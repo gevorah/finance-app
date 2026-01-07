@@ -1,4 +1,4 @@
-import './Button.scss';
+import './button.scss';
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-export default function Button({
+export function Button({
   children,
   type,
   size,
