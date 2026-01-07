@@ -37,6 +37,8 @@
 
   --color-primary: var(--marguerite-500);
   --color-primary-hover: var(--marguerite-400);
+  --color-secondary: transparent;
+  --color-secondary-hover: var(--color-surface-elevated);
   
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -51,6 +53,14 @@
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
+
+  --button-width-sm: 5rem;
+  --button-width-md: 7.875rem;
+  --button-width-lg: 12.75rem;
+
+  --button-height-sm: 2.375rem;
+  --button-height-md: 3rem;
+  --button-height-lg: 3rem;
   
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -102,4 +112,14 @@ button,input,select,textarea {
 
 ::placeholder {
   opacity: 1;
+}
+
+
+/** Mixin */
+@mixin flex($justify: center, $align: center, $direction: row, $wrap: nowrap) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+  flex-wrap: $wrap;
 }
