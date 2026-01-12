@@ -61,9 +61,9 @@
 }
 
 *,
-::before,
-::after,
-::backdrop {
+*::before,
+*::after,
+*::backdrop {
   box-sizing: border-box;
   border: 0 solid;
   margin: 0;
