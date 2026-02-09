@@ -1,0 +1,37 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.input {
+  width: 100%;
+  height: var(--spacing-10);
+  padding: var(--spacing-2) var(--spacing-4);
+
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+
+  appearance: none;
+  transition: border-color 0.15s ease-in-out;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &[data-focused] {
+    border-color: var(--color-primary);
+  }
+
+  &[data-disabled] {
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
