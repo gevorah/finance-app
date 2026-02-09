@@ -13,11 +13,11 @@ import { Description, FieldError, Label } from '../field';
 import styles from './date-field.module.scss';
 
 export function DateSegment(props: DateSegmentProps) {
-  return <AriaDateSegment {...props} className={styles.segment} />;
+  return <AriaDateSegment className={styles.segment} {...props} />;
 }
 
 export function DateInput(props: DateInputProps) {
-  return <AriaDateInput {...props} className={styles.input} />;
+  return <AriaDateInput className={styles.input} {...props} />;
 }
 
 export interface DateFieldProps<

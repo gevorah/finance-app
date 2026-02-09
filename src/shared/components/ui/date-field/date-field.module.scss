@@ -8,10 +8,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  overflow: hidden;
-  width: fit-content;
+  width: 100%;
   height: var(--spacing-10);
   padding: var(--spacing-2) var(--spacing-4);
+  overflow: hidden;
 
   font-size: 0.875rem;
   color: var(--color-text-primary);

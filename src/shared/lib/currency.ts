@@ -1,11 +1,11 @@
-type CurrencyFormatOptions = {
+interface CurrencyFormatOptions {
   currency?: string;
   locale?: string;
   minimumFractionDigits?: number;
   maximumFractionDigits?: number;
   compact?: boolean;
   showSign?: boolean;
-};
+}
 
 const DEFAULT_LOCALE = 'es-CO';
 const DEFAULT_CURRENCY = 'COP';

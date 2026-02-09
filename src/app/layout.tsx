@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import '@/shared/styles/globals.css';
+import '@/shared/styles/globals.scss';
 
 import { Poppins } from 'next/font/google';
 import localFont from 'next/font/local';

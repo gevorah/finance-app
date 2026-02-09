@@ -3,7 +3,6 @@
 import {
   NumberField as AriaNumberField,
   NumberFieldProps as AriaNumberFieldProps,
-  Group,
   Input,
   ValidationResult,
 } from 'react-aria-components';
@@ -27,9 +26,7 @@ export function NumberField({
   return (
     <AriaNumberField {...props} className={styles.root}>
       <Label>{label}</Label>
-      <Group>
-        <Input className={styles.input} />
-      </Group>
+      <Input className={styles.input} />
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </AriaNumberField>
