@@ -1,0 +1,97 @@
+@use '../../../styles/globals.scss' as *;
+
+.container {
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  @include flex(center, flex-start, column);
+
+  &__title {
+    font-size: var(--text-xs);
+  }
+
+  &__description {
+    font-weight: var(--font-weight-bold);
+    color: var(--dark-vulcan-50);
+    margin-bottom: var(--space-lg);
+  }
+
+  &__stats {
+    @include flex();
+    gap: var(--space-lg);
+  }
+
+  &__stat-item {
+    @include flex();
+    gap: var(--space-sm);
+  }
+
+  &__icon {
+    border-radius: var(--radius-md);
+    width: 32px;
+    height: 32px;
+    @include flex(center, center);
+
+    &--income {
+      background-color: var(--river-blue-900);
+      color: var(--river-blue-400);
+    }
+
+    &--expense {
+      background-color: var(--persian-rose-900);
+      color: var(--persian-rose-400);
+    }
+  }
+
+  .stats-container {
+    @include flex(center, flex-start, column);
+    &__label {
+      color: var(--dark-vulcan-400);
+      font-size: var(--text-xs);
+    }
+
+    &__value {
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+
+      &--income {
+        color: var(--river-blue-400);
+      }
+      &--expense {
+        color: var(--persian-rose-400);
+      }
+    }
+  }
+
+  &__icon {
+    border-radius: var(--radius-md);
+  }
+}
+
+.primary {
+  background: var(--marguerite-900);
+  border: 1px solid var(--marguerite-700);
+
+  .container__title {
+    text-transform: uppercase;
+    font-weight: var(--font-weight-medium);
+    color: var(--marguerite-400);
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+  }
+
+  .container__description{
+    font-size: var(--text-5xl);
+  }
+}
+
+.secondary{
+    .container__title{
+        color: var(--color-text-secondary);
+    }
+    .container__description{
+        font-size: var(--text-2xl);
+        margin-bottom: var(--space-xs);
+    }
+}

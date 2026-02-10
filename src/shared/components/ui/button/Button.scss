@@ -4,7 +4,7 @@
   @include flex();
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--text-xs);
   border-radius: var(--radius-md);
   cursor: pointer;
 
