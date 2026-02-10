@@ -1,0 +1,34 @@
+.root {
+  padding: var(--spacing-2);
+
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+
+  background-color: var(--color-surface-inset);
+  border-radius: var(--radius-md);
+  outline: none;
+  filter: drop-shadow(var(--shadow-md));
+  transition: transform 150ms, opacity 150ms;
+
+  &[data-entering],
+  &[data-exiting] {
+    transform: var(--origin);
+    opacity: 0;
+  }
+
+  &[data-placement=top] {
+    --origin: translateY(8px);
+  }
+
+  &[data-placement=bottom] {
+    --origin: translateY(-8px);
+  }
+
+  &[data-placement=right] {
+    --origin: translateX(-8px);
+  }
+
+  &[data-placement=left] {
+    --origin: translateX(8px);
+  }
+}
