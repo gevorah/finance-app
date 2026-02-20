@@ -3,16 +3,20 @@
   --marguerite-200: #c8d0fd;
   --marguerite-400: #8387f6;
   --marguerite-500: #615bed;
+  --marguerite-700: #3d39b0;
+  --marguerite-900: #1e1c4d;
   
   --persian-rose-100: #fce7f5;
   --persian-rose-200: #fbcfec;
   --persian-rose-400: #f472c2;
   --persian-rose-500: #eb43a5;
+  --persian-rose-900: #4a1035;
   
   --river-blue-100: #dceefd;
   --river-blue-200: #c1e1fc;
   --river-blue-400: #66b5f4;
   --river-blue-500: #3b92ee;
+  --river-blue-900: #0f2d4d;
 
   --jade-100: #dcfef2;
   --jade-200: #b8fce5;
@@ -33,8 +37,8 @@
   --dark-vulcan-600: #525877;
   --dark-vulcan-700: #32343f;
   --dark-vulcan-800: #252731;
-  --dark-vulcan-900: #1f2029;
-  --dark-vulcan-950: #1a1b23;
+  --dark-vulcan-900: #1a1b23;
+  --dark-vulcan-950: #0d0e12;
   
   --color-background: var(--dark-vulcan-950);
   --color-surface: var(--dark-vulcan-900);
@@ -42,7 +46,7 @@
   --color-surface-inset: var(--dark-vulcan-950);
 
   --color-text-primary: var(--dark-vulcan-50);
-  --color-text-secondary: var(--dak-vulcan-300);
+  --color-text-secondary: var(--dark-vulcan-300);
   --color-text-muted: var(--dark-vulcan-500);
   --color-text-inverse: var(--dark-vulcan-950);
 
@@ -98,6 +102,25 @@
 
   --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Test Tiempos Fine', -apple-system, BlinkMacSystemFont, serif;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-4xl: 32px;
+  --text-5xl: 36px;
+  --text-6xl: 40px;
+  --text-7xl: 48px;
+  --text-8xl: 56px;
+
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 }
 
 *,
