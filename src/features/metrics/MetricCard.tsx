@@ -1,8 +1,8 @@
 import './MetricCard.scss';
 
 import { Card } from '@/shared/components/ui/card';
-import { ArrowDown } from '@/shared/components/ui/icon/ArrowDown';
-import { ArrowUp } from '@/shared/components/ui/icon/ArrowUp';
+import { ArrowDown, ArrowDownLeft, ArrowUp } from 'lucide-react';
+
 import { TransactionType } from '../transactions';
 
 interface MetricCardProps {
@@ -12,16 +12,11 @@ interface MetricCardProps {
   trend?: string;
 }
 
-export function MetricCard({
-  title,
-  value,
-  icon,
-  trend,
-}: MetricCardProps) {
+export function MetricCard({ title, value, icon, trend }: MetricCardProps) {
   return (
     <Card type="secondary" className="metric-card">
       <div className={`metric-header metric-header--${icon}`}>
-        {icon === 'income' ? <ArrowUp /> : <ArrowDown />}
+        {icon === 'income' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
       </div>
       <section className="metric-information">
         <p className="metric-information__title">{title}</p>
@@ -29,11 +24,7 @@ export function MetricCard({
         <p
           className={`metric-information__trend metric-information__trend--${icon}`}
         >
-          {icon === 'income' ? (
-            <ArrowUp className="metric-information__trend-icon" />
-          ) : (
-            <ArrowDown className="metric-information__trend-icon" />
-          )}
+          {icon === 'income' ? <ArrowUp size={12} /> : <ArrowDownLeft size={12} />}
           {trend}
         </p>
       </section>

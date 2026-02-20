@@ -1,9 +1,6 @@
-import { Card } from '@/shared/components/ui/card';
-import { ArrowDown } from '@/shared/components/ui/icon/ArrowDown';
-import { ArrowUp } from '@/shared/components/ui/icon/ArrowUp';
-
 import './BalanceCard.scss';
-
+import { Card } from '@/shared/components/ui/card';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { TransactionType } from '../transactions';
 
 interface CardBalanceProps {
@@ -28,7 +25,7 @@ export function BalanceCard({ balance, stats = [] }: CardBalanceProps) {
         {stats.map((stat, index) => (
           <div key={index} className={`stat-item`}>
             <div className={`stat-item__icon stat-item__icon--${stat.icon}`}>
-              {stat.icon === 'income' ? <ArrowUp /> : <ArrowDown />}
+              {stat.icon === 'income' ? <ArrowUp size={16}/> : <ArrowDown size={16}/>}
             </div>
             <div>
               <p className={`stat-item__label`}>
