@@ -8,14 +8,14 @@
   &__title {
     text-transform: uppercase;
     font-weight: var(--font-weight-medium);
-    color: var(--marguerite-400);
+    color: var(--color-primary-mute);
     letter-spacing: 0.05em;
     margin-bottom: var(--spacing-2);
   }
   &__description {
     font-size: var(--text-5xl);
     font-weight: var(--font-weight-bold);
-    color: var(--dark-vulcan-50);
+    color: var(--color-primary-contrast);
     margin-bottom: var(--spacing-4);
   }
 }
@@ -35,17 +35,17 @@
     @include flex(center, center);
 
     &--income {
-      background-color: var(--river-blue-900);
-      color: var(--river-blue-400);
+      background-color: var(--color-info-muted);
+      color: var(--color-info-border);
     }
 
     &--expense {
-      background-color: var(--persian-rose-900);
-      color: var(--persian-rose-400);
+      background-color: var(--color-danger-muted);
+      color: var(--color-danger-border);
     }
   }
   &__label {
-    color: var(--dark-vulcan-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
   &__value {
@@ -53,10 +53,10 @@
     font-weight: var(--font-weight-semibold);
 
     &--income {
-      color: var(--river-blue-400);
+      color: var(--color-info-border);
     }
     &--expense {
-      color: var(--persian-rose-400);
+      color: var(--color-danger-border);
     }
   }
 }

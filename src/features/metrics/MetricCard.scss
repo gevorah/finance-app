@@ -7,13 +7,13 @@
   margin-bottom: var(--spacing-3);
   @include flex(center, center);
   &--income {
-    background-color: var(--river-blue-900);
-    color: var(--river-blue-400);
+    background-color: var(--color-info-muted);
+    color: var(--color-info-border);
   }
 
   &--expense {
-    background-color: var(--persian-rose-900);
-    color: var(--persian-rose-400);
+    background-color: var(--color-danger-muted);
+    color: var(--color-danger-border);
   }
 }
 
@@ -35,10 +35,10 @@
     gap: var(--spacing-1);
     
     &--income {
-      color: var(--river-blue-400);
+      color: var(--color-info-border);
     }
     &--expense {
-      color: var(--persian-rose-400);
+      color: var(--color-danger-border);
     }
   }
 

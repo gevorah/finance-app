@@ -47,7 +47,8 @@
 
   --color-text-primary: var(--dark-vulcan-50);
   --color-text-secondary: var(--dark-vulcan-300);
-  --color-text-muted: var(--dark-vulcan-500);
+  --color-text-muted: var(--dark-vulcan-400);
+  --color-text-faint: var(--dark-vulcan-500);
   --color-text-inverse: var(--dark-vulcan-950);
 
   --color-border: var(--dark-vulcan-600);
@@ -56,7 +57,7 @@
 
   --color-primary: var(--marguerite-500);
   --color-primary-contrast: var(--dark-vulcan-50);
-  --color-primary-hover: var(--marguerite-400);
+  --color-primary-mute: var(--marguerite-400);
   --color-primary-active: var(--marguerite-500);
 
   --color-success: var(--jade-500);
@@ -70,10 +71,12 @@
   --color-danger: var(--persian-rose-500);
   --color-danger-bg: var(--persian-rose-100);
   --color-danger-border: var(--persian-rose-400);
+  --color-danger-muted: var(--persian-rose-900);
 
   --color-info: var(--river-blue-500);
   --color-info-bg: var(--river-blue-100);
   --color-info-border: var(--river-blue-400);
+  --color-info-muted: var(--river-blue-900);
   
   --spacing: 0.25rem;
   --spacing-1: var(--spacing);

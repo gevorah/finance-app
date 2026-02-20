@@ -15,8 +15,8 @@
     @include flex(center, center);
     width: 44px;
     height: 44px;
-    background: var(--persian-rose-900);
-    color: var(--persian-rose-400);
+    background: var(--color-danger-muted);
+    color: var(--color-danger-border);
     border-radius: var(--radius-md);   
 }
 
@@ -34,13 +34,13 @@
 
 .transaction-amount{
     &__value{
-        color: var(--persian-rose-400);
+        color: var(--color-danger-border);
         font-weight: var(--font-weight-semibold);
     }
 
     &__date{
         font-size: var(--text-xs);
-        color: var( --color-text-muted);
+        color: var(--color-text-faint);
         text-align: right;
     }
 }
