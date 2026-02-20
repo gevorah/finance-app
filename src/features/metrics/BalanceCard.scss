@@ -1,0 +1,62 @@
+@use '../../shared/styles/globals.scss' as *;
+
+.balance-card {
+  @include flex(center, flex-start, column);
+}
+
+.balance-header {
+  &__title {
+    text-transform: uppercase;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-2);
+  }
+  &__description {
+    font-size: var(--text-5xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary-contrast);
+    margin-bottom: var(--spacing-4);
+  }
+}
+
+.stats {
+  @include flex();
+  gap: var(--spacing-4);
+}
+
+.stat-item {
+  @include flex();
+  gap: var(--spacing-2);
+  &__icon {
+    border-radius: var(--radius-md);
+    width: 32px;
+    height: 32px;
+    @include flex(center, center);
+
+    &--income {
+      background-color: var(--color-info-muted);
+      color: var(--color-info-border);
+    }
+
+    &--expense {
+      background-color: var(--color-danger-muted);
+      color: var(--color-danger-border);
+    }
+  }
+  &__label {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  &__value {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+
+    &--income {
+      color: var(--color-info-border);
+    }
+    &--expense {
+      color: var(--color-danger-border);
+    }
+  }
+}

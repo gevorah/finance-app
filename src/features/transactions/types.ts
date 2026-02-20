@@ -1,4 +1,5 @@
 export type TransactionType = 'income' | 'expense';
+export type VariantType = 'primary' | 'secondary' | 'tertiary';
 
 export interface Transaction {
   id: string;

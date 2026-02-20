@@ -1,0 +1,43 @@
+@use '../../../styles/globals.scss' as *;
+
+.btn {
+  @include flex();
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-sm);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+
+  &-primary {
+    background-color: var(--color-primary);
+    color: var(--color-text-primary);
+    &:hover {
+      background: var(--color-primary-hover);
+    }
+  }
+  &-secondary {
+    background-color: var(--color-secondary);
+    color: var(--color-text-secondary);
+    &:hover {
+      background: var(--color-secondary-hover);
+    }
+  }
+
+  &-small {
+    width: var(--button-width-sm);
+    height: var(--button-height-sm);
+  }
+  &-medium {
+    width: var(--button-width-md);
+    height: var(--button-height-md);
+  }
+  &-large {
+    padding: 0 var(--spacing-6);
+    height: 48px;
+  }
+
+  &-bordered {
+    border: 1px solid var(--color-border);
+  }
+}

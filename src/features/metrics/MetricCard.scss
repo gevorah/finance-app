@@ -1,0 +1,49 @@
+@use '../../shared/styles/globals.scss' as *;
+
+.metric-header {
+  border-radius: var(--radius-md);
+  width: 32px;
+  height: 32px;
+  margin-bottom: var(--spacing-3);
+  @include flex(center, center);
+  &--income {
+    background-color: var(--color-info-muted);
+    color: var(--color-info-border);
+  }
+
+  &--expense {
+    background-color: var(--color-danger-muted);
+    color: var(--color-danger-border);
+  }
+}
+
+.metric-information {
+  @include flex(center, flex-start, column);
+  gap: var(--spacing-1);
+  &__title {
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-1xs);
+  }
+
+  &__trend {
+    @include flex(center, center);
+    gap: var(--spacing-1);
+    
+    &--income {
+      color: var(--color-info-border);
+    }
+    &--expense {
+      color: var(--color-danger-border);
+    }
+  }
+
+  &__trend-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
