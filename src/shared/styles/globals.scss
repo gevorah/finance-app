@@ -1,3 +1,9 @@
+$mobile-sm: 375px;
+$mobile: 428px;
+$tablet: 768px;
+$desktop: 1024px;
+$wide: 1440px;
+
 :root {
   --marguerite-100: #e1e5fe;
   --marguerite-200: #c8d0fd;
@@ -5,13 +11,13 @@
   --marguerite-500: #615bed;
   --marguerite-700: #3d39b0;
   --marguerite-900: #1e1c4d;
-  
+
   --persian-rose-100: #fce7f5;
   --persian-rose-200: #fbcfec;
   --persian-rose-400: #f472c2;
   --persian-rose-500: #eb43a5;
   --persian-rose-900: #4a1035;
-  
+
   --river-blue-100: #dceefd;
   --river-blue-200: #c1e1fc;
   --river-blue-400: #66b5f4;
@@ -28,7 +34,7 @@
   --golden-400: #f4c744;
   --golden-500: #e8a90e;
 
-  --dark-vulcan-50:  #f6f7f9;
+  --dark-vulcan-50: #f6f7f9;
   --dark-vulcan-100: #ecedf2;
   --dark-vulcan-200: #d5d7e0;
   --dark-vulcan-300: #b5b8c3;
@@ -39,7 +45,7 @@
   --dark-vulcan-800: #252731;
   --dark-vulcan-900: #1a1b23;
   --dark-vulcan-950: #0d0e12;
-  
+
   --color-background: var(--dark-vulcan-950);
   --color-surface: var(--dark-vulcan-900);
   --color-surface-elevated: var(--dark-vulcan-800);
@@ -79,7 +85,7 @@
   --color-info-bg: var(--river-blue-100);
   --color-info-border: var(--river-blue-400);
   --color-info-muted: var(--river-blue-900);
-  
+
   --spacing: 0.25rem;
   --spacing-1: var(--spacing);
   --spacing-2: calc(2 * var(--spacing));
@@ -93,14 +99,14 @@
   --spacing-10: calc(10 * var(--spacing));
   --spacing-11: calc(11 * var(--spacing));
   --spacing-12: calc(12 * var(--spacing));
-  
+
   --radius-xs: 0.25rem;
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
-  
+
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -149,9 +155,14 @@ body {
   color: var(--color-text-primary);
 }
 
-h1,h2,h3,h4,h5,h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-size: inherit;
-  font-weight: inherit
+  font-weight: inherit;
 }
 
 a {
@@ -159,13 +170,16 @@ a {
   text-decoration: inherit;
 }
 
-button,input,select,textarea {
+button,
+input,
+select,
+textarea {
   font: inherit;
   letter-spacing: inherit;
   color: inherit;
   opacity: 1;
   background-color: #0000;
-  border-radius: 0
+  border-radius: 0;
 }
 
 ::placeholder {
@@ -179,4 +193,22 @@ button,input,select,textarea {
   justify-content: $justify;
   align-items: $align;
   flex-wrap: $wrap;
+}
+
+@mixin mobile {
+  @media (max-width: $mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media ($tablet <= width <= ($desktop-1px)) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
 }

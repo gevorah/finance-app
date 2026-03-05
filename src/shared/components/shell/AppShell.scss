@@ -1,0 +1,10 @@
+@use '../../styles/globals.scss' as *;
+
+.app-shell {
+  @include flex(flex-start, normal);  
+  min-height: 100vh;
+}
+
+.app-content {
+    padding: var(--spacing-4);
+}

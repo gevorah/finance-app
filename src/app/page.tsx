@@ -1,11 +1,8 @@
 'use client';
 
-import './page.scss';
-
 import { BalanceCard } from '@/features/metrics/BalanceCard';
 import { MetricCard } from '@/features/metrics/MetricCard';
 import { TransactionCard } from '@/features/metrics/TransactionCard';
-import { Sidebar } from '@/features/sidebar/Sidebar';
 import { Button } from '@/shared/components/ui/button';
 import { Calendar } from '@/shared/components/ui/calendar';
 import { DateField } from '@/shared/components/ui/date-field';
@@ -17,7 +14,6 @@ import { Coffee } from 'lucide-react';
 export default function Home() {
   return (
     <div className="page">
-      <Sidebar></Sidebar>
       <main className="page-container">
         <h1>finance-app</h1>
         <Button type={'secondary'} size={'large'} border={true}>
@@ -38,14 +34,7 @@ export default function Home() {
           value={'$3,280'}
           icon={'expense'}
           trend="12% vs last month"
-        ></MetricCard>
-        <TransactionCard
-          icon={<Coffee size={20} />}
-          title={'Starbucks Coffee'}
-          description={'Food & Drinks'}
-          value={'-$5.80'}
-          date={'Today'}
-        ></TransactionCard>
+        ></MetricCard>    
         <TextField label="Name" />
         <NumberField
           label="Amount"

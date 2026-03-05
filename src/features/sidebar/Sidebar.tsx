@@ -1,11 +1,14 @@
-import './Sidebar.scss';
+import { Button } from '@/shared/components/ui/button';
 
+import './Sidebar.scss';
+import Link from 'next/link';
 import {
   ChartNoAxesColumn,
   CreditCard,
   DollarSign,
   House,
   PiggyBank,
+  Plus,
   Settings,
 } from 'lucide-react';
 
@@ -22,23 +25,29 @@ export function Sidebar() {
         <ul className="nav-list">
           <li className="nav-list__item nav-list__item--active">
             <House size={20} />
-            Dashboard
+            <Link href="/dashboard">Dashboard</Link>
           </li>
           <li className="nav-list__item">
             <DollarSign size={20} />
-            Transactions
+            <Link href="/transactions">Transactions</Link>
+          </li>
+          {/* button only on mobile*/}
+          <li className="nav-list__item">
+            <button className="nav-list__item--add">
+              <Plus size={24} />
+            </button>
           </li>
           <li className="nav-list__item">
             <ChartNoAxesColumn size={20} />
-            Analytics
+            <Link href="/analytics">Analytics</Link>
           </li>
           <li className="nav-list__item">
             <CreditCard size={20} />
-            Debts
+            <Link href="/debts">Debts</Link>
           </li>
           <li className="nav-list__item">
             <Settings size={20} />
-            Settings
+            <Link href="/settings">Settings</Link>
           </li>
         </ul>
       </nav>
