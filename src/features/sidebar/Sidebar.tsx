@@ -1,5 +1,3 @@
-import { Button } from '@/shared/components/ui/button';
-
 import './Sidebar.scss';
 import Link from 'next/link';
 import {

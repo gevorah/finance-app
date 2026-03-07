@@ -2,14 +2,12 @@
 
 import { BalanceCard } from '@/features/metrics/BalanceCard';
 import { MetricCard } from '@/features/metrics/MetricCard';
-import { TransactionCard } from '@/features/metrics/TransactionCard';
 import { Button } from '@/shared/components/ui/button';
 import { Calendar } from '@/shared/components/ui/calendar';
 import { DateField } from '@/shared/components/ui/date-field';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { TextField } from '@/shared/components/ui/text-field';
-import { Coffee } from 'lucide-react';
 
 export default function Home() {
   return (

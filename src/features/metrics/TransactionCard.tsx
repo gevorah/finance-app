@@ -1,6 +1,7 @@
 import { Card } from '@/shared/components/ui/card';
 import "./TransactionCard.scss";
 import { Transaction } from '../transactions';
+import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -13,11 +14,11 @@ transaction
     <Card type="tertiary" className="transaction-card">
       <section className="transaction-item">
         <div className="transaction-icon">
-            {transaction.icon}
+            {getCategoryIcon(transaction.category)}
         </div>
         <div className='transaction-details'>
             <p className='transaction-details__title'>{transaction.title}</p>
-            <p className='transaction-details__description'>{transaction.description}</p>
+            <p className='transaction-details__description'>{transaction.category}</p>
         </div>
         <div className='transaction-amount'>
             <p className='transaction-amount__value'>{transaction.amount}</p>

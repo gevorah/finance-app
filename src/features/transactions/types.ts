@@ -16,7 +16,7 @@ export interface Transaction {
   updatedAt: string;
 }
 
-enum CATEGORY_TYPES{
+export enum CATEGORY_TYPES{
   Food= "Food & Drinks",
   Bills= "Bills",
   Income= "Income",
