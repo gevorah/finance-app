@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { DateValue } from "react-aria-components";
 
 export type TransactionType = 'income' | 'expense';
 export type VariantType = 'primary' | 'secondary' | 'tertiary';
@@ -6,12 +7,11 @@ export type VariantType = 'primary' | 'secondary' | 'tertiary';
 export interface Transaction {
   id: string;
   type: TransactionType;
-  title: string;
   icon?: ReactNode;
   category: CATEGORY_TYPES;
   amount: number;
-  date: string;
-  description?: string;
+  date: DateValue;
+  description: string;
   createdAt: string;
   updatedAt: string;
 }

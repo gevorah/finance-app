@@ -32,7 +32,7 @@ export function Sidebar() {
           {/* button only on mobile*/}
           <li className="nav-list__item">
             <button className="nav-list__item--add">
-              <Plus size={24} />
+              <Link href="/create"><Plus size={24} /></Link>
             </button>
           </li>
           <li className="nav-list__item">

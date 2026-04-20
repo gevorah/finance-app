@@ -14,10 +14,10 @@ export default function Home() {
     <div className="page">
       <main className="page-container">
         <h1>finance-app</h1>
-        <Button type={'secondary'} size={'large'} border={true}>
+        <Button variant={'secondary'} size={'large'} border={true}>
           Cancel
         </Button>
-        <Button type={'primary'} size={'large'}>
+        <Button variant={'primary'} size={'large'}>
           Save Transaction
         </Button>
         <BalanceCard

@@ -1,27 +1,25 @@
+import React from 'react';
 import './Button.scss';
 
-interface ButtonProps {
-  children: React.ReactNode;
-  type: 'primary' | 'secondary' | 'ghost';
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>{
+  variant: 'primary' | 'secondary' | 'ghost';
   size: 'small' | 'medium' | 'large';
   border?: boolean;
   active?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
 }
 
 export function Button({
   children,
-  type,
+  variant,
   size,
   border = false,
-  onClick,
   active,
-  disabled,
+  className,
+  ...rest
 }: ButtonProps) {
-  const btnStyle = `btn btn-${type} btn-${size} ${border ? 'btn-bordered' : ''} ${active ? 'btn-active' : ''}`;
+  const btnStyle = `btn btn-${variant} btn-${size} ${border ? 'btn-bordered' : ''} ${active ? 'btn-active' : ''} ${className ?? ''}`;
   return (
-    <button className={btnStyle} onClick={onClick} disabled={disabled}>
+    <button className={btnStyle} {...rest}>
       {children}
     </button>
   );
