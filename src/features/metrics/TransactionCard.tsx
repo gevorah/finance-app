@@ -1,35 +1,28 @@
-import { ReactNode } from 'react';
 import { Card } from '@/shared/components/ui/card';
 import "./TransactionCard.scss";
+import { Transaction } from '../transactions';
+import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
 
 interface TransactionCardProps {
-  title: string;
-  description: string;
-  icon?: ReactNode;
-  value: string;
-  date?: string;
+  transaction: Transaction;
 }
 
 export function TransactionCard({
-  title,
-  description,
-  icon,
-  value,
-  date,
+transaction
 }: TransactionCardProps) {
   return (
     <Card type="tertiary" className="transaction-card">
       <section className="transaction-item">
         <div className="transaction-icon">
-            {icon}
+            {getCategoryIcon(transaction.category)}
         </div>
         <div className='transaction-details'>
-            <p className='transaction-details__title'>{title}</p>
-            <p className='transaction-details__description'>{description}</p>
+            <p className='transaction-details__title'>{transaction.description}</p>
+            <p className='transaction-details__description'>{transaction.category}</p>
         </div>
         <div className='transaction-amount'>
-            <p className='transaction-amount__value'>{value}</p>
-            <p className='transaction-amount__date'>{date}</p>
+            <p className='transaction-amount__value'>{transaction.amount}</p>
+            <p className='transaction-amount__date'>{transaction.date.toString()}</p>
         </div>
       </section>
     </Card>

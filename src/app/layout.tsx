@@ -1,7 +1,7 @@
-import type { Metadata } from 'next';
-
 import '@/shared/styles/globals.scss';
 
+import { AppShell } from '@/shared/components/shell/AppShell';
+import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import localFont from 'next/font/local';
 
@@ -32,7 +32,9 @@ export default function RootLayout({
       lang="en"
       className={`${poppins.variable} ${testTiemposFine.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

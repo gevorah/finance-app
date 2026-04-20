@@ -1,0 +1,6 @@
+@use '../../shared/styles/globals.scss' as *;
+
+.options{
+    @include flex();
+    gap: var(--spacing-2);
+}

@@ -25,12 +25,11 @@
   }
 
   &-small {
-    width: var(--button-width-sm);
-    height: var(--button-height-sm);
+    height: 32px;
   }
   &-medium {
-    width: var(--button-width-md);
-    height: var(--button-height-md);
+    padding: var(--spacing-2) var(--spacing-4);
+    height: 36px;
   }
   &-large {
     padding: 0 var(--spacing-6);

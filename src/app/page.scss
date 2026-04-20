@@ -1,8 +1,0 @@
-@use '../shared/styles/globals.scss' as *;
-
-.page{
-    @include flex(flex-start, normal);
-}
-.page-container{
-    padding: var(--spacing-4);
-}
