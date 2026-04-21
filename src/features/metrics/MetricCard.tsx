@@ -1,9 +1,9 @@
+import { TransactionType } from '@/entities/transaction';
+
 import './MetricCard.scss';
 
 import { Card } from '@/shared/components/ui/card';
 import { ArrowDown, ArrowDownLeft, ArrowUp } from 'lucide-react';
-
-import { TransactionType } from '../transactions';
 
 interface MetricCardProps {
   title: string;
@@ -24,7 +24,11 @@ export function MetricCard({ title, value, icon, trend }: MetricCardProps) {
         <p
           className={`metric-information__trend metric-information__trend--${icon}`}
         >
-          {icon === 'income' ? <ArrowUp size={12} /> : <ArrowDownLeft size={12} />}
+          {icon === 'income' ? (
+            <ArrowUp size={12} />
+          ) : (
+            <ArrowDownLeft size={12} />
+          )}
           {trend}
         </p>
       </section>

@@ -6,6 +6,12 @@ import { Button } from '@/shared/components/ui/button';
 import { Calendar } from '@/shared/components/ui/calendar';
 import { DateField } from '@/shared/components/ui/date-field';
 import { DatePicker } from '@/shared/components/ui/date-picker';
+import {
+  DialogContent,
+  DialogOverlay,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/components/ui/dialog';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { TextField } from '@/shared/components/ui/text-field';
 
@@ -32,7 +38,7 @@ export default function Home() {
           value={'$3,280'}
           icon={'expense'}
           trend="12% vs last month"
-        ></MetricCard>    
+        ></MetricCard>
         <TextField label="Name" />
         <NumberField
           label="Amount"
@@ -41,6 +47,17 @@ export default function Home() {
         <DateField label="Date" />
         <Calendar />
         <DatePicker />
+        <DialogTrigger>
+          <Button size="large">Dialog</Button>
+          <DialogOverlay>
+            <DialogContent>
+              <div>
+                <DialogTitle>Sign up</DialogTitle>
+              </div>
+              <p>Hola</p>
+            </DialogContent>
+          </DialogOverlay>
+        </DialogTrigger>
       </main>
     </div>
   );
