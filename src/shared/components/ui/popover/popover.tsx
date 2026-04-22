@@ -1,3 +1,5 @@
+'use client';
+
 import clsx from 'clsx';
 import { Popover as AriaPopover, PopoverProps } from 'react-aria-components';
 

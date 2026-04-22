@@ -1,3 +1,5 @@
+'use client';
+
 import {
   DateField as AriaDateField,
   DateFieldProps as AriaDateFieldProps,
