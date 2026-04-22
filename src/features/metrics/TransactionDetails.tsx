@@ -6,7 +6,6 @@ import { Button } from '@/shared/components/ui/button';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-
 import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
 
 export default function TransactionDetails() {

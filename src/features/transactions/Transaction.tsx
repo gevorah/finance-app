@@ -8,7 +8,7 @@ export default function TransactionComponent() {
   return (
     <main>
       <div className="options">
-        <Button variant={'secondary'} border={true} size={'medium'} active={true}>
+        <Button variant={'secondary'} border={true} size={'medium'}>
           All
         </Button>
         <Button variant={'secondary'} border={true} size={'medium'}>

@@ -1,16 +1,15 @@
-import { ReactNode } from "react";
-import { DateValue } from "react-aria-components";
+import { ReactNode } from 'react';
+import { CategoryType } from '@/entities/category';
 
 export type TransactionType = 'income' | 'expense';
-export type VariantType = 'primary' | 'secondary' | 'tertiary';
 
 export interface Transaction {
   id: string;
   type: TransactionType;
   icon?: ReactNode;
-  category: CATEGORY_TYPES;
+  category: CategoryType;
   amount: number;
-  date: DateValue;
+  date: string;
   description: string;
   createdAt: string;
   updatedAt: string;
