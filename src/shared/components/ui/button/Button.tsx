@@ -1,26 +1,34 @@
-import React from 'react';
-import './Button.scss';
+import clsx from 'clsx';
+import {
+  Button as AriaButton,
+  type ButtonProps as AriaButtonProps,
+} from 'react-aria-components';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>{
-  variant: 'primary' | 'secondary' | 'ghost';
-  size: 'small' | 'medium' | 'large';
+import styles from './button.module.scss';
+
+interface ButtonProps extends AriaButtonProps {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'small' | 'medium' | 'large';
   border?: boolean;
-  active?: boolean;
 }
 
 export function Button({
-  children,
-  variant,
-  size,
+  variant = 'primary',
+  size = 'medium',
   border = false,
-  active,
   className,
-  ...rest
+  children,
+  ...props
 }: ButtonProps) {
-  const btnStyle = `btn btn-${variant} btn-${size} ${border ? 'btn-bordered' : ''} ${active ? 'btn-active' : ''} ${className ?? ''}`;
   return (
-    <button className={btnStyle} {...rest}>
+    <AriaButton
+      data-variant={variant}
+      data-size={size}
+      data-border={border}
+      className={clsx(styles.button, className)}
+      {...props}
+    >
       {children}
-    </button>
+    </AriaButton>
   );
 }

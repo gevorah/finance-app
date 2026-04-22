@@ -1,26 +1,29 @@
+import { CATEGORY_TYPES, CategoryType } from '@/entities/category';
 import {
-  Coffee,
-  Home,
-  Wallet,
   Car,
-  ShoppingCart,
+  Coffee,
   Heart,
   HelpCircle,
-  type LucideIcon
+  Home,
+  ShoppingCart,
+  Wallet,
+  type LucideIcon,
 } from 'lucide-react';
-import { CATEGORY_TYPES } from '../types';
 
-const CATEGORY_ICONS: Record<CATEGORY_TYPES, LucideIcon>={
-    [CATEGORY_TYPES.Food]: Coffee,
-    [CATEGORY_TYPES.Bills]: Home,
-    [CATEGORY_TYPES.Income]: Wallet,
-    [CATEGORY_TYPES.Shopping]: ShoppingCart,
-    [CATEGORY_TYPES.Health]: Heart,
-    [CATEGORY_TYPES.Transport]: Car,
-    [CATEGORY_TYPES.Others]: HelpCircle
-}
+const CATEGORY_ICONS: Record<CategoryType, LucideIcon> = {
+  [CATEGORY_TYPES.FOOD]: Coffee,
+  [CATEGORY_TYPES.BILLS]: Home,
+  [CATEGORY_TYPES.INCOME]: Wallet,
+  [CATEGORY_TYPES.SHOPPING]: ShoppingCart,
+  [CATEGORY_TYPES.HEALTH]: Heart,
+  [CATEGORY_TYPES.TRANSPORT]: Car,
+  [CATEGORY_TYPES.OTHERS]: HelpCircle,
+};
 
-export function getCategoryIcon(category:CATEGORY_TYPES, size: number= 20): React.ReactNode{
-    const IconComponent = CATEGORY_ICONS[category];
-    return <IconComponent size={size}/>;
+export function getCategoryIcon(
+  category: CategoryType,
+  size: number = 20,
+): React.ReactNode {
+  const IconComponent = CATEGORY_ICONS[category];
+  return <IconComponent size={size} />;
 }

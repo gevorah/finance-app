@@ -1,7 +1,9 @@
+import { TransactionType } from '@/entities/transaction';
+
 import './BalanceCard.scss';
+
 import { Card } from '@/shared/components/ui/card';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { TransactionType } from '../transactions';
 
 interface CardBalanceProps {
   balance: string;
@@ -25,12 +27,14 @@ export function BalanceCard({ balance, stats = [] }: CardBalanceProps) {
         {stats.map((stat, index) => (
           <div key={index} className={`stat-item`}>
             <div className={`stat-item__icon stat-item__icon--${stat.icon}`}>
-              {stat.icon === 'income' ? <ArrowUp size={16}/> : <ArrowDown size={16}/>}
+              {stat.icon === 'income' ? (
+                <ArrowUp size={16} />
+              ) : (
+                <ArrowDown size={16} />
+              )}
             </div>
             <div>
-              <p className={`stat-item__label`}>
-                {stat.label}
-              </p>
+              <p className={`stat-item__label`}>{stat.label}</p>
               <p className={`stat-item__value stat-item__value--${stat.icon}`}>
                 {stat.value}
               </p>
