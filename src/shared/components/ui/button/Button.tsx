@@ -4,7 +4,7 @@ import {
   type ButtonProps as AriaButtonProps,
 } from 'react-aria-components';
 
-import styles from './button.module.scss';
+import styles from './Button.module.scss';
 
 interface ButtonProps extends AriaButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost';
