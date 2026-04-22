@@ -2,7 +2,6 @@ import "./Transaction.scss";
 
 import { Button } from '@/shared/components/ui/button';
 import { Funnel } from 'lucide-react';
-import { CATEGORY_TYPES, Transaction } from './types';
 import TransactionList from "./transaction-list/TransactionList";
 
 export default function TransactionComponent() {
