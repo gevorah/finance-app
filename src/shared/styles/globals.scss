@@ -186,6 +186,12 @@ textarea {
   opacity: 1;
 }
 
+ol,
+ul,
+menu {
+  list-style: none;
+}
+
 /** Mixin */
 @mixin flex($justify: center, $align: center, $direction: row, $wrap: nowrap) {
   display: flex;
