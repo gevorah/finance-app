@@ -17,6 +17,7 @@ import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 
 export default function AddTransaction() {
@@ -24,6 +25,7 @@ export default function AddTransaction() {
     resolver: zodResolver(transactionSchema),
   });
   const { addTransaction } = useTransactionStore();
+  const router = useRouter();
   const onSubmit: SubmitHandler<TransactionValues> = (data) => {
     addTransaction({
       type: data.type,
@@ -37,7 +39,7 @@ export default function AddTransaction() {
   return (
     <main className="add-transaction-container">
       <div className="back-section">
-        <Button variant={'secondary'} size={'small'}>
+        <Button variant={'secondary'} size={'small'} onPress={() => router.back()}>
           <ArrowLeft /> <span>Back</span>
         </Button>
       </div>

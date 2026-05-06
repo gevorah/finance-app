@@ -5,20 +5,21 @@ import './TransactionDetails.scss';
 import { Button } from '@/shared/components/ui/button';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { ArrowLeft } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
 
 export default function TransactionDetails() {
   const { transactions } = useTransactionStore();
   const { id } = useParams();
+  const router = useRouter();
   const transaction = transactions.find((t) => t.id === id);
   if (!transaction) return <p>Transaction not found.</p>;
 
   return (
     <main>
       <div className="back-section">
-        <Button variant={'secondary'} size={'small'}>
+        <Button variant={'secondary'} size={'small'} onPress={() => router.back()}>
           <ArrowLeft /> <span>Back</span>
         </Button>
       </div>
