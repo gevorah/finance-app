@@ -17,3 +17,8 @@ export interface Transaction {
   updatedAt: string;
   paymentMethod?: PaymentMethod;
 }
+
+export type TransactionInput = Omit<
+  Transaction,
+  'id' | 'createdAt' | 'updatedAt'
+>;

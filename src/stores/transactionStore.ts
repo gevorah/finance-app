@@ -1,14 +1,13 @@
 import { CATEGORY_TYPES } from '@/entities/category';
-import { Transaction } from '@/entities/transaction';
+import { Transaction, TransactionInput } from '@/entities/transaction';
 import { CalendarDate } from '@internationalized/date';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface TransactionStore {
   transactions: Transaction[];
-  addTransaction: (
-    transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>,
-  ) => void;
+  addTransaction: (transaction: TransactionInput) => void;
+  updateTransaction: (id: string, changes: Partial<TransactionInput>) => void;
   deleteTransaction: (id: string) => void;
 }
 
@@ -83,10 +82,18 @@ export const useTransactionStore = create<TransactionStore>()(
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
         })),
+        updateTransaction: (id, changes) =>
+    set((state) => ({
+      transactions: state.transactions.map((t) =>
+        t.id === id
+          ? { ...t, ...changes, updatedAt: new Date().toISOString() }
+          : t,
+      ),
+    })),
     }),
     {
       name: 'transaction-storage',
       storage: createJSONStorage(() => localStorage),
     },
   ),
-);
+)

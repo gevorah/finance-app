@@ -25,7 +25,7 @@ export default function TransactionDetails() {
   return (
     <main>
       <div className="back-section">
-        <Button variant={'secondary'} size={'small'}>
+        <Button variant={'secondary'} size={'small'} onPress={() => router.back()}>
           <ArrowLeft /> <span>Back</span>
         </Button>
       </div>
