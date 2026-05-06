@@ -1,21 +1,24 @@
-import "./Transaction.scss";
+'use client';
 
+import "./Transaction.scss";
 import { Button } from '@/shared/components/ui/button';
 import { Funnel } from 'lucide-react';
-import { CATEGORY_TYPES, Transaction } from './types';
 import TransactionList from "./transaction-list/TransactionList";
+import { useState } from "react";
 
 export default function TransactionComponent() {
+  const [filter, setFilter] = useState<string>('all');
+
   return (
     <main>
       <div className="options">
-        <Button variant={'secondary'} border={true} size={'medium'} active={true}>
+        <Button variant={'secondary'} border={true} size={'medium'} onClick={() => setFilter('all')}>
           All
         </Button>
-        <Button variant={'secondary'} border={true} size={'medium'}>
+        <Button variant={'secondary'} border={true} size={'medium'} onClick={() => setFilter('income')}>
           Income
         </Button>
-        <Button variant={'secondary'} border={true} size={'medium'}>
+        <Button variant={'secondary'} border={true} size={'medium'} onClick={() => setFilter('expense')}>
           Expense
         </Button>
         <Button variant={'secondary'} border={true} size={'medium'}>
@@ -23,7 +26,7 @@ export default function TransactionComponent() {
         </Button>
       </div>
       <div className="transaction-list">
-        <TransactionList />
+        <TransactionList filter={filter} />
       </div>
     </main>
   );

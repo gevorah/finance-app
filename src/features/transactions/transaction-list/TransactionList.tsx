@@ -7,17 +7,18 @@ import './TransactionList.scss';
 import { useTransactionStore } from '@/stores/transactionStore';
 import Link from 'next/link';
 
-/* interface TransactionListProps{
-    transactions: Transaction[];
-} */
+interface TransactionListProps{
+  filter?: string;
+}
 
-export default function TransactionList() {
+export default function TransactionList({ filter }: TransactionListProps) {
   const { transactions } = useTransactionStore();
+  const filteredTransactions = filter === 'all' ? transactions : transactions.filter(t => t.type === filter);
   return (
     <section>
-      {transactions.map((transaction) => (
+      {filteredTransactions.map((transaction) => (
         <Link href={`/transactions/${transaction.id}`} key={transaction.id}>
-          <TransactionCard key={transaction.id} transaction={transaction} />
+          <TransactionCard transaction={transaction} />
         </Link>
       ))}
     </section>
