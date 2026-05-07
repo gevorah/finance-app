@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
+import Link from 'next/link';
 
 export default function TransactionDetails() {
   const { transactions, deleteTransaction } = useTransactionStore();
@@ -48,7 +49,7 @@ export default function TransactionDetails() {
             Category: {transaction.category}
           </p>
           <p className="transaction-information__row">
-            Date: {transaction.date.toString()}
+            Date: {transaction.date}
           </p>
           <p className="transaction-information__row">Payment:</p>
         </div>
@@ -73,9 +74,11 @@ export default function TransactionDetails() {
             Delete
           </Button>
         </Dialog>
+        <Link href={`/transactions/${transaction.id}/edit/`} key={transaction.id}>
         <Button variant={'primary'} size={'medium'}>
           Edit
         </Button>
+        </Link>
       </div>
     </main>
   );

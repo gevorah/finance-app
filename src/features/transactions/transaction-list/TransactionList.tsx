@@ -1,22 +1,20 @@
-'use client';
-
 import { TransactionCard } from '@/features/metrics/TransactionCard';
 
 import './TransactionList.scss';
 
-import { useTransactionStore } from '@/stores/transactionStore';
+import { Transaction } from '@/entities/transaction';
 import Link from 'next/link';
 
-interface TransactionListProps{
-  filter?: string;
+interface TransactionListProps {
+  transactions: Transaction[];
 }
 
-export default function TransactionList({ filter }: TransactionListProps) {
-  const { transactions } = useTransactionStore();
-  const filteredTransactions = filter === 'all' ? transactions : transactions.filter(t => t.type === filter);
+export default function TransactionList({
+  transactions,
+}: TransactionListProps) {
   return (
     <section>
-      {filteredTransactions.map((transaction) => (
+      {transactions.map((transaction) => (
         <Link href={`/transactions/${transaction.id}`} key={transaction.id}>
           <TransactionCard transaction={transaction} />
         </Link>
