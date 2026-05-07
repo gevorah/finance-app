@@ -1,0 +1,54 @@
+@use '../../../shared/styles/globals.scss' as *;
+
+.transaction-form {
+  @include flex(center, normal, column);
+  gap: var(--spacing-4);
+
+  &__category {
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    display: block;
+  }
+}
+
+.form-container {
+  &__title {
+    text-align: center;
+    margin-bottom: var(--spacing-6);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+.buttons-container {
+  @include flex(center, normal, row);
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+
+  &__btn-cancel {
+    flex: 1;
+  }
+  &__btn-save {
+    flex: 2;
+  }
+}
+
+.type-toggle {
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-1);
+
+  .toggle-expense,
+  .toggle-income {
+    flex: 1;
+  }
+
+  .toggle-expense[data-selected] {
+    background-color: var(--persian-rose-900);
+    color: var(--persian-rose-400);
+  }
+
+  .toggle-income[data-selected] {
+    background-color: var(--river-blue-900);
+    color: var(--river-blue-400);
+  }
+}
