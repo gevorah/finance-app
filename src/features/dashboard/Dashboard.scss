@@ -1,0 +1,35 @@
+@use '../../shared/styles/globals.scss' as *;
+
+.balance-cards {
+  @include desktop {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-4);
+  }
+}
+.transaction-header {
+  @include flex(space-between);
+  margin-top: var(--spacing-6);
+  margin-bottom: var(--spacing-3);
+  &__title {
+    font-size: var(--text-md);
+    font-weight: var(--font-weight-semibold);
+  }
+  &__link {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary-muted);
+  }
+}
+
+.metrics {
+  @include flex(space-between);
+  margin-top: var(--spacing-4);
+  gap: var(--spacing-3);
+  @include desktop {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 0;
+  }
+}
