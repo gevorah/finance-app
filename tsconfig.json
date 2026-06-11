@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/features/charts/spending-chart"  ],
   "exclude": ["node_modules"]
 }

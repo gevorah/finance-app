@@ -1,25 +1,27 @@
+import { CategoryType } from '@/entities/category';
 import { Card } from '@/shared/components/ui/card';
-import { getSpendingByCategory } from '@/stores/selectors';
 
 import "./SpendingChart.scss";
 
-import { useTransactionStore } from '@/stores/transactionStore';
 import { Legend, Pie, PieChart } from 'recharts';
 
 import CardChart from '../card-chart/CardChart';
 
-export function SpendingChart() {
-  const COLORS = [
-    '#f06bb8',
-    '#b8bac2',
-    '#7b76f0',
-    '#5fa6f2',
-    '#9966ff',
-    '#ff9f40',
-    '#c9cbcf',
-  ];
-  const { transactions } = useTransactionStore();
-  const spendingByCategory = getSpendingByCategory(transactions);
+const COLORS = [
+  '#f06bb8',
+  '#b8bac2',
+  '#7b76f0',
+  '#5fa6f2',
+  '#9966ff',
+  '#ff9f40',
+  '#c9cbcf',
+];
+
+interface SpendingChartProps {
+  data: Record<CategoryType, number>;
+}
+
+export function SpendingChart({ data: spendingByCategory }: SpendingChartProps) {
   const today = new Date().toLocaleDateString('en-US', { month: 'long' });
   const data = Object.entries(spendingByCategory).map(
     ([category, amount], index) => ({

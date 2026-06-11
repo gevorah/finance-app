@@ -1,9 +1,7 @@
 import { Card } from '@/shared/components/ui/card';
-import { getmonthIncomeExpense } from '@/stores/selectors';
 
 import './ComparisonChart.scss';
 
-import { useTransactionStore } from '@/stores/transactionStore';
 import {
   Bar,
   BarChart,
@@ -15,11 +13,11 @@ import {
 } from 'recharts';
 import CardChart from '../card-chart/CardChart';
 
-export function ComparisonChart() {
-  const { transactions } = useTransactionStore();
+interface ComparisonChartProps {
+  data: { monthText: string; income: number; expenses: number }[];
+}
 
-  const incomevsExpenses = getmonthIncomeExpense(transactions, new Date(), 6);
-
+export function ComparisonChart({ data }: ComparisonChartProps) {
   return (
     <Card className="chart-container">
         <CardChart title="Income vs Expenses" date="6 months">
@@ -31,7 +29,7 @@ export function ComparisonChart() {
           aspectRatio: 1.618,
         }}
         responsive
-        data={incomevsExpenses}
+        data={data}
         margin={{
           top: 5,
           right: 0,

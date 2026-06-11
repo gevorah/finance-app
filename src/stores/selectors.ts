@@ -31,11 +31,13 @@ export function monthOverMonthExpenses(
   month: number,
 ): number {
   const actualMonth = getMonthlyExpenses(transactions, year, month);
+  const [prevYear, prevMonth] = month === 1 ? [year - 1, 12] : [year, month - 1];
   const previousMonthExpenses = getMonthlyExpenses(
     transactions,
-    year,
-    month - 1,
+    prevYear,
+    prevMonth,
   );
+  if (previousMonthExpenses === 0) return 0;
   return ((actualMonth - previousMonthExpenses) / previousMonthExpenses) * 100;
 }
 
@@ -45,7 +47,9 @@ export function monthOverMonthIncome(
   month: number,
 ): number {
   const actualMonth = getMonthlyIncome(transactions, year, month);
-  const previousMonthIncome = getMonthlyIncome(transactions, year, month - 1);
+  const [prevYear, prevMonth] = month === 1 ? [year - 1, 12] : [year, month - 1];
+  const previousMonthIncome = getMonthlyIncome(transactions, prevYear, prevMonth);
+  if (previousMonthIncome === 0) return 0;
   return ((actualMonth - previousMonthIncome) / previousMonthIncome) * 100;
 }
 
@@ -84,7 +88,7 @@ export function getSpendingByCategory(
     );
 }
 
-export function getmonthIncomeExpense(
+export function getMonthIncomeExpense(
   transactions: Transaction[],
   currentDate: Date,
   amountMonth: number,

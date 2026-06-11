@@ -1,17 +1,16 @@
 import { Card } from '@/shared/components/ui/card';
-import { getWeeklySpending } from '@/stores/selectors';
 
 import './WeeklySpendingChart.scss';
 
-import { useTransactionStore } from '@/stores/transactionStore';
 import { Area, AreaChart, XAxis } from 'recharts';
 
 import CardChart from '../card-chart/CardChart';
 
-export function WeeklySpendingChart() {
-  const { transactions } = useTransactionStore();
-  const weeklySpending = getWeeklySpending(transactions, new Date());
+interface WeeklySpendingChartProps {
+  data: { day: number; shortDayName: string; dayTransactions: number }[];
+}
 
+export function WeeklySpendingChart({ data }: WeeklySpendingChartProps) {
   return (
     <Card className="chart-container">
       <CardChart title="Weekly Spending" date="Last 7 days">
@@ -23,7 +22,7 @@ export function WeeklySpendingChart() {
             aspectRatio: 1.618,
           }}
           responsive
-          data={weeklySpending}
+          data={data}
           margin={{
             top: 5,
             right: 0,
