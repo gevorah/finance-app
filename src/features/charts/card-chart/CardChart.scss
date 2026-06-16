@@ -1,0 +1,16 @@
+@use '../../../shared/styles/globals.scss' as *;
+
+.chart-header {
+  @include flex(space-between, center);
+  &__title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-bold);
+  }
+  &__date {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    background: var(--color-surface-elevated);
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--radius-sm);
+  }
+}

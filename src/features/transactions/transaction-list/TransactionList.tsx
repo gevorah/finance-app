@@ -13,7 +13,7 @@ export default function TransactionList({
   transactions,
 }: TransactionListProps) {
   return (
-    <section>
+    <section className="transaction-list">
       {transactions.map((transaction) => (
         <Link href={`/transactions/${transaction.id}`} key={transaction.id}>
           <TransactionCard transaction={transaction} />

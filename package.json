@@ -19,6 +19,7 @@
     "react-aria-components": "^1.15.1",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.70.0",
+    "recharts": "^3.8.1",
     "zod": "^4.3.5",
     "zustand": "^5.0.11"
   },

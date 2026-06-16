@@ -5,7 +5,18 @@
   min-height: 100vh;
 }
 
+.app-header {
+  visibility: hidden;
+  @include mobile {
+    visibility: visible;
+  }
+}
 .app-content {
   flex: 1;
   padding: var(--spacing-4);
+  padding-top: calc(var(--spacing-4) + 78px);
+  @include desktop{
+    padding: var(--spacing-6);
+    padding-top: calc(var(--spacing-1) + 78px);
+  }
 }
