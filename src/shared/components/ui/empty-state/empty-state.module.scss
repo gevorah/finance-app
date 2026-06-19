@@ -1,0 +1,32 @@
+@use '../../../styles/mixins.scss' as *;
+
+.root {
+  @include flex(center, center, column);
+  gap: var(--spacing-3);
+  padding: var(--spacing-8) var(--spacing-5);
+  text-align: center;
+}
+
+.icon {
+  @include flex(center, center);
+  width: 56px;
+  height: 56px;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-full);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: 36ch;
+}
+
+.action {
+  margin-top: var(--spacing-2);
+}

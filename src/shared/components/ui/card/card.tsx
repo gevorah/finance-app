@@ -1,12 +1,13 @@
 import './card.scss';
 
 import { ReactNode } from 'react';
-import { VariantType } from '@/features/transactions';
+
+type CardVariant = 'primary' | 'secondary' | 'tertiary';
 
 interface CardProps {
   children: ReactNode;
   className?: string;
-  type?: VariantType;
+  type?: CardVariant;
 }
 
 export function Card({ children, className, type = 'secondary' }: CardProps) {
