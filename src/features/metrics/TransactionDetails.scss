@@ -1,4 +1,4 @@
-@use '../../shared/styles/globals.scss' as *;
+@use 'shared/styles/mixins' as *;
 
 .transaction-header {
   //@include flex(center, center, column);

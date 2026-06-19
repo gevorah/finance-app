@@ -1,3 +1,8 @@
+$mobile: 640px;
+$tablet: 768px;
+$desktop: 1024px;
+$wide: 1280px;
+
 @mixin flex($justify: center, $align: center, $direction: row, $wrap: nowrap) {
   display: flex;
   flex-direction: $direction;

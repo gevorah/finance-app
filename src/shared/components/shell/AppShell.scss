@@ -1,4 +1,4 @@
-@use '../../styles/globals.scss' as *;
+@use 'shared/styles/mixins' as *;
 
 .app-shell {
   @include flex(flex-start, normal);

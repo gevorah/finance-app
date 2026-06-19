@@ -1,0 +1,7 @@
+@use 'shared/styles/animations' as *;
+
+.root {
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-md);
+  @include pulse;
+}

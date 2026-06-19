@@ -1,0 +1,54 @@
+@use 'shared/styles/mixins' as *;
+
+.dashboard-skeleton {
+  &__balance-row {
+    @include desktop {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+    }
+  }
+
+  &__balance {
+    height: 140px;
+    margin-bottom: var(--spacing-3);
+
+    @include desktop {
+      margin-bottom: 0;
+    }
+  }
+
+  &__metrics {
+    @include flex(space-between);
+    gap: var(--spacing-3);
+
+    @include desktop {
+      grid-column: span 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  &__metric {
+    height: 100px;
+    flex: 1;
+  }
+
+  &__charts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-4);
+  }
+
+  &__chart {
+    height: 200px;
+  }
+
+  &__section-title {
+    height: 16px;
+    width: 180px;
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-3);
+  }
+}
