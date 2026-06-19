@@ -78,22 +78,22 @@ export const useTransactionStore = create<TransactionStore>()(
             },
           ],
         })),
+      updateTransaction: (id, changes) =>
+        set((state) => ({
+          transactions: state.transactions.map((t) =>
+            t.id === id
+              ? { ...t, ...changes, updatedAt: new Date().toISOString() }
+              : t,
+          ),
+        })),
       deleteTransaction: (id) =>
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
         })),
-        updateTransaction: (id, changes) =>
-    set((state) => ({
-      transactions: state.transactions.map((t) =>
-        t.id === id
-          ? { ...t, ...changes, updatedAt: new Date().toISOString() }
-          : t,
-      ),
-    })),
     }),
     {
       name: 'transaction-storage',
       storage: createJSONStorage(() => localStorage),
     },
   ),
-)
+);

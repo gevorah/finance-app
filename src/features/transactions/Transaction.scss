@@ -1,5 +1,14 @@
 @use 'shared/styles/mixins' as *;
 
+.page-header {
+    @include flex(flex-end, center);
+    margin-bottom: var(--spacing-4);
+
+    @include mobile {
+        display: none;
+    }
+}
+
 .options{
     @include flex();
     gap: var(--spacing-2);

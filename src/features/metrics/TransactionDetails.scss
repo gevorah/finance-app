@@ -26,6 +26,14 @@
   &__amount {
     font-size: var(--text-4xl);
     font-weight: var(--font-weight-bold);
+
+    &--income {
+      color: var(--color-success-border);
+    }
+
+    &--expense {
+      color: var(--color-danger-border);
+    }
   }
 }
 

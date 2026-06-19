@@ -4,8 +4,11 @@ import './TransactionDetails.scss';
 
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
+import { EmptyState } from '@/shared/components/ui/empty-state';
+import { formatCurrency } from '@/shared/lib/currency';
+import { formatDateLong } from '@/shared/lib/date';
 import { useTransactionStore } from '@/stores/transactionStore';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
@@ -16,7 +19,28 @@ export default function TransactionDetails() {
   const { id } = useParams();
   const router = useRouter();
   const transaction = transactions.find((t) => t.id === id);
-  if (!transaction) return <p>Transaction not found.</p>;
+
+  if (!transaction) {
+    return (
+      <EmptyState
+        icon={<SearchX size={28} />}
+        title="Transaction not found"
+        description="This transaction may have been deleted, or the link is incorrect."
+        action={
+          <Button
+            variant="secondary"
+            size="small"
+            onPress={() => router.back()}
+          >
+            <ArrowLeft /> <span>Back</span>
+          </Button>
+        }
+      />
+    );
+  }
+
+  const signedAmount =
+    transaction.type === 'income' ? transaction.amount : -transaction.amount;
 
   const handleDelete = () => {
     deleteTransaction(transaction.id);
@@ -26,18 +50,28 @@ export default function TransactionDetails() {
   return (
     <main>
       <div className="back-section">
-        <Button variant={'secondary'} size={'small'} onPress={() => router.back()}>
+        <Button
+          variant={'secondary'}
+          size={'small'}
+          onPress={() => router.back()}
+        >
           <ArrowLeft /> <span>Back</span>
         </Button>
       </div>
       <section className="transaction-details">
         <div className="details-header">
-          <div className="transaction-icon">
+          <div
+            className={`transaction-icon transaction-icon--${transaction.type}`}
+          >
             {getCategoryIcon(transaction.category, 28)}
           </div>
           <h1 className="details-header__title">{transaction.description}</h1>
           <p className="details-header__category">{transaction.category}</p>
-          <p className="details-header__amount">${transaction.amount}</p>
+          <p
+            className={`details-header__amount details-header__amount--${transaction.type}`}
+          >
+            {formatCurrency(signedAmount, { showSign: true })}
+          </p>
         </div>
 
         <div className="transaction-information">
@@ -49,7 +83,7 @@ export default function TransactionDetails() {
             Category: {transaction.category}
           </p>
           <p className="transaction-information__row">
-            Date: {transaction.date}
+            Date: {formatDateLong(transaction.date)}
           </p>
           <p className="transaction-information__row">Payment:</p>
         </div>
@@ -75,9 +109,9 @@ export default function TransactionDetails() {
           </Button>
         </Dialog>
         <Link href={`/transactions/${transaction.id}/edit/`} key={transaction.id}>
-        <Button variant={'primary'} size={'medium'}>
-          Edit
-        </Button>
+          <Button variant={'primary'} size={'medium'}>
+            Edit
+          </Button>
         </Link>
       </div>
     </main>

@@ -15,9 +15,17 @@
     @include flex(center, center);
     width: 44px;
     height: 44px;
-    background: var(--color-danger-muted);
-    color: var(--color-danger-border);
-    border-radius: var(--radius-md);   
+    border-radius: var(--radius-md);
+
+    &--income{
+        background: var(--color-success-muted);
+        color: var(--color-success-border);
+    }
+
+    &--expense{
+        background: var(--color-danger-muted);
+        color: var(--color-danger-border);
+    }
 }
 
 .transaction-details{
@@ -34,8 +42,15 @@
 
 .transaction-amount{
     &__value{
-        color: var(--color-danger-border);
         font-weight: var(--font-weight-semibold);
+
+        &--income{
+            color: var(--color-success-border);
+        }
+
+        &--expense{
+            color: var(--color-danger-border);
+        }
     }
 
     &__date{

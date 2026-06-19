@@ -18,7 +18,7 @@ $wide: 1280px;
 }
 
 @mixin tablet {
-  @media ($tablet <= width <= ($desktop-1px)) {
+  @media ($tablet <= width <= ($desktop - 1px)) {
     @content;
   }
 }

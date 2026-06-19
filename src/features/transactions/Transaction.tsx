@@ -8,7 +8,8 @@ import { useHydrated } from '@/shared/hooks/useHydrated';
 import { getTransactionsByMonth } from '@/stores/selectors';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { getLocalTimeZone, today } from '@internationalized/date';
-import { Calendar, ChevronLeft, ChevronRight, Funnel } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Funnel, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import TransactionList from './transaction-list/TransactionList';
 import { TransactionListSkeleton } from './transaction-list/TransactionListSkeleton';
@@ -16,6 +17,7 @@ import { TransactionListSkeleton } from './transaction-list/TransactionListSkele
 export default function TransactionComponent() {
   const hydrated = useHydrated();
   const { transactions } = useTransactionStore();
+  const router = useRouter();
   const [filter, setFilter] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState(today(getLocalTimeZone()));
   const handleBackMonth = () => {
@@ -35,6 +37,15 @@ export default function TransactionComponent() {
       : transactionsByMonth.filter((t) => t.type === filter);
   return (
     <main>
+      <div className="page-header">
+        <Button
+          variant="primary"
+          size="medium"
+          onPress={() => router.push('/create')}
+        >
+          <Plus size={16} /> New transaction
+        </Button>
+      </div>
       <div className="options">
         <Button
           variant={'secondary'}

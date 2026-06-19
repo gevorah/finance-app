@@ -3,13 +3,9 @@
 .navbar{
     @include flex(space-between, center);
     width: 100%;
-    max-width: 100%;
     padding: var(--spacing-4);
     background-color: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
-    position: fixed;
-    top:0;
-    z-index: 100;
 }
 
 .navbar-info{
