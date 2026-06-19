@@ -7,7 +7,7 @@ import { ArrowDown, ArrowDownLeft, ArrowUp } from 'lucide-react';
 
 interface MetricCardProps {
   title: string;
-  value: string;
+  value: number;
   icon: TransactionType;
   trend?: string;
 }

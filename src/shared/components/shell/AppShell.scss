@@ -1,11 +1,32 @@
 @use '../../styles/globals.scss' as *;
 
+.app-shell-container {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app-header {
+  display: none;
+  flex-shrink: 0;
+  @include mobile {
+    display: block;
+  }
+}
+
 .app-shell {
   @include flex(flex-start, normal);
-  min-height: 100vh;
+  flex: 1;
+  overflow: hidden;
 }
 
 .app-content {
   flex: 1;
+  overflow-y: auto;
   padding: var(--spacing-4);
+
+  @include desktop {
+    padding: var(--spacing-6);
+  }
 }

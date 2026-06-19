@@ -6,14 +6,14 @@ import { Card } from '@/shared/components/ui/card';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 
 interface CardBalanceProps {
-  balance: string;
+  balance: number;
   stats?: Stats[];
 }
 
 interface Stats {
   icon: TransactionType;
   label: string;
-  value: string;
+  value: number;
 }
 
 export function BalanceCard({ balance, stats = [] }: CardBalanceProps) {

@@ -1,8 +1,7 @@
-$mobile-sm: 375px;
-$mobile: 428px;
+$mobile: 640px;
 $tablet: 768px;
 $desktop: 1024px;
-$wide: 1440px;
+$wide: 1280px;
 
 :root {
   --marguerite-100: #e1e5fe;
@@ -210,7 +209,7 @@ menu {
 }
 
 @mixin tablet {
-  @media ($tablet <= width <= ($desktop-1px)) {
+  @media ($tablet <= width <= ($desktop - 1px)) {
     @content;
   }
 }

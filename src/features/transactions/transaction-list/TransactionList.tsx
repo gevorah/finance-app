@@ -1,18 +1,21 @@
-'use client';
-
 import { TransactionCard } from '@/features/metrics/TransactionCard';
 
 import './TransactionList.scss';
 
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { Transaction } from '@/entities/transaction';
 import { Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function TransactionList() {
-  const { transactions } = useTransactionStore();
+interface TransactionListProps {
+  transactions: Transaction[];
+}
+
+export default function TransactionList({
+  transactions,
+}: TransactionListProps) {
   const router = useRouter();
 
   if (transactions.length === 0) {
@@ -35,7 +38,7 @@ export default function TransactionList() {
   }
 
   return (
-    <section>
+    <section className="transaction-list">
       {transactions.map((transaction) => (
         <Link href={`/transactions/${transaction.id}`} key={transaction.id}>
           <TransactionCard transaction={transaction} />

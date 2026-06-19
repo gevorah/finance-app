@@ -3,6 +3,7 @@
 import './TransactionDetails.scss';
 
 import { Button } from '@/shared/components/ui/button';
+import { Dialog } from '@/shared/components/ui/dialog';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDateLong } from '@/shared/lib/date';
@@ -11,9 +12,10 @@ import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
+import Link from 'next/link';
 
 export default function TransactionDetails() {
-  const { transactions } = useTransactionStore();
+  const { transactions, deleteTransaction } = useTransactionStore();
   const { id } = useParams();
   const router = useRouter();
   const transaction = transactions.find((t) => t.id === id);
@@ -39,6 +41,11 @@ export default function TransactionDetails() {
 
   const signedAmount =
     transaction.type === 'income' ? transaction.amount : -transaction.amount;
+
+  const handleDelete = () => {
+    deleteTransaction(transaction.id);
+    router.push('/transactions');
+  };
 
   return (
     <main>
@@ -82,12 +89,30 @@ export default function TransactionDetails() {
         </div>
       </section>
       <div className="btns-container">
-        <Button variant={'primary'} size={'medium'}>
-          Delete
-        </Button>
-        <Button variant={'primary'} size={'medium'}>
-          Edit
-        </Button>
+        <Dialog
+          trigger={
+            <Button variant={'primary'} size={'medium'}>
+              Delete
+            </Button>
+          }
+          title={'Delete Transaction?'}
+          description={
+            'Are you sure you want to delete this transaction? This action cannot be undone.'
+          }
+          category={'food'}
+        >
+          <Button variant={'secondary'} size={'medium'}>
+            Edit
+          </Button>
+          <Button variant={'primary'} size={'medium'} onClick={handleDelete}>
+            Delete
+          </Button>
+        </Dialog>
+        <Link href={`/transactions/${transaction.id}/edit/`} key={transaction.id}>
+          <Button variant={'primary'} size={'medium'}>
+            Edit
+          </Button>
+        </Link>
       </div>
     </main>
   );

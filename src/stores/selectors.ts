@@ -7,6 +7,52 @@ export function getTotalIncome(transactions: Transaction[]): number {
     .reduce((sum, t) => sum + t.amount, 0);
 }
 
+export function getMonthlyIncome(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): number {
+  const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
+  return getTotalIncome(monthlyTransactions);
+}
+
+export function getMonthlyExpenses(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): number {
+  const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
+  return getTotalExpenses(monthlyTransactions);
+}
+
+export function monthOverMonthExpenses(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): number {
+  const actualMonth = getMonthlyExpenses(transactions, year, month);
+  const [prevYear, prevMonth] = month === 1 ? [year - 1, 12] : [year, month - 1];
+  const previousMonthExpenses = getMonthlyExpenses(
+    transactions,
+    prevYear,
+    prevMonth,
+  );
+  if (previousMonthExpenses === 0) return 0;
+  return ((actualMonth - previousMonthExpenses) / previousMonthExpenses) * 100;
+}
+
+export function monthOverMonthIncome(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): number {
+  const actualMonth = getMonthlyIncome(transactions, year, month);
+  const [prevYear, prevMonth] = month === 1 ? [year - 1, 12] : [year, month - 1];
+  const previousMonthIncome = getMonthlyIncome(transactions, prevYear, prevMonth);
+  if (previousMonthIncome === 0) return 0;
+  return ((actualMonth - previousMonthIncome) / previousMonthIncome) * 100;
+}
+
 export function getTotalExpenses(transactions: Transaction[]): number {
   return transactions
     .filter((t) => t.type === 'expense')
@@ -40,6 +86,51 @@ export function getSpendingByCategory(
       },
       {} as Record<CategoryType, number>,
     );
+}
+
+export function getMonthIncomeExpense(
+  transactions: Transaction[],
+  currentDate: Date,
+  amountMonth: number,
+) {
+  const monthIncomeExpense = Array.from({ length: amountMonth }).map(
+    (_, index) => {
+      const date = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - index,
+      );
+      const month = date.getMonth() + 1;
+      const monthText = date.toLocaleString('default', { month: 'short' });
+      const year = date.getFullYear();
+      const expenses = getMonthlyExpenses(transactions, year, month);
+      const income = getMonthlyIncome(transactions, year, month);
+      return { monthText, income, expenses };
+    },
+  );
+
+  return monthIncomeExpense;
+}
+
+export function getWeeklySpending(
+  transactions: Transaction[],
+  currentDate: Date,
+) {
+  const weeklySpending = Array.from({ length: 7 }).map((_, index) => {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate() - index,
+    );
+    const day = date.getDay();
+    const shortDayName = date.toLocaleDateString('en-US', {
+      weekday: 'short',
+    });
+    const dayTransactions = getTotalExpenses(
+      transactions.filter((t) => t.date === date.toISOString().split('T')[0]),
+    );
+    return { day, shortDayName, dayTransactions };
+  });
+  return weeklySpending;
 }
 
 export function getRecentTransactions(
