@@ -1,0 +1,57 @@
+@use 'shared/styles/mixins' as *;
+
+.transaction-list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.transaction-card-skeleton {
+  @include flex(flex-start, center);
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+  }
+
+  &__details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  &__title {
+    height: 14px;
+    width: 60%;
+  }
+
+  &__subtitle {
+    height: 12px;
+    width: 40%;
+  }
+
+  &__amount {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    align-items: flex-end;
+  }
+
+  &__value {
+    height: 14px;
+    width: 60px;
+  }
+
+  &__date {
+    height: 12px;
+    width: 40px;
+  }
+}

@@ -4,6 +4,7 @@ import './Transaction.scss';
 
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
+import { useHydrated } from '@/shared/hooks/useHydrated';
 import { getTransactionsByMonth } from '@/stores/selectors';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { getLocalTimeZone, today } from '@internationalized/date';
@@ -11,8 +12,10 @@ import { Calendar, ChevronLeft, ChevronRight, Funnel, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 
 import TransactionList from './transaction-list/TransactionList';
+import { TransactionListSkeleton } from './transaction-list/TransactionListSkeleton';
 
 export default function TransactionComponent() {
+  const hydrated = useHydrated();
   const { transactions } = useTransactionStore();
   const router = useRouter();
   const [filter, setFilter] = useState<string>('all');
@@ -92,7 +95,11 @@ export default function TransactionComponent() {
         </Button>
       </div>
       <div className="transaction-list">
-        <TransactionList transactions={filteredTransactions} />
+        {hydrated ? (
+          <TransactionList transactions={filteredTransactions} />
+        ) : (
+          <TransactionListSkeleton />
+        )}
       </div>
     </main>
   );

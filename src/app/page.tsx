@@ -1,9 +1,5 @@
-import Dashboard from "@/features/dashboard/Dashboard";
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <div className="page">
-      <Dashboard />
-    </div>
-  );
+  redirect('/dashboard');
 }

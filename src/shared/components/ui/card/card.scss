@@ -1,4 +1,4 @@
-@use '../../../styles/globals.scss' as *;
+@use 'shared/styles/mixins' as *;
 
 .card {
   border-radius: var(--radius-lg);

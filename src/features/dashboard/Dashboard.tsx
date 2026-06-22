@@ -6,6 +6,7 @@ import { SpendingChart } from '@/features/charts/spending-chart/SpendingChart';
 import { BalanceCard } from '@/features/metrics/BalanceCard';
 import { MetricCard } from '@/features/metrics/MetricCard';
 import TransactionList from '@/features/transactions/transaction-list/TransactionList';
+import { useHydrated } from '@/shared/hooks/useHydrated';
 import {
   getBalance,
   getMonthIncomeExpense,
@@ -24,9 +25,13 @@ import Link from 'next/link';
 
 import { ComparisonChart } from '../charts/comparison-chart/ComparisonChart';
 import { WeeklySpendingChart } from '../charts/weekly-spending-chart/WeeklySpendingChart';
+import { DashboardSkeleton } from './DashboardSkeleton';
 
 export default function Dashboard() {
+  const hydrated = useHydrated();
   const { transactions } = useTransactionStore();
+
+  if (!hydrated) return <DashboardSkeleton />;
 
   const now = new Date();
   const year = now.getFullYear();
