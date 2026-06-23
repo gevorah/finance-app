@@ -4,11 +4,19 @@ import './Transaction.scss';
 
 import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { getTransactionsByMonth } from '@/stores/selectors';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { getLocalTimeZone, today } from '@internationalized/date';
-import { Calendar, ChevronLeft, ChevronRight, Funnel, Plus } from 'lucide-react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Funnel,
+  Plus,
+  Search,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import TransactionList from './transaction-list/TransactionList';
@@ -19,6 +27,8 @@ export default function TransactionComponent() {
   const { transactions } = useTransactionStore();
   const router = useRouter();
   const [filter, setFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedQuery = useDebounce(searchQuery, 300);
   const [selectedDate, setSelectedDate] = useState(today(getLocalTimeZone()));
   const handleBackMonth = () => {
     setSelectedDate(selectedDate.subtract({ months: 1 }));
@@ -31,10 +41,14 @@ export default function TransactionComponent() {
     selectedDate.year,
     selectedDate.month,
   );
-  const filteredTransactions =
+  const byType =
     filter === 'all'
       ? transactionsByMonth
       : transactionsByMonth.filter((t) => t.type === filter);
+  const trimmedQuery = debouncedQuery.trim().toLowerCase();
+  const filteredTransactions = trimmedQuery
+    ? byType.filter((t) => t.description.toLowerCase().includes(trimmedQuery))
+    : byType;
   return (
     <main>
       <div className="page-header">
@@ -45,6 +59,17 @@ export default function TransactionComponent() {
         >
           <Plus size={16} /> New transaction
         </Button>
+      </div>
+      <div className="search">
+        <Search size={16} className="search__icon" />
+        <input
+          type="text"
+          placeholder="Search transactions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search__input"
+          aria-label="Search transactions by description"
+        />
       </div>
       <div className="options">
         <Button
