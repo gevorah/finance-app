@@ -9,6 +9,41 @@
     }
 }
 
+.search {
+    position: relative;
+    margin-bottom: var(--spacing-3);
+
+    &__icon {
+        position: absolute;
+        left: var(--spacing-3);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-muted);
+        pointer-events: none;
+    }
+
+    &__input {
+        width: 100%;
+        padding: var(--spacing-3) var(--spacing-3) var(--spacing-3) calc(var(--spacing-3) + 16px + var(--spacing-2));
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        color: var(--color-text-primary);
+        font-size: var(--text-sm);
+        font-family: inherit;
+        transition: border-color 0.15s ease;
+
+        &::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+    }
+}
+
 .options{
     @include flex();
     gap: var(--spacing-2);
