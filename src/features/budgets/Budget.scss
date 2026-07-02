@@ -1,0 +1,21 @@
+@use 'shared/styles/mixins' as *;
+
+.budget-list-header {
+  @include flex(space-between);
+
+  &__title {
+    font-size: var(--text-md);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__button {
+    @include flex();
+    gap: var(--spacing-2);
+    font-size: var(--text-xs);
+  }
+}
+
+.budget-list-items {
+  @include flex(normal, normal, column);
+  gap: var(--spacing-3);
+}

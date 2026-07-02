@@ -141,3 +141,10 @@ export function getRecentTransactions(
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, count);
 }
+
+export function getTopTransactions(
+  transactions: Transaction[],
+  count: number,
+): Transaction[]{
+  return [...transactions].sort((a, b) => b.amount - a.amount).slice(0, count);
+}

@@ -1,0 +1,41 @@
+@use 'shared/styles/mixins' as *;
+
+.budget-card {
+  @include flex(center, normal, column);
+}
+
+.budget-info {
+  @include flex(center, normal, column);
+  gap: var(--spacing-3);
+}
+
+.budget-header {
+  @include flex(space-between, center);
+  margin-bottom: var(--spacing-3);
+  &__title {
+    text-transform: uppercase;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary-muted);
+    letter-spacing: 0.05em;
+  }
+  &__remaining {
+    color: var(--color-text-secondary);
+  }
+}
+
+.budget-amount {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+  &__spent {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary-contrast);
+    margin-bottom: var(--spacing-4);
+  }
+}
+
+.budget-message {
+  color: var(--color-text-secondary);
+  text-align: center;
+}

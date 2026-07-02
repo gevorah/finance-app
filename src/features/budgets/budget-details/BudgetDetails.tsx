@@ -1,0 +1,114 @@
+'use client';
+
+import { getCategoryIcon } from '@/features/transactions/utils/getCategoryIcon';
+import Bar from '@/shared/components/ui/bar/bar';
+import { Button } from '@/shared/components/ui/button';
+import { Card } from '@/shared/components/ui/card';
+import { useBudgetStore } from '@/stores/budgetStore';
+import { ArrowLeft } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+
+import './BudgetDetails.scss';
+
+import { formatDate } from '@/shared/lib/date';
+import { getTopTransactions } from '@/stores/selectors';
+import { useTransactionStore } from '@/stores/transactionStore';
+
+export function BudgetDetails() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { budget } = useBudgetStore();
+  const { transactions } = useTransactionStore();
+  const budgetDetail = budget.find((item) => item.id === id);
+  const transactionsCategory = transactions.filter(
+    (t) => t.category === budgetDetail?.category,
+  );
+  const topTransactions = getTopTransactions(transactionsCategory, 3);
+
+  if (!budgetDetail) return null;
+
+  const spent = budgetDetail.spent ?? 0;
+  const percentage = Math.round((spent / budgetDetail.monthlyLimit) * 100);
+  const dailyAvg = Math.round(spent / 30);
+  const monthChange = '+15%';
+
+  return (
+    <main className="budget-details">
+      <div className="back-section">
+        <Button variant="secondary" size="small" onPress={() => router.back()}>
+          <ArrowLeft /> <span>Back</span>
+        </Button>
+      </div>
+
+      <section className="budget-header">
+        <div className="budget-header__icon">
+          {getCategoryIcon(budgetDetail.category, 28)}
+        </div>
+        <h2 className="budget-header__category">{budgetDetail.category}</h2>
+        <p className="budget-header__daily-avg">
+          ${dailyAvg.toLocaleString()}/day avg
+        </p>
+      </section>
+
+      <section className="budget-summary">
+        <h1 className="budget-summary__amounts">
+          <span className="budget-summary__spent">
+            ${spent.toLocaleString()}
+          </span>{' '}
+          / ${budgetDetail.monthlyLimit.toLocaleString()}
+        </h1>
+        <Bar percentage={percentage} />
+        <span className="budget-summary__change">
+          {monthChange} vs last month
+        </span>
+      </section>
+
+      <Card className="budget-info">
+        <h4 className="budget-info__title">DETAILS</h4>
+        <ul className="budget-info__list">
+          <li>
+            <span>Spent</span>
+            <span>${spent.toLocaleString()}</span>
+          </li>
+          <li>
+            <span>Budget</span>
+            <span>${budgetDetail.monthlyLimit.toLocaleString()}</span>
+          </li>
+          <li>
+            <span>Used</span>
+            <span>{percentage}%</span>
+          </li>
+          <li>
+            <span>Daily Average</span>
+            <span>${dailyAvg.toLocaleString()}/day avg</span>
+          </li>
+        </ul>
+      </Card>
+
+      <Card className="budget-transactions">
+        <h4 className="budget-transactions__title">TOP TRANSACTIONS</h4>
+        <div className="budget-transactions__list">
+          {topTransactions.map((transaction) => (
+            <div className="budget-transactions__item" key={transaction.id}>
+              <span className="budget-transactions__description">
+                {transaction.description} • {formatDate(transaction.date)}
+              </span>
+              <span className="budget-transactions__amount">
+                ${transaction.amount.toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Button
+        variant="primary"
+        size="large"
+        className="budget-details__edit-btn"
+        onPress={() => router.push(`/budgets/${id}/edit`)}
+      >
+        Edit Budget
+      </Button>
+    </main>
+  );
+}
