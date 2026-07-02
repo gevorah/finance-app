@@ -1,8 +1,8 @@
 import {
-  ChartNoAxesColumn,
   CreditCard,
   DollarSign,
   House,
+  RectangleHorizontal,
   Settings,
   type LucideIcon,
 } from 'lucide-react';
@@ -16,7 +16,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: House },
   { href: '/transactions', label: 'Transactions', icon: DollarSign },
-  { href: '/analytics', label: 'Analytics', icon: ChartNoAxesColumn },
+  { href: '/budgets', label: 'Budgets', icon: RectangleHorizontal },
   { href: '/debts', label: 'Debts', icon: CreditCard },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
