@@ -1,7 +1,9 @@
-export default function Dashboard() {
+import Debts from '@/features/debts/Debts';
+
+export default function Page() {
   return (
-    <main>
-      <h1>debts</h1>
-    </main>
+    <div>
+      <Debts />
+    </div>
   );
 }
