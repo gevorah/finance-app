@@ -1,29 +1,52 @@
+'use client';
+
 import { Card } from '@/shared/components/ui/card';
 
 import './BudgetCard.scss';
 
 import Bar from '@/shared/components/ui/bar/bar';
+import { getBudgetSummary } from '@/stores/selectors';
+import { useBudgetStore } from '@/stores/budgetStore';
+import { useTransactionStore } from '@/stores/transactionStore';
 
-interface BudgetCardProps{
-    monthlyBudget: number;
-    spent: number;
+function daysLeftInMonth(date: Date): number {
+  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  return lastDay - date.getDate();
+}
+
+function getSummaryMessage(percentage: number, daysLeft: number): string {
+  if (percentage > 100) return 'You are over budget this month.';
+  if (percentage >= 80) return `Careful — close to your limit with ${daysLeft} days left.`;
+  return `You are on track. ${daysLeft} days left this month.`;
 }
 
 export function BudgetCard() {
+  const { budget } = useBudgetStore();
+  const { transactions } = useTransactionStore();
+  const { spent, limit, remaining, percentage } = getBudgetSummary(
+    budget,
+    transactions,
+  );
+  const daysLeft = daysLeftInMonth(new Date());
+
   return (
     <Card type="primary" className="budget-card">
       <div className="budget-header">
         <h3 className="budget-header__title">MONTHLY BUDGET</h3>
-        <p className="budget-header__remaining">$900 remaining</p>
+        <p className="budget-header__remaining">
+          ${remaining.toLocaleString()} remaining
+        </p>
       </div>
       <section className="budget-info">
         <p className="budget-amount">
-          <span className="budget-amount__spent">$1000 </span>
-          of $2000
+          <span className="budget-amount__spent">
+            ${spent.toLocaleString()}{' '}
+          </span>
+          of ${limit.toLocaleString()}
         </p>
-        <Bar percentage={50} />
+        <Bar percentage={percentage} />
         <p className="budget-message">
-          You are on track. Budget left for 8 more days.
+          {getSummaryMessage(percentage, daysLeft)}
         </p>
       </section>
     </Card>

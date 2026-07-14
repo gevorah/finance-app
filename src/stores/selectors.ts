@@ -1,3 +1,4 @@
+import { Budget } from '@/entities/budget';
 import { CategoryType } from '@/entities/category';
 import { Transaction } from '@/entities/transaction';
 
@@ -147,4 +148,92 @@ export function getTopTransactions(
   count: number,
 ): Transaction[]{
   return [...transactions].sort((a, b) => b.amount - a.amount).slice(0, count);
+}
+
+export function getCategorySpendingPercentages(
+  transactions: Transaction[],
+): Record<CategoryType, number> {
+  const spendingByCategory = getSpendingByCategory(transactions);
+  const total = getTotalExpenses(transactions);
+  return Object.entries(spendingByCategory).reduce(
+    (acc, [category, amount]) => {
+      acc[category as CategoryType] =
+        total > 0 ? Math.round((amount / total) * 100) : 0;
+      return acc;
+    },
+    {} as Record<CategoryType, number>,
+  );
+}
+
+export function getBudgetSpent(
+  transactions: Transaction[],
+  category: CategoryType,
+  year: number,
+  month: number,
+): number {
+  const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
+  return getSpendingByCategory(monthlyTransactions)[category] ?? 0;
+}
+
+export interface BudgetProgress {
+  spent: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+  isOverBudget: boolean;
+}
+
+export function getBudgetProgress(
+  budget: Budget,
+  transactions: Transaction[],
+  refDate: Date = new Date(),
+): BudgetProgress {
+  const spent = getBudgetSpent(
+    transactions,
+    budget.category,
+    refDate.getFullYear(),
+    refDate.getMonth() + 1,
+  );
+  const limit = budget.monthlyLimit;
+  const remaining = limit - spent;
+  const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+  return { spent, limit, remaining, percentage, isOverBudget: spent > limit };
+}
+
+export function getNearLimitBudgets(
+  budgets: Budget[],
+  transactions: Transaction[],
+  threshold = 80,
+  refDate: Date = new Date(),
+): Budget[] {
+  return budgets.filter(
+    (b) => getBudgetProgress(b, transactions, refDate).percentage >= threshold,
+  );
+}
+
+export interface BudgetSummary {
+  spent: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+}
+
+export function getBudgetSummary(
+  budgets: Budget[],
+  transactions: Transaction[],
+  refDate: Date = new Date(),
+): BudgetSummary {
+  const totals = budgets.reduce(
+    (acc, budget) => {
+      const { spent, limit } = getBudgetProgress(budget, transactions, refDate);
+      acc.spent += spent;
+      acc.limit += limit;
+      return acc;
+    },
+    { spent: 0, limit: 0 },
+  );
+  const remaining = totals.limit - totals.spent;
+  const percentage =
+    totals.limit > 0 ? Math.round((totals.spent / totals.limit) * 100) : 0;
+  return { ...totals, remaining, percentage };
 }

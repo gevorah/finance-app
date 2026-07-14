@@ -1,15 +1,11 @@
-import Budget from "@/app/budgets/page";
 import { CategoryType } from "@/entities/category";
-import { ReactNode } from "react";
 
 export interface Budget {
     id: string;
     category:CategoryType;
     monthlyLimit: number;
-    spent?: number;
     createdAt: string;
     updatedAt: string;
-    icon?: ReactNode;
 }
 
 export type BudgetInput=Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>
