@@ -1,7 +1,8 @@
 'use client';
 
 import { Button } from '@/shared/components/ui/button';
-import { Plus } from 'lucide-react';
+import { EmptyState } from '@/shared/components/ui/empty-state';
+import { PiggyBank, Plus } from 'lucide-react';
 
 import { BudgetCard } from './budget-card/BudgetCard';
 
@@ -16,6 +17,27 @@ import BudgetCategoryCard from './budget-category-card/BudgetCategoryCard';
 export default function BudgetComponent() {
   const { budget } = useBudgetStore();
   const router = useRouter();
+  if (budget.length === 0) {
+    return (
+      <div className="budget-list">
+        <EmptyState
+          icon={<PiggyBank size={28} />}
+          title="No budgets yet"
+          description="Set a monthly limit per category and see how much you have left to spend."
+          action={
+            <Button
+              variant="primary"
+              size="small"
+              onPress={() => router.push('/budgets/create')}
+            >
+              Add budget
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="budget-list">
       <BudgetCard />
@@ -30,9 +52,9 @@ export default function BudgetComponent() {
         </Button>
       </section>
       <section className="budget-list-items">
-        {budget.map((item, key) => (
-          <Link href={`/budgets/${item.id}`} key={key}>
-            <BudgetCategoryCard budget={item} key={key} />
+        {budget.map((item) => (
+          <Link href={`/budgets/${item.id}`} key={item.id}>
+            <BudgetCategoryCard budget={item} />
           </Link>
         ))}
       </section>

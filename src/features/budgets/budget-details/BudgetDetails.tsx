@@ -11,7 +11,11 @@ import { useParams, useRouter } from 'next/navigation';
 import './BudgetDetails.scss';
 
 import { formatDate } from '@/shared/lib/date';
-import { getTopTransactions } from '@/stores/selectors';
+import {
+  getBudgetProgress,
+  getBudgetSpent,
+  getTopTransactions,
+} from '@/stores/selectors';
 import { useTransactionStore } from '@/stores/transactionStore';
 
 export function BudgetDetails() {
@@ -27,10 +31,26 @@ export function BudgetDetails() {
 
   if (!budgetDetail) return null;
 
-  const spent = budgetDetail.spent ?? 0;
-  const percentage = Math.round((spent / budgetDetail.monthlyLimit) * 100);
-  const dailyAvg = Math.round(spent / 30);
-  const monthChange = '+15%';
+  const now = new Date();
+  const { spent, percentage } = getBudgetProgress(budgetDetail, transactions, now);
+  const dailyAvg = Math.round(spent / now.getDate());
+
+  const [prevYear, prevMonth] =
+    now.getMonth() === 0
+      ? [now.getFullYear() - 1, 12]
+      : [now.getFullYear(), now.getMonth()];
+  const prevSpent = getBudgetSpent(
+    transactions,
+    budgetDetail.category,
+    prevYear,
+    prevMonth,
+  );
+  const change =
+    prevSpent > 0 ? Math.round(((spent - prevSpent) / prevSpent) * 100) : null;
+  const monthChange =
+    change === null
+      ? 'No spending last month'
+      : `${change >= 0 ? '+' : ''}${change}% vs last month`;
 
   return (
     <main className="budget-details">
@@ -58,9 +78,7 @@ export function BudgetDetails() {
           / ${budgetDetail.monthlyLimit.toLocaleString()}
         </h1>
         <Bar percentage={percentage} />
-        <span className="budget-summary__change">
-          {monthChange} vs last month
-        </span>
+        <span className="budget-summary__change">{monthChange}</span>
       </section>
 
       <Card className="budget-info">

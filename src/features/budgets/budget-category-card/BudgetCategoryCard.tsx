@@ -5,6 +5,9 @@ import { Card } from '@/shared/components/ui/card';
 
 import './BudgetCategoryCard.scss';
 
+import { getBudgetProgress } from '@/stores/selectors';
+import { useTransactionStore } from '@/stores/transactionStore';
+
 import { getBudgetMessage } from './getBudgetMessage';
 
 interface BudgetCategoryCardProps {
@@ -14,10 +17,11 @@ interface BudgetCategoryCardProps {
 export default function BudgetCategoryCard({
   budget,
 }: BudgetCategoryCardProps) {
-  const percentage = Math.round(
-    ((budget.spent ?? 0) / budget.monthlyLimit) * 100,
+  const { transactions } = useTransactionStore();
+  const { spent, percentage, remaining } = getBudgetProgress(
+    budget,
+    transactions,
   );
-  const remaining = budget.monthlyLimit - (budget.spent ?? 0);
   const { text } = getBudgetMessage(budget.category, percentage, remaining);
 
   return (
@@ -30,7 +34,7 @@ export default function BudgetCategoryCard({
           <h4 className="budget-category-info__category"> {budget.category}</h4>
           <p className="budget-category-amount">
             <span className="budget-category-amount__spent">
-              ${budget.spent?.toLocaleString()}{' '}
+              ${spent.toLocaleString()}{' '}
             </span>
             of ${budget.monthlyLimit.toLocaleString()}
           </p>
