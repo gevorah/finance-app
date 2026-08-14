@@ -1,5 +1,7 @@
 import { Money } from '@/shared/lib/money';
 
+import { DebtTerms } from './debt-terms';
+
 export const ACCOUNT_ROOTS = {
   ASSETS: 'assets',
   LIABILITIES: 'liabilities',
@@ -15,6 +17,11 @@ export const ACCOUNT_KINDS = {
   CHECKING: 'checking',
   SAVINGS: 'savings',
   CREDIT_CARD: 'credit_card',
+  LOAN: 'loan',
+  MORTGAGE: 'mortgage',
+  VEHICLE: 'vehicle',
+  STUDENT: 'student',
+  PERSONAL: 'personal',
 } as const;
 
 export type AccountKind = (typeof ACCOUNT_KINDS)[keyof typeof ACCOUNT_KINDS];
@@ -28,6 +35,9 @@ export interface Account {
   creditLimit?: Money;
   cutOffDay?: number;
   paymentDueDay?: number;
+  description?: string;
+  /** Only on liability accounts. */
+  debtTerms?: DebtTerms;
   archived: boolean;
   createdAt: string;
   updatedAt: string;
@@ -65,5 +75,23 @@ export const ACCOUNT_KIND_OPTIONS = [
   { id: ACCOUNT_KINDS.CASH, label: 'Cash' },
   { id: ACCOUNT_KINDS.CHECKING, label: 'Checking' },
   { id: ACCOUNT_KINDS.SAVINGS, label: 'Savings' },
-  { id: ACCOUNT_KINDS.CREDIT_CARD, label: 'Credit card' },
 ] as const;
+
+export const LIABILITY_KIND_OPTIONS = [
+  { id: ACCOUNT_KINDS.CREDIT_CARD, label: 'Credit card' },
+  { id: ACCOUNT_KINDS.LOAN, label: 'Loan' },
+  { id: ACCOUNT_KINDS.MORTGAGE, label: 'Mortgage' },
+  { id: ACCOUNT_KINDS.VEHICLE, label: 'Vehicle' },
+  { id: ACCOUNT_KINDS.STUDENT, label: 'Student' },
+  { id: ACCOUNT_KINDS.PERSONAL, label: 'Personal' },
+] as const;
+
+/** A credit card revolves; everything else that is owed is paid in installments. */
+export const LIABILITY_KIND_TO_PAYMENT_TYPE: Record<string, string> = {
+  [ACCOUNT_KINDS.CREDIT_CARD]: 'revolving',
+  [ACCOUNT_KINDS.LOAN]: 'installments',
+  [ACCOUNT_KINDS.MORTGAGE]: 'installments',
+  [ACCOUNT_KINDS.VEHICLE]: 'installments',
+  [ACCOUNT_KINDS.STUDENT]: 'installments',
+  [ACCOUNT_KINDS.PERSONAL]: 'flexible',
+};

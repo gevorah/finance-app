@@ -1,21 +1,21 @@
 import { DateValue } from 'react-aria-components';
 import { z } from 'zod';
 
-const requiredDate = (message: string) =>
-  z.custom<DateValue>((val) => val !== undefined && val !== null, {
-    error: message,
-  });
+import { ACCOUNT_KINDS } from './types';
 
-const dayOfMonthSchema = z
+const dayOfMonth = z
   .number()
   .int()
   .min(1, { error: 'Day should be between 1 and 31' })
   .max(31, { error: 'Day should be between 1 and 31' });
 
+const requiredDate = (message: string) =>
+  z.custom<DateValue>((val) => val !== undefined && val !== null, {
+    error: message,
+  });
+
 const interestSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('none'),
-  }),
+  z.object({ type: z.literal('none') }),
   z.object({
     type: z.literal('fixed'),
     rate: z.number().min(0, { error: 'Rate should be 0 or above' }),
@@ -38,9 +38,8 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
     totalInstallments: z.number().int().positive().optional(),
     paidInstallments: z.number().int().min(0).optional(),
     frequency: z.enum(['weekly', 'monthly', 'yearly', 'custom']),
-    nextPaymentDueDate: requiredDate(
-      'Next payment due date is required',
-    ).optional(),
+    nextPaymentDueDate: requiredDate('Next payment due date is required')
+      .optional(),
   }),
   z.object({
     type: z.literal('revolving'),
@@ -48,14 +47,8 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
       .number()
       .positive({ error: 'Minimum payment should be above 0' })
       .optional(),
-    statementBalance: z
-      .number()
-      .min(0, { error: 'Statement balance should be 0 or above' })
+    nextPaymentDueDate: requiredDate('Next payment due date is required')
       .optional(),
-    cutOffDay: dayOfMonthSchema.optional(),
-    nextPaymentDueDate: requiredDate(
-      'Next payment due date is required',
-    ).optional(),
   }),
   z.object({
     type: z.literal('flexible'),
@@ -63,35 +56,35 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
       .number()
       .positive({ error: 'Suggested payment should be above 0' })
       .optional(),
-    nextPaymentDueDate: requiredDate(
-      'Next payment due date is required',
-    ).optional(),
+    nextPaymentDueDate: requiredDate('Next payment due date is required')
+      .optional(),
   }),
 ]);
 
+/**
+ * The amount owed is the opening balance of the liability account, so the form
+ * asks for it once instead of asking for an original and a current amount.
+ */
 export const debtSchema = z.object({
-  creditorName: z.string({ error: 'Name is required' }),
-  type: z.enum([
-    'credit_card',
-    'loan',
-    'personal',
-    'mortgage',
-    'vehicle',
-    'student',
-    'other',
+  name: z.string().min(1, { error: 'Creditor is required' }),
+  kind: z.enum([
+    ACCOUNT_KINDS.CREDIT_CARD,
+    ACCOUNT_KINDS.LOAN,
+    ACCOUNT_KINDS.MORTGAGE,
+    ACCOUNT_KINDS.VEHICLE,
+    ACCOUNT_KINDS.STUDENT,
+    ACCOUNT_KINDS.PERSONAL,
   ]),
-  originalAmount: z
+  amountOwed: z.number().positive({ error: 'Amount owed should be above 0' }),
+  creditLimit: z
     .number()
-    .positive({ error: 'Original amount should be above 0' }),
-  currentBalance: z
-    .number()
-    .min(0, { error: 'Current balance should be 0 or above' })
+    .positive({ error: 'Credit limit should be above 0' })
     .optional(),
-  interest: interestSchema,
-  paymentTerms: paymentTermsSchema,
+  cutOffDay: dayOfMonth.optional(),
   startDate: requiredDate('Start date is required'),
   description: z.string().optional(),
-  priority: z.number().int().min(1).max(5).optional(),
+  interest: interestSchema,
+  paymentTerms: paymentTermsSchema,
 });
 
 export type DebtValues = z.infer<typeof debtSchema>;

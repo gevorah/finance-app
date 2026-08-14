@@ -10,7 +10,6 @@ import {
   useAccountStore,
 } from '@/entities/account';
 import { Budget, useBudgetStore } from '@/entities/budget';
-import { Debt, useDebtStore } from '@/entities/debt';
 import {
   buildPostings,
   Transaction,
@@ -22,6 +21,7 @@ import { toMinorUnits } from '@/shared/lib/money';
 
 const SAVINGS_ACCOUNT_ID = 'assets-savings';
 const CARD_ACCOUNT_ID = 'liabilities-card';
+const LOAN_ACCOUNT_ID = 'liabilities-loan';
 
 const EPOCH = '2026-01-01T00:00:00.000Z';
 
@@ -39,6 +39,28 @@ export const SAMPLE_ACCOUNTS: Account[] = [
     root: ACCOUNT_ROOTS.ASSETS,
     kind: ACCOUNT_KINDS.SAVINGS,
     onBudget: false,
+    archived: false,
+    createdAt: EPOCH,
+    updatedAt: EPOCH,
+  },
+  {
+    id: LOAN_ACCOUNT_ID,
+    name: 'Bancolombia',
+    root: ACCOUNT_ROOTS.LIABILITIES,
+    kind: ACCOUNT_KINDS.LOAN,
+    onBudget: true,
+    description: 'Crédito libre inversión',
+    debtTerms: {
+      interest: { type: 'fixed', rate: 1.8, period: 'monthly' },
+      paymentTerms: {
+        type: 'installments',
+        installmentAmount: toMinorUnits(1219706),
+        totalInstallments: 36,
+        paidInstallments: 10,
+        frequency: 'monthly',
+        nextPaymentDueDate: dayOfCurrentMonth(15),
+      },
+    },
     archived: false,
     createdAt: EPOCH,
     updatedAt: EPOCH,
@@ -106,6 +128,7 @@ export const SAMPLE_TRANSACTIONS: Transaction[] = [
   openingBalance('open-cash', DEFAULT_CASH_ACCOUNT_ID, 200000),
   openingBalance('open-savings', SAVINGS_ACCOUNT_ID, 1500000),
   openingBalance('open-card', CARD_ACCOUNT_ID, -850000),
+  openingBalance('open-loan', LOAN_ACCOUNT_ID, -22000000),
   sampleTransaction('s1', INCOME, 'Monthly Salary', DEFAULT_INCOME_ACCOUNT_ID, 4500000, 1, SAVINGS_ACCOUNT_ID),
   sampleTransaction('s2', TRANSFER, 'Retiro cajero', DEFAULT_CASH_ACCOUNT_ID, 300000, 2, SAVINGS_ACCOUNT_ID),
   sampleTransaction('s3', EXPENSE, 'Bus Pass', 'expenses-transport', 60000, 3),
@@ -140,40 +163,13 @@ export const SAMPLE_BUDGETS: Budget[] = [
   sampleBudget('b6', 'expenses-others', 300000),
 ];
 
-export const SAMPLE_DEBTS: Debt[] = [
-  {
-    id: 'd1',
-    creditorName: 'Bancolombia',
-    type: 'loan',
-    originalAmount: toMinorUnits(30000000),
-    currentBalance: toMinorUnits(22000000),
-    interest: { type: 'fixed', rate: 1.8, period: 'monthly' },
-    paymentTerms: {
-      type: 'installments',
-      installmentAmount: toMinorUnits(1219706),
-      totalInstallments: 36,
-      paidInstallments: 10,
-      frequency: 'monthly',
-      nextPaymentDueDate: dayOfCurrentMonth(15),
-    },
-    startDate: '2025-09-01',
-    description: 'Crédito libre inversión',
-    priority: 1,
-    status: 'current',
-    createdAt: EPOCH,
-    updatedAt: EPOCH,
-  },
-];
-
 export function loadSampleData(): void {
   useAccountStore.setState({ accounts: SAMPLE_ACCOUNTS });
   useTransactionStore.setState({ transactions: SAMPLE_TRANSACTIONS });
   useBudgetStore.setState({ budgets: SAMPLE_BUDGETS });
-  useDebtStore.setState({ debts: SAMPLE_DEBTS });
 }
 
 export function clearAllData(): void {
   useTransactionStore.setState({ transactions: [] });
   useBudgetStore.setState({ budgets: [] });
-  useDebtStore.setState({ debts: [] });
 }

@@ -1,35 +1,42 @@
 'use client';
 
-import { Debt } from '@/entities/debt';
+import {
+  DEBT_STRATEGIES,
+  DebtStrategy,
+  getDebtAccounts,
+  orderDebtsByStrategy,
+  useAccountStore,
+} from '@/entities/account';
+import { useTransactionStore } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
-import { useDebtStore } from '@/entities/debt';
+import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { HandCoins, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { DebtCard } from './debt-card/DebtCard';
 
 import './Debts.scss';
 
-const byPriorityThenDueDate = (a: Debt, b: Debt) => {
-  const priorityA = a.priority ?? Number.MAX_SAFE_INTEGER;
-  const priorityB = b.priority ?? Number.MAX_SAFE_INTEGER;
-
-  if (priorityA !== priorityB) {
-    return priorityA - priorityB;
-  }
-
-  const dueA = a.paymentTerms.nextPaymentDueDate ?? '';
-  const dueB = b.paymentTerms.nextPaymentDueDate ?? '';
-
-  return dueA.localeCompare(dueB);
+const STRATEGY_HINTS: Record<DebtStrategy, string> = {
+  snowball: 'Smallest balance first — quicker wins.',
+  avalanche: 'Highest interest first — cheaper overall.',
 };
 
 export default function Debts() {
-  const { debts } = useDebtStore();
+  const { accounts } = useAccountStore();
+  const { transactions } = useTransactionStore();
   const router = useRouter();
+  const [strategy, setStrategy] = useState<DebtStrategy>(
+    DEBT_STRATEGIES.SNOWBALL,
+  );
 
-  const sortedDebts = [...debts].sort(byPriorityThenDueDate);
+  const debts = getDebtAccounts(accounts);
+  const ordered = orderDebtsByStrategy(accounts, transactions, strategy);
+  const paidOff = debts.filter(
+    (account) => !ordered.some((item) => item.id === account.id),
+  );
 
   return (
     <div className="debts">
@@ -60,11 +67,31 @@ export default function Debts() {
           }
         />
       ) : (
-        <div className="debts-group__items">
-          {sortedDebts.map((debt) => (
-            <DebtCard debt={debt} key={debt.id} />
-          ))}
-        </div>
+        <>
+          <section className="debts-strategy">
+            <ToggleButtonGroup
+              className="debts-strategy__toggle"
+              selectedKeys={new Set([strategy])}
+              onSelectionChange={(keys) => {
+                const selected = [...keys][0] as DebtStrategy;
+                if (selected) setStrategy(selected);
+              }}
+            >
+              <Toggle id={DEBT_STRATEGIES.SNOWBALL}>Snowball</Toggle>
+              <Toggle id={DEBT_STRATEGIES.AVALANCHE}>Avalanche</Toggle>
+            </ToggleButtonGroup>
+            <p className="debts-strategy__hint">{STRATEGY_HINTS[strategy]}</p>
+          </section>
+
+          <div className="debts-group__items">
+            {ordered.map((debt) => (
+              <DebtCard debt={debt} key={debt.id} />
+            ))}
+            {paidOff.map((debt) => (
+              <DebtCard debt={debt} key={debt.id} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -76,24 +76,50 @@ export function migrateTransactionsToV2(persisted: unknown): {
  * Accounts used to carry an initialBalance field. In a ledger that number has
  * to come from somewhere, so it becomes a dated transaction against equity.
  */
+export function buildOpeningBalance(
+  accountId: string,
+  amount: number,
+  date: string,
+): Transaction {
+  const now = new Date().toISOString();
+  return {
+    id: `opening-${accountId}`,
+    date,
+    description: 'Opening balance',
+    postings: [
+      { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -amount },
+      { accountId, amount },
+    ],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 export function buildOpeningBalanceTransactions(
   persistedAccounts: unknown,
   date: string,
 ): Transaction[] {
   return readPersistedList(persistedAccounts, 'accounts')
     .filter((entry) => Number(entry.initialBalance) !== 0)
-    .map((entry) => {
-      const amount = readPersistedMoney(entry.initialBalance);
-      return {
-        id: `opening-${String(entry.id)}`,
+    .map((entry) =>
+      buildOpeningBalance(
+        String(entry.id),
+        readPersistedMoney(entry.initialBalance),
         date,
-        description: 'Opening balance',
-        postings: [
-          { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -amount },
-          { accountId: String(entry.id), amount },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-    });
+      ),
+    );
+}
+
+/** A debt owed is a negative balance on its liability account. */
+export function buildDebtOpeningBalances(
+  debts: { accountId: string; amountOwed: number; startDate: string }[],
+  fallbackDate: string,
+): Transaction[] {
+  return debts.map((debt) =>
+    buildOpeningBalance(
+      debt.accountId,
+      -debt.amountOwed,
+      debt.startDate || fallbackDate,
+    ),
+  );
 }

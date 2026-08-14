@@ -3,12 +3,17 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { DEFAULT_CHART_OF_ACCOUNTS } from './chart';
+import {
+  legacyDebtsToAccounts,
+  readLegacyDebtStorage,
+} from './debt-migration';
 import { indexAccounts } from './selectors';
 import { Account, AccountInput } from './types';
 
 interface AccountStore {
   accounts: Account[];
-  addAccount: (account: AccountInput) => void;
+  /** Returns the new account id so callers can post its opening balance. */
+  addAccount: (account: AccountInput) => string;
   updateAccount: (id: string, changes: Partial<AccountInput>) => void;
   archiveAccount: (id: string) => void;
   deleteAccount: (id: string) => void;
@@ -19,22 +24,19 @@ export const useAccountStore = create<AccountStore>()(
     (set) => ({
       accounts: DEFAULT_CHART_OF_ACCOUNTS,
 
-      addAccount: (account) =>
-        set((state) => {
-          const now = new Date().toISOString();
-          return {
-            accounts: [
-              ...state.accounts,
-              {
-                ...account,
-                id: crypto.randomUUID(),
-                archived: false,
-                createdAt: now,
-                updatedAt: now,
-              },
-            ],
-          };
-        }),
+      addAccount: (account) => {
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        set((state) => ({
+          accounts: [
+            ...state.accounts,
+            { ...account, id, archived: false, createdAt: now, updatedAt: now },
+          ],
+        }));
+
+        return id;
+      },
 
       updateAccount: (id, changes) =>
         set((state) => ({
@@ -65,8 +67,22 @@ export const useAccountStore = create<AccountStore>()(
     }),
     {
       name: 'account-storage',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persisted, version) => {
+        const accounts =
+          (persisted as { accounts?: Account[] } | undefined)?.accounts ??
+          DEFAULT_CHART_OF_ACCOUNTS;
+
+        if (version >= 3) return { accounts };
+
+        return {
+          accounts: [
+            ...accounts,
+            ...legacyDebtsToAccounts(readLegacyDebtStorage()),
+          ],
+        };
+      },
     },
   ),
 );

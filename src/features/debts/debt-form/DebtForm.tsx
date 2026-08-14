@@ -1,21 +1,31 @@
 'use client';
 
 import {
-  Debt,
-  DebtPaymentTerms,
+  Account,
+  ACCOUNT_KINDS,
+  ACCOUNT_ROOTS,
   debtSchema,
-  DebtType,
   DebtValues,
-} from '@/entities/debt';
+  getAmountOwed,
+  INTEREST_PERIOD_OPTIONS,
+  INTEREST_TYPE_OPTIONS,
+  LIABILITY_KIND_OPTIONS,
+  LIABILITY_KIND_TO_PAYMENT_TYPE,
+  OPENING_BALANCE_ACCOUNT_ID,
+  PAYMENT_FREQUENCY_OPTIONS,
+  PAYMENT_TERMS_OPTIONS,
+  useAccountsById,
+  useAccountStore,
+} from '@/entities/account';
+import { buildPostings, useTransactionStore } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
-import { useDebtStore } from '@/entities/debt';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { parseDate } from '@internationalized/date';
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import { useRouter } from 'next/navigation';
 import {
   Controller,
@@ -27,154 +37,114 @@ import {
 
 import './DebtForm.scss';
 
+const MONEY_FORMAT = {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 2,
+} as const;
+
 interface DebtFormProps {
-  debtInfo?: Debt;
+  debtInfo?: Account;
 }
-
-const DEBT_TYPE_OPTIONS = [
-  { id: 'credit_card', label: 'Credit card' },
-  { id: 'loan', label: 'Loan' },
-  { id: 'personal', label: 'Personal' },
-  { id: 'mortgage', label: 'Mortgage' },
-  { id: 'vehicle', label: 'Vehicle' },
-  { id: 'student', label: 'Student' },
-  { id: 'other', label: 'Other' },
-];
-
-const INTEREST_TYPE_OPTIONS = [
-  { id: 'none', label: 'No interest' },
-  { id: 'fixed', label: 'Fixed' },
-  { id: 'variable', label: 'Variable' },
-];
-
-const INTEREST_PERIOD_OPTIONS = [
-  { id: 'monthly', label: 'Monthly' },
-  { id: 'yearly', label: 'Yearly' },
-];
-
-const PAYMENT_TERMS_OPTIONS = [
-  { id: 'installments', label: 'Installments' },
-  { id: 'revolving', label: 'Revolving' },
-  { id: 'flexible', label: 'Flexible' },
-];
-
-const PAYMENT_FREQUENCY_OPTIONS = [
-  { id: 'weekly', label: 'Weekly' },
-  { id: 'monthly', label: 'Monthly' },
-  { id: 'yearly', label: 'Yearly' },
-  { id: 'custom', label: 'Custom' },
-];
-
-const DEBT_TYPE_TO_PAYMENT_TYPE: Record<DebtType, DebtPaymentTerms['type']> = {
-  credit_card: 'revolving',
-  loan: 'installments',
-  mortgage: 'installments',
-  vehicle: 'installments',
-  student: 'installments',
-  personal: 'flexible',
-  other: 'flexible',
-};
-
-
-const MONEY_TERM_KEYS = [
-  'installmentAmount',
-  'minimumPayment',
-  'statementBalance',
-  'suggestedPaymentAmount',
-] as const;
-
-function convertTerms(
-  terms: Record<string, unknown>,
-  convert: (value: number) => number,
-): Record<string, number> {
-  return MONEY_TERM_KEYS.reduce<Record<string, number>>((acc, key) => {
-    const value = terms[key];
-    if (typeof value === 'number') acc[key] = convert(value);
-    return acc;
-  }, {});
-}
-
-const toMajorPaymentTerms = (terms: DebtPaymentTerms) =>
-  convertTerms(terms as unknown as Record<string, unknown>, toMajorUnits);
-
-const toMinorPaymentTerms = (terms: DebtValues['paymentTerms']) =>
-  convertTerms(terms as unknown as Record<string, unknown>, toMinorUnits);
 
 const getDefaultValues = (
-  debt?: Debt,
-): DefaultValues<DebtValues> | undefined => {
+  debt: Account | undefined,
+  amountOwed: number,
+): DefaultValues<DebtValues> => {
   if (!debt) {
     return {
-      creditorName: '',
-      type: 'credit_card',
-      originalAmount: undefined,
-      currentBalance: undefined,
-      interest: { type: 'none' },
-      paymentTerms: { type: DEBT_TYPE_TO_PAYMENT_TYPE.credit_card },
-      startDate: undefined,
+      name: '',
+      kind: ACCOUNT_KINDS.CREDIT_CARD,
+      startDate: today(getLocalTimeZone()),
       description: '',
+      interest: { type: 'none' },
+      paymentTerms: { type: 'revolving' },
     };
   }
 
+  const terms = debt.debtTerms?.paymentTerms;
+
   return {
-    ...debt,
-    originalAmount: toMajorUnits(debt.originalAmount),
-    currentBalance: toMajorUnits(debt.currentBalance),
-    startDate: parseDate(debt.startDate),
-    paymentTerms: {
-      ...debt.paymentTerms,
-      ...toMajorPaymentTerms(debt.paymentTerms),
-      nextPaymentDueDate: debt.paymentTerms.nextPaymentDueDate
-        ? parseDate(debt.paymentTerms.nextPaymentDueDate)
-        : undefined,
-    },
-  };
+    name: debt.name,
+    kind: debt.kind,
+    amountOwed: toMajorUnits(amountOwed),
+    creditLimit: debt.creditLimit ? toMajorUnits(debt.creditLimit) : undefined,
+    cutOffDay: debt.cutOffDay,
+    startDate: today(getLocalTimeZone()),
+    description: debt.description ?? '',
+    interest: debt.debtTerms?.interest ?? { type: 'none' },
+    paymentTerms: terms
+      ? {
+          ...terms,
+          nextPaymentDueDate: terms.nextPaymentDueDate
+            ? parseDate(terms.nextPaymentDueDate)
+            : undefined,
+        }
+      : { type: 'revolving' },
+  } as DefaultValues<DebtValues>;
 };
 
 export default function DebtForm({ debtInfo }: DebtFormProps) {
   const router = useRouter();
-  const { addDebt, updateDebt } = useDebtStore();
+  const { addAccount, updateAccount } = useAccountStore();
+  const { transactions, addTransaction } = useTransactionStore();
+  const accountsById = useAccountsById();
+
+  const amountOwed = debtInfo ? getAmountOwed(debtInfo, transactions) : 0;
 
   const { control, handleSubmit, setValue } = useForm<DebtValues>({
     resolver: zodResolver(debtSchema),
-    defaultValues: getDefaultValues(debtInfo),
+    defaultValues: getDefaultValues(debtInfo, amountOwed),
   });
 
-  const interestType = useWatch({
-    control,
-    name: 'interest.type',
-  });
-
-  const paymentTermsType = useWatch({
-    control,
-    name: 'paymentTerms.type',
-  });
+  const interestType = useWatch({ control, name: 'interest.type' });
+  const paymentTermsType = useWatch({ control, name: 'paymentTerms.type' });
+  const isRevolving = paymentTermsType === 'revolving';
 
   const onSubmit: SubmitHandler<DebtValues> = (data) => {
-    const debtData = {
-      creditorName: data.creditorName.trim(),
-      type: data.type,
-
-      originalAmount: toMinorUnits(data.originalAmount),
-      currentBalance: toMinorUnits(data.currentBalance ?? data.originalAmount),
-
+    const debtTerms = {
       interest: data.interest,
-
       paymentTerms: {
         ...data.paymentTerms,
-        ...toMinorPaymentTerms(data.paymentTerms),
         nextPaymentDueDate: data.paymentTerms.nextPaymentDueDate?.toString(),
       },
+    } as Account['debtTerms'];
 
-      startDate: data.startDate.toString(),
+    const shared = {
+      name: data.name.trim(),
+      kind: data.kind,
+      creditLimit: data.creditLimit
+        ? toMinorUnits(data.creditLimit)
+        : undefined,
+      cutOffDay: data.cutOffDay,
       description: data.description?.trim() || undefined,
+      debtTerms,
     };
 
     if (debtInfo) {
-      updateDebt(debtInfo.id, debtData);
-    } else {
-      addDebt(debtData);
+      updateAccount(debtInfo.id, shared);
+      router.push('/debts');
+      return;
     }
+
+    const id = addAccount({
+      ...shared,
+      root: ACCOUNT_ROOTS.LIABILITIES,
+      onBudget: true,
+    });
+
+    addTransaction({
+      date: data.startDate.toString(),
+      description: `${data.name.trim()} opening balance`,
+      postings: buildPostings(
+        {
+          amount: toMinorUnits(data.amountOwed),
+          accountId: OPENING_BALANCE_ACCOUNT_ID,
+          counterAccountId: id,
+        },
+        accountsById,
+      ),
+    });
 
     router.push('/debts');
   };
@@ -189,7 +159,7 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
         <form className="debt-form" onSubmit={handleSubmit(onSubmit)}>
           <div className="debt-form__full">
             <Controller
-              name="creditorName"
+              name="name"
               control={control}
               render={({ field, fieldState }) => (
                 <TextField
@@ -204,7 +174,7 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
           </div>
 
           <Controller
-            name="type"
+            name="kind"
             control={control}
             render={({ field, fieldState }) => (
               <Select
@@ -216,10 +186,12 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
                   field.onChange(value);
                   setValue(
                     'paymentTerms.type',
-                    DEBT_TYPE_TO_PAYMENT_TYPE[value as DebtType],
+                    LIABILITY_KIND_TO_PAYMENT_TYPE[
+                      String(value)
+                    ] as DebtValues['paymentTerms']['type'],
                   );
                 }}
-                items={DEBT_TYPE_OPTIONS}
+                items={LIABILITY_KIND_OPTIONS}
                 errorMessage={fieldState.error?.message}
               >
                 {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
@@ -228,53 +200,80 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
           />
 
           <Controller
-            name="originalAmount"
+            name="amountOwed"
             control={control}
             render={({ field, fieldState }) => (
               <NumberField
-                label="Original amount"
+                label="Amount owed"
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
+                formatOptions={MONEY_FORMAT}
+                isDisabled={Boolean(debtInfo)}
+                description={
+                  debtInfo
+                    ? 'Comes from the ledger — register a payment to change it'
+                    : undefined
+                }
                 errorMessage={fieldState.error?.message}
               />
             )}
           />
 
-          <Controller
-            name="currentBalance"
-            control={control}
-            render={({ field, fieldState }) => (
-              <NumberField
-                label="Current balance"
-                name={field.name}
-                value={field.value}
-                onChange={field.onChange}
-                errorMessage={fieldState.error?.message}
-              />
-            )}
-          />
+          {!debtInfo && (
+            <Controller
+              name="startDate"
+              control={control}
+              render={({ field, fieldState }) => (
+                <DatePicker
+                  label="Owed since"
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  errorMessage={fieldState.error?.message}
+                />
+              )}
+            />
+          )}
 
-          <Controller
-            name="startDate"
-            control={control}
-            render={({ field, fieldState }) => (
-              <DatePicker
-                label="Start date"
-                name={field.name}
-                value={field.value}
-                onChange={field.onChange}
-                errorMessage={fieldState.error?.message}
+          {isRevolving && (
+            <>
+              <Controller
+                name="creditLimit"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <NumberField
+                    label="Credit limit"
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    formatOptions={MONEY_FORMAT}
+                    errorMessage={fieldState.error?.message}
+                  />
+                )}
               />
-            )}
-          />
+              <Controller
+                name="cutOffDay"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <NumberField
+                    label="Cut-off day"
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    errorMessage={fieldState.error?.message}
+                  />
+                )}
+              />
+            </>
+          )}
 
           <Controller
             name="interest.type"
             control={control}
             render={({ field, fieldState }) => (
               <Select
-                label="Interest type"
+                label="Interest"
                 placeholder="Select interest type"
                 name={field.name}
                 value={field.value}
@@ -294,7 +293,7 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
                 control={control}
                 render={({ field, fieldState }) => (
                   <NumberField
-                    label="Interest rate"
+                    label="Rate (%)"
                     name={field.name}
                     value={field.value}
                     onChange={field.onChange}
@@ -302,13 +301,12 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
                   />
                 )}
               />
-
               <Controller
                 name="interest.period"
                 control={control}
                 render={({ field, fieldState }) => (
                   <Select
-                    label="Interest period"
+                    label="Rate period"
                     placeholder="Select period"
                     name={field.name}
                     value={field.value}
@@ -325,29 +323,13 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
             </>
           )}
 
-          {interestType === 'variable' && (
-            <Controller
-              name="interest.referenceRate"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                  label="Reference rate"
-                  name={field.name}
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  errorMessage={fieldState.error?.message}
-                />
-              )}
-            />
-          )}
-
           <Controller
             name="paymentTerms.type"
             control={control}
             render={({ field, fieldState }) => (
               <Select
-                label="Payment type"
-                placeholder="Select payment type"
+                label="Payment terms"
+                placeholder="Select payment terms"
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
@@ -366,43 +348,15 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
                 control={control}
                 render={({ field, fieldState }) => (
                   <NumberField
-                    label="Installment amount"
+                    label="Installment"
                     name={field.name}
                     value={field.value}
                     onChange={field.onChange}
+                    formatOptions={MONEY_FORMAT}
                     errorMessage={fieldState.error?.message}
                   />
                 )}
               />
-
-              <Controller
-                name="paymentTerms.totalInstallments"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <NumberField
-                    label="Total installments"
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange}
-                    errorMessage={fieldState.error?.message}
-                  />
-                )}
-              />
-
-              <Controller
-                name="paymentTerms.paidInstallments"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <NumberField
-                    label="Paid installments"
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange}
-                    errorMessage={fieldState.error?.message}
-                  />
-                )}
-              />
-
               <Controller
                 name="paymentTerms.frequency"
                 control={control}
@@ -425,62 +379,17 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
             </>
           )}
 
-          {paymentTermsType === 'revolving' && (
-            <>
-              <Controller
-                name="paymentTerms.minimumPayment"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <NumberField
-                    label="Minimum payment"
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange}
-                    errorMessage={fieldState.error?.message}
-                  />
-                )}
-              />
-
-              <Controller
-                name="paymentTerms.statementBalance"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <NumberField
-                    label="Statement balance"
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange}
-                    errorMessage={fieldState.error?.message}
-                  />
-                )}
-              />
-
-              <Controller
-                name="paymentTerms.cutOffDay"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <NumberField
-                    label="Cut-off day"
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange}
-                    errorMessage={fieldState.error?.message}
-                  />
-                )}
-              />
-            </>
-          )}
-
-          {paymentTermsType === 'flexible' && (
+          {isRevolving && (
             <Controller
-              name="paymentTerms.suggestedPaymentAmount"
+              name="paymentTerms.minimumPayment"
               control={control}
               render={({ field, fieldState }) => (
                 <NumberField
-                  label="Suggested payment"
+                  label="Minimum payment"
                   name={field.name}
                   value={field.value}
                   onChange={field.onChange}
+                  formatOptions={MONEY_FORMAT}
                   errorMessage={fieldState.error?.message}
                 />
               )}
@@ -492,7 +401,7 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
             control={control}
             render={({ field, fieldState }) => (
               <DatePicker
-                label="Next payment due date"
+                label="Next payment due"
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
@@ -501,36 +410,19 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
             )}
           />
 
-          <div className="debt-form__full">
-            <Controller
-              name="description"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                  label="Description"
-                  name={field.name}
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  errorMessage={fieldState.error?.message}
-                />
-              )}
-            />
-          </div>
-
-          <div className="buttons-container debt-form__full">
+          <div className="debt-form__full buttons-container">
             <Button
-              variant="secondary"
-              size="large"
+              variant={'secondary'}
+              size={'large'}
               border={true}
               className="buttons-container__btn-cancel"
               onPress={() => router.back()}
             >
               Cancel
             </Button>
-
             <Button
-              variant="primary"
-              size="large"
+              variant={'primary'}
+              size={'large'}
               type="submit"
               className="buttons-container__btn-save"
             >
