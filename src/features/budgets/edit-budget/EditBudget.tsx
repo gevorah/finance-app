@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/shared/components/ui/button';
-import { useBudgetStore } from '@/stores/budgetStore';
+import { useBudgetStore } from '@/entities/budget';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import BudgetForm from '../budget-form/BudgetForm';

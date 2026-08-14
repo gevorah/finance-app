@@ -13,7 +13,7 @@ import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
-import { useDebtStore } from '@/stores/debtStore';
+import { useDebtStore } from '@/entities/debt';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { parseDate } from '@internationalized/date';
 import { useRouter } from 'next/navigation';

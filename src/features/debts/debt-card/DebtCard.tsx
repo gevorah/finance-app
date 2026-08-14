@@ -5,7 +5,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
-import { useDebtStore } from '@/stores/debtStore';
+import { useDebtStore } from '@/entities/debt';
 import { Check, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

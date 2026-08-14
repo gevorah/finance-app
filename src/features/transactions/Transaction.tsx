@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useHydrated } from '@/shared/hooks/useHydrated';
-import { getTransactionsByMonth } from '@/stores/selectors';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { getTransactionsByMonth } from '@/entities/transaction';
+import { useTransactionStore } from '@/entities/transaction';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import {
   Calendar,

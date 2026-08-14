@@ -3,7 +3,7 @@
 import Bar from '@/shared/components/ui/bar/bar';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import { useBudgetStore } from '@/stores/budgetStore';
+import { useBudgetStore } from '@/entities/budget';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -12,12 +12,9 @@ import './BudgetDetails.scss';
 import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
-import {
-  getBudgetProgress,
-  getBudgetSpent,
-  getTopTransactions,
-} from '@/stores/selectors';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { getTopTransactions } from '@/entities/transaction';
+import { getBudgetProgress, getBudgetSpent } from '@/entities/budget';
+import { useTransactionStore } from '@/entities/transaction';
 
 export function BudgetDetails() {
   const { id } = useParams();

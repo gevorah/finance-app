@@ -3,29 +3,18 @@
 import './Dashboard.scss';
 
 import { SpendingChart } from '@/features/charts/spending-chart/SpendingChart';
-import { BalanceCard } from '@/features/metrics/BalanceCard';
-import { MetricCard } from '@/features/metrics/MetricCard';
 import TransactionList from '@/features/transactions/transaction-list/TransactionList';
 import { useHydrated } from '@/shared/hooks/useHydrated';
-import { useAccountStore } from '@/stores/accountStore';
-import {
-  getMonthIncomeExpense,
-  getMonthlyExpenses,
-  getMonthlyIncome,
-  getRecentTransactions,
-  getSpendingByCategory,
-  getTotalBalance,
-  getTotalExpenses,
-  getTotalIncome,
-  getWeeklySpending,
-  monthOverMonthExpenses,
-  monthOverMonthIncome,
-} from '@/stores/selectors';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { useAccountStore } from '@/entities/account';
+import { getMonthIncomeExpense, getMonthlyExpenses, getMonthlyIncome, getRecentTransactions, getSpendingByCategory, getTotalExpenses, getTotalIncome, getWeeklySpending, monthOverMonthExpenses, monthOverMonthIncome } from '@/entities/transaction';
+import { getTotalBalance } from '@/entities/account';
+import { useTransactionStore } from '@/entities/transaction';
 import Link from 'next/link';
 
 import { ComparisonChart } from '@/features/charts/comparison-chart/ComparisonChart';
 import { WeeklySpendingChart } from '@/features/charts/weekly-spending-chart/WeeklySpendingChart';
+import { BalanceCard } from './BalanceCard';
+import { MetricCard } from './MetricCard';
 import { DashboardSkeleton } from './DashboardSkeleton';
 
 export default function DashboardPage() {

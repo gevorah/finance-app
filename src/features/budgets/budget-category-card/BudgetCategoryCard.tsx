@@ -6,8 +6,8 @@ import { Card } from '@/shared/components/ui/card';
 import './BudgetCategoryCard.scss';
 
 import { formatCurrency } from '@/shared/lib/currency';
-import { getBudgetProgress } from '@/stores/selectors';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { getBudgetProgress } from '@/entities/budget';
+import { useTransactionStore } from '@/entities/transaction';
 
 import { getBudgetMessage } from './getBudgetMessage';
 

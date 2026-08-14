@@ -6,9 +6,9 @@ import './BudgetCard.scss';
 
 import Bar from '@/shared/components/ui/bar/bar';
 import { formatCurrency } from '@/shared/lib/currency';
-import { getBudgetSummary } from '@/stores/selectors';
-import { useBudgetStore } from '@/stores/budgetStore';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { getBudgetSummary } from '@/entities/budget';
+import { useBudgetStore } from '@/entities/budget';
+import { useTransactionStore } from '@/entities/transaction';
 
 function daysLeftInMonth(date: Date): number {
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();

@@ -1,14 +1,15 @@
-import { Account, ACCOUNT_TYPES, DEFAULT_ACCOUNT_ID } from '@/entities/account';
-import { Budget } from '@/entities/budget';
+import {
+  Account,
+  ACCOUNT_TYPES,
+  DEFAULT_ACCOUNT_ID,
+  useAccountStore,
+} from '@/entities/account';
+import { Budget, useBudgetStore } from '@/entities/budget';
 import { CATEGORY_TYPES } from '@/entities/category';
-import { Debt } from '@/entities/debt';
-import { Transaction } from '@/entities/transaction';
+import { Debt, useDebtStore } from '@/entities/debt';
+import { Transaction, useTransactionStore } from '@/entities/transaction';
 import { toMinorUnits } from '@/shared/lib/money';
 
-import { useAccountStore } from './accountStore';
-import { useBudgetStore } from './budgetStore';
-import { useDebtStore } from './debtStore';
-import { useTransactionStore } from './transactionStore';
 
 const SAVINGS_ACCOUNT_ID = 'sample-savings';
 const CARD_ACCOUNT_ID = 'sample-card';

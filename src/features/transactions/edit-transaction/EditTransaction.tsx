@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/shared/components/ui/button';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { useTransactionStore } from '@/entities/transaction';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 

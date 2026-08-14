@@ -1,4 +1,4 @@
-import { Budget, BudgetInput } from '@/entities/budget';
+import { Budget, BudgetInput } from './types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

@@ -8,7 +8,7 @@ import { BudgetCard } from './budget-card/BudgetCard';
 
 import './Budget.scss';
 
-import { useBudgetStore } from '@/stores/budgetStore';
+import { useBudgetStore } from '@/entities/budget';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 

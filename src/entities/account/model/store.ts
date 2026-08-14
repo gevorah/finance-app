@@ -3,7 +3,7 @@ import {
   AccountInput,
   ACCOUNT_TYPES,
   DEFAULT_ACCOUNT_ID,
-} from '@/entities/account';
+} from './types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

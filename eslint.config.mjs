@@ -1,8 +1,27 @@
+import { readdirSync } from 'node:fs';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 
 const LAYERS = ['app', 'widgets', 'features', 'entities', 'shared'];
+
+const ALLOWED_CROSS_IMPORTS = {
+  entities: {
+    account: ['transaction'],
+    budget: ['category', 'transaction'],
+    transaction: ['account', 'category'],
+  },
+};
+
+const readSlices = (layer) => {
+  try {
+    return readdirSync(`./src/${layer}`, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+};
 
 const layerZones = LAYERS.flatMap((layer, index) =>
   LAYERS.slice(0, index).map((upperLayer) => ({
@@ -12,13 +31,19 @@ const layerZones = LAYERS.flatMap((layer, index) =>
   })),
 );
 
-const sliceZones = (layer, slices, sharedSlices = []) =>
-  slices.map((slice) => ({
-    target: `./src/${layer}/${slice}`,
-    from: `./src/${layer}`,
-    except: [...new Set([slice, ...sharedSlices])].map((name) => `./${name}`),
-    message: `${layer}/${slice} cannot import a sibling slice.`,
-  }));
+const sliceZones = LAYERS.filter(
+  (layer) => layer !== 'app' && layer !== 'shared',
+).flatMap((layer) =>
+  readSlices(layer).map((slice) => {
+    const allowed = ALLOWED_CROSS_IMPORTS[layer]?.[slice] ?? [];
+    return {
+      target: `./src/${layer}/${slice}`,
+      from: `./src/${layer}`,
+      except: [...new Set([slice, ...allowed])].map((name) => `./${name}`),
+      message: `${layer}/${slice} cannot import a sibling slice. Declare the cross-import in ALLOWED_CROSS_IMPORTS if it is deliberate.`,
+    };
+  }),
+);
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -30,25 +55,7 @@ const eslintConfig = defineConfig([
     rules: {
       'import/no-restricted-paths': [
         'error',
-        {
-          zones: [
-            ...layerZones,
-            ...sliceZones(
-              'entities',
-              ['account', 'budget', 'category', 'debt', 'transaction'],
-              ['category'],
-            ),
-            ...sliceZones('features', [
-              'budgets',
-              'charts',
-              'debts',
-              'navbar',
-              'navigation',
-              'transactions',
-            ]),
-            ...sliceZones('widgets', ['app-shell', 'budget-summary']),
-          ],
-        },
+        { zones: [...layerZones, ...sliceZones] },
       ],
     },
   },

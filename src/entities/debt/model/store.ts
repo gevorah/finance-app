@@ -3,7 +3,7 @@ import type {
   DebtInput,
   DebtPaymentTerms,
   DebtStatus,
-} from '@/entities/debt';
+} from './types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

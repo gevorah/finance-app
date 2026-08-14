@@ -8,8 +8,8 @@ import { Dialog } from '@/shared/components/ui/dialog';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDateLong } from '@/shared/lib/date';
-import { useAccountStore } from '@/stores/accountStore';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { useAccountStore } from '@/entities/account';
+import { useTransactionStore } from '@/entities/transaction';
 import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 

@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
-import { useBudgetStore } from '@/stores/budgetStore';
+import { useBudgetStore } from '@/entities/budget';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';

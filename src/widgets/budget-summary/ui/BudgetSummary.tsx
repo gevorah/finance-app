@@ -4,12 +4,21 @@ import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
 import { formatCurrency } from '@/shared/lib/currency';
 import Bar from '@/shared/components/ui/bar/bar';
 import { Card } from '@/shared/components/ui/card';
-import { useBudgetStore } from '@/stores/budgetStore';
-import { getBudgetHighlights } from '@/stores/selectors';
-import { useTransactionStore } from '@/stores/transactionStore';
+import {
+  BudgetHighlightKind,
+  getBudgetHighlights,
+  useBudgetStore,
+} from '@/entities/budget';
+import { useTransactionStore } from '@/entities/transaction';
 import Link from 'next/link';
 
 import './BudgetSummary.scss';
+
+const HIGHLIGHT_LABELS: Record<BudgetHighlightKind, string> = {
+  mostUsed: 'Most used',
+  closestToLimit: 'Closest to limit',
+  healthiest: 'Healthiest',
+};
 
 export function BudgetSummary() {
   const { budgets } = useBudgetStore();
@@ -29,7 +38,7 @@ export function BudgetSummary() {
       <div className="budget-summary-section__grid">
         {highlights.map((highlight) => (
           <Card key={highlight.budget.id} className="budget-highlight">
-            <span className="budget-highlight__label">{highlight.label}</span>
+            <span className="budget-highlight__label">{HIGHLIGHT_LABELS[highlight.kind]}</span>
             <div className="budget-highlight__category">
               <span className="budget-highlight__icon">
                 {getCategoryIcon(highlight.budget.category, 16)}

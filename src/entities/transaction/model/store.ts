@@ -1,4 +1,4 @@
-import { Transaction, TransactionInput } from '@/entities/transaction';
+import { Transaction, TransactionInput } from './types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 

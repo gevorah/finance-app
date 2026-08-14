@@ -3,7 +3,7 @@
 import { Debt } from '@/entities/debt';
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
-import { useDebtStore } from '@/stores/debtStore';
+import { useDebtStore } from '@/entities/debt';
 import { HandCoins, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

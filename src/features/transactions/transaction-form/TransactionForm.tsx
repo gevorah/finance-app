@@ -13,8 +13,8 @@ import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { toMinorUnits, toMajorUnits } from '@/shared/lib/money';
-import { useAccountStore } from '@/stores/accountStore';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { useAccountStore } from '@/entities/account';
+import { useTransactionStore } from '@/entities/transaction';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   getLocalTimeZone,
