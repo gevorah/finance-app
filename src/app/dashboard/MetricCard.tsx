@@ -1,4 +1,3 @@
-import { TransactionType } from '@/entities/transaction';
 import { formatCurrency } from '@/shared/lib/currency';
 import { Money } from '@/shared/lib/money';
 
@@ -7,10 +6,12 @@ import './MetricCard.scss';
 import { Card } from '@/shared/components/ui/card';
 import { ArrowDown, ArrowDownLeft, ArrowUp } from 'lucide-react';
 
+type MetricTone = 'income' | 'expense';
+
 interface MetricCardProps {
   title: string;
   value: Money;
-  icon: TransactionType;
+  icon: MetricTone;
   trend?: string;
 }
 

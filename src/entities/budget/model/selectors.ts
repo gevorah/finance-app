@@ -1,21 +1,36 @@
-import { CategoryType } from '@/entities/category';
 import type { Transaction } from '@/entities/transaction';
-import {
-  getSpendingByCategory,
-  getTransactionsByMonth,
-} from '@/entities/transaction';
 import { Money } from '@/shared/lib/money';
 
 import { Budget } from './types';
 
-export function getBudgetSpent(
+function spentOnAccount(
   transactions: Transaction[],
-  category: CategoryType,
+  accountId: string,
   year: number,
   month: number,
 ): Money {
-  const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
-  return getSpendingByCategory(monthlyTransactions)[category] ?? 0;
+  return transactions
+    .filter((t) => {
+      const [y, m] = t.date.split('-').map(Number);
+      return y === year && m === month;
+    })
+    .reduce(
+      (total, t) =>
+        total +
+        t.postings
+          .filter((posting) => posting.accountId === accountId)
+          .reduce((sum, posting) => sum + posting.amount, 0),
+      0,
+    );
+}
+
+export function getBudgetSpent(
+  transactions: Transaction[],
+  accountId: string,
+  year: number,
+  month: number,
+): Money {
+  return spentOnAccount(transactions, accountId, year, month);
 }
 
 export interface BudgetProgress {
@@ -33,7 +48,7 @@ export function getBudgetProgress(
 ): BudgetProgress {
   const spent = getBudgetSpent(
     transactions,
-    budget.category,
+    budget.accountId,
     refDate.getFullYear(),
     refDate.getMonth() + 1,
   );
@@ -81,10 +96,7 @@ export function getBudgetSummary(
   return { ...totals, remaining, percentage };
 }
 
-export type BudgetHighlightKind =
-  | 'mostUsed'
-  | 'closestToLimit'
-  | 'healthiest';
+export type BudgetHighlightKind = 'mostUsed' | 'closestToLimit' | 'healthiest';
 
 export interface BudgetHighlight {
   kind: BudgetHighlightKind;
@@ -111,15 +123,14 @@ export function getBudgetHighlights(
     (a, b) => b.progress.spent - a.progress.spent,
   );
 
-  const candidates: { kind: BudgetHighlightKind; entry: (typeof entries)[number] }[] =
-    [
-      { kind: 'mostUsed', entry: bySpentDesc[0] },
-      { kind: 'closestToLimit', entry: byPercentageDesc[0] },
-      {
-        kind: 'healthiest',
-        entry: byPercentageDesc[byPercentageDesc.length - 1],
-      },
-    ];
+  const candidates: {
+    kind: BudgetHighlightKind;
+    entry: (typeof entries)[number];
+  }[] = [
+    { kind: 'mostUsed', entry: bySpentDesc[0] },
+    { kind: 'closestToLimit', entry: byPercentageDesc[0] },
+    { kind: 'healthiest', entry: byPercentageDesc[byPercentageDesc.length - 1] },
+  ];
 
   const seen = new Set<string>();
   return candidates.reduce<BudgetHighlight[]>((acc, { kind, entry }) => {
@@ -128,4 +139,8 @@ export function getBudgetHighlights(
     acc.push({ kind, ...entry });
     return acc;
   }, []);
+}
+
+export function getBudgetAccountIds(budgets: Budget[]): string[] {
+  return budgets.map((budget) => budget.accountId);
 }

@@ -1,0 +1,153 @@
+import { Account, ACCOUNT_ROOTS, AccountRoot } from '@/entities/account';
+import { Money } from '@/shared/lib/money';
+
+import {
+  Posting,
+  Transaction,
+  TRANSACTION_KINDS,
+  TransactionKind,
+} from './types';
+
+export function getPostingsTotal(postings: Posting[]): Money {
+  return postings.reduce((total, posting) => total + posting.amount, 0);
+}
+
+export function isBalanced(postings: Posting[]): boolean {
+  return postings.length >= 2 && getPostingsTotal(postings) === 0;
+}
+
+export function getPostingFor(
+  transaction: Transaction,
+  accountId: string,
+): Posting | undefined {
+  return transaction.postings.find(
+    (posting) => posting.accountId === accountId,
+  );
+}
+
+export function touchesAccount(
+  transaction: Transaction,
+  accountId: string,
+): boolean {
+  return getPostingFor(transaction, accountId) !== undefined;
+}
+
+export interface TransactionDraft {
+  kind: TransactionKind;
+  amount: Money;
+  /** Real account the money leaves from or arrives in. */
+  accountId: string;
+  /** Category account for expense and income, destination account for transfer. */
+  counterAccountId: string;
+}
+
+/**
+ * Money always leaves one account and arrives in another, so the two amounts
+ * are mirror images and the transaction sums to zero.
+ */
+export function buildPostings({
+  kind,
+  amount,
+  accountId,
+  counterAccountId,
+}: TransactionDraft): Posting[] {
+  const magnitude = Math.abs(amount);
+
+  if (kind === TRANSACTION_KINDS.INCOME) {
+    return [
+      { accountId: counterAccountId, amount: -magnitude },
+      { accountId, amount: magnitude },
+    ];
+  }
+
+  return [
+    { accountId, amount: -magnitude },
+    { accountId: counterAccountId, amount: magnitude },
+  ];
+}
+
+export interface TransactionView {
+  kind: TransactionKind;
+  amount: Money;
+  accountId: string;
+  counterAccountId: string;
+  counterPostings: Posting[];
+  isSplit: boolean;
+}
+
+const byMagnitudeDesc = (a: Posting, b: Posting) =>
+  Math.abs(b.amount) - Math.abs(a.amount);
+
+const REAL_ROOTS: AccountRoot[] = [
+  ACCOUNT_ROOTS.ASSETS,
+  ACCOUNT_ROOTS.LIABILITIES,
+];
+
+/**
+ * Firefly III derives the transaction type from the roots its postings touch
+ * instead of storing it, and only lets the counter side be split — an expense
+ * leaves one account and may land in several. Both rules are applied here, so
+ * the amount is always the funding side rather than any single posting.
+ */
+export function describeTransaction(
+  transaction: Transaction,
+  accountsById: Map<string, Account>,
+): TransactionView {
+  const rootOf = (posting: Posting) =>
+    accountsById.get(posting.accountId)?.root;
+
+  const roots = new Set(transaction.postings.map(rootOf));
+
+  const kind = roots.has(ACCOUNT_ROOTS.EQUITY)
+    ? TRANSACTION_KINDS.OPENING
+    : roots.has(ACCOUNT_ROOTS.INCOME)
+      ? TRANSACTION_KINDS.INCOME
+      : roots.has(ACCOUNT_ROOTS.EXPENSES)
+        ? TRANSACTION_KINDS.EXPENSE
+        : TRANSACTION_KINDS.TRANSFER;
+
+  const amount = transaction.postings
+    .filter((posting) => posting.amount < 0)
+    .reduce((total, posting) => total - posting.amount, 0);
+
+  const realPostings = transaction.postings.filter((posting) => {
+    const root = rootOf(posting);
+    return root !== undefined && REAL_ROOTS.includes(root);
+  });
+
+  const moneyArrives =
+    kind === TRANSACTION_KINDS.INCOME || kind === TRANSACTION_KINDS.OPENING;
+  const funding = realPostings.filter((posting) =>
+    moneyArrives ? posting.amount > 0 : posting.amount < 0,
+  );
+
+  const accountId =
+    [...(funding.length > 0 ? funding : realPostings)].sort(
+      byMagnitudeDesc,
+    )[0]?.accountId ?? '';
+
+  const counterPostings = transaction.postings.filter(
+    (posting) => posting.accountId !== accountId,
+  );
+
+  return {
+    kind,
+    amount,
+    accountId,
+    counterAccountId:
+      [...counterPostings].sort(byMagnitudeDesc)[0]?.accountId ?? '',
+    counterPostings,
+    isSplit: counterPostings.length > 1,
+  };
+}
+
+export type EditableKind = Exclude<
+  TransactionKind,
+  typeof TRANSACTION_KINDS.OPENING
+>;
+
+export function isEditableKind(
+  kind: TransactionKind | undefined,
+): kind is EditableKind {
+  return kind !== undefined && kind !== TRANSACTION_KINDS.OPENING;
+}

@@ -1,14 +1,27 @@
-import { Transaction, TransactionInput } from './types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { migrateTransactionsToV1 } from './migrations';
+import { isBalanced } from './ledger';
+import { migrateTransactionsToV2 } from './migrations';
+import { Transaction, TransactionInput } from './types';
 
 interface TransactionStore {
   transactions: Transaction[];
   addTransaction: (transaction: TransactionInput) => void;
   updateTransaction: (id: string, changes: Partial<TransactionInput>) => void;
   deleteTransaction: (id: string) => void;
+}
+
+/**
+ * Postings that do not sum to zero would silently corrupt every balance, so an
+ * unbalanced write is rejected at the door rather than stored.
+ */
+function assertBalanced(transaction: TransactionInput | Transaction): void {
+  if (!isBalanced(transaction.postings)) {
+    throw new Error(
+      `Unbalanced transaction "${transaction.description}": postings must sum to zero.`,
+    );
+  }
 }
 
 export const useTransactionStore = create<TransactionStore>()(
@@ -18,6 +31,7 @@ export const useTransactionStore = create<TransactionStore>()(
 
       addTransaction: (transaction) =>
         set((state) => {
+          assertBalanced(transaction);
           const now = new Date().toISOString();
           return {
             transactions: [
@@ -34,11 +48,16 @@ export const useTransactionStore = create<TransactionStore>()(
 
       updateTransaction: (id, changes) =>
         set((state) => ({
-          transactions: state.transactions.map((t) =>
-            t.id === id
-              ? { ...t, ...changes, updatedAt: new Date().toISOString() }
-              : t,
-          ),
+          transactions: state.transactions.map((t) => {
+            if (t.id !== id) return t;
+            const updated = {
+              ...t,
+              ...changes,
+              updatedAt: new Date().toISOString(),
+            };
+            assertBalanced(updated);
+            return updated;
+          }),
         })),
 
       deleteTransaction: (id) =>
@@ -48,12 +67,12 @@ export const useTransactionStore = create<TransactionStore>()(
     }),
     {
       name: 'transaction-storage',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) =>
-        version >= 1
+        version >= 2
           ? (persisted as { transactions: Transaction[] })
-          : migrateTransactionsToV1(persisted),
+          : migrateTransactionsToV2(persisted),
     },
   ),
 );

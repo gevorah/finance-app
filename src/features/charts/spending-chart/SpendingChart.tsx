@@ -1,4 +1,4 @@
-import { CategoryType, getCategoryLabel } from '@/entities/category';
+
 import { Card } from '@/shared/components/ui/card';
 import { formatCurrency } from '@/shared/lib/currency';
 import { Money } from '@/shared/lib/money';
@@ -20,16 +20,20 @@ const COLORS = [
 ];
 
 interface SpendingChartProps {
-  data: Record<CategoryType, Money>;
+  data: Record<string, Money>;
+  accountNames: Record<string, string>;
 }
 
-export function SpendingChart({ data: spendingByCategory }: SpendingChartProps) {
+export function SpendingChart({
+  data: spendingByAccount,
+  accountNames,
+}: SpendingChartProps) {
   const today = new Date().toLocaleDateString('en-US', { month: 'long' });
-  const data = Object.entries(spendingByCategory).map(
-    ([category, amount], index) => ({
-      category,
+  const data = Object.entries(spendingByAccount).map(
+    ([accountId, amount], index) => ({
+      category: accountNames[accountId] ?? accountId,
       amount,
-      fill: COLORS[index],
+      fill: COLORS[index % COLORS.length],
     }),
   );
 
@@ -64,7 +68,7 @@ export function SpendingChart({ data: spendingByCategory }: SpendingChartProps) 
               <ul>
                 {payload?.map((entry, index) => (
                   <li key={index} style={{ color: entry.color }}>
-                    <span>{getCategoryLabel(entry.value as CategoryType)}</span>
+                    <span>{entry.value}</span>
                     <span>{formatCurrency(data[index].amount)}</span>
                   </li>
                 ))}

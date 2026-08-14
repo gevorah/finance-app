@@ -1,25 +1,93 @@
-import { DEFAULT_ACCOUNT_ID } from '@/entities/account';
-import { migrateLegacyCategory } from '@/entities/category';
-import { readPersistedList, readPersistedMoney } from '@/shared/lib/persist';
+import {
+  DEFAULT_CASH_ACCOUNT_ID,
+  DEFAULT_INCOME_ACCOUNT_ID,
+  OPENING_BALANCE_ACCOUNT_ID,
+  UNCATEGORIZED_EXPENSE_ACCOUNT_ID,
+} from '@/entities/account';
+import {
+  PersistedRecord,
+  readPersistedList,
+  readPersistedMoney,
+} from '@/shared/lib/persist';
 
-import { Transaction, TransactionType } from './types';
+import { buildPostings } from './ledger';
+import { Transaction, TRANSACTION_KINDS, TransactionKind } from './types';
 
-export function migrateTransactionsToV1(persisted: unknown): {
+const LEGACY_CATEGORY_ACCOUNTS: Record<string, string> = {
+  salary: DEFAULT_INCOME_ACCOUNT_ID,
+  income: DEFAULT_INCOME_ACCOUNT_ID,
+  other_income: 'income-other',
+  food: 'expenses-food',
+  bills: 'expenses-bills',
+  shopping: 'expenses-shopping',
+  health: 'expenses-health',
+  transport: 'expenses-transport',
+  others: UNCATEGORIZED_EXPENSE_ACCOUNT_ID,
+};
+
+function counterAccountFor(entry: PersistedRecord, kind: TransactionKind) {
+  if (kind === TRANSACTION_KINDS.TRANSFER) {
+    return String(entry.transferAccountId ?? DEFAULT_CASH_ACCOUNT_ID);
+  }
+
+  return (
+    LEGACY_CATEGORY_ACCOUNTS[String(entry.category)] ??
+    (kind === TRANSACTION_KINDS.INCOME
+      ? DEFAULT_INCOME_ACCOUNT_ID
+      : UNCATEGORIZED_EXPENSE_ACCOUNT_ID)
+  );
+}
+
+/** Version 1 stored a single amount plus a type; version 2 stores balanced postings. */
+export function migrateTransactionsToV2(persisted: unknown): {
   transactions: Transaction[];
 } {
   const transactions = readPersistedList(persisted, 'transactions').map(
-    (entry) => ({
-      id: String(entry.id),
-      type: entry.type as TransactionType,
-      accountId: DEFAULT_ACCOUNT_ID,
-      category: migrateLegacyCategory(entry.category),
-      amount: readPersistedMoney(entry.amount),
-      date: String(entry.date),
-      description: String(entry.description ?? ''),
-      createdAt: String(entry.createdAt ?? new Date().toISOString()),
-      updatedAt: String(entry.updatedAt ?? new Date().toISOString()),
-    }),
+    (entry) => {
+      const kind = (String(entry.type) as TransactionKind) ?? 'expense';
+      const amount = Number(entry.amount) || 0;
+
+      return {
+        id: String(entry.id),
+        date: String(entry.date),
+        description: String(entry.description ?? ''),
+        postings: buildPostings({
+          kind,
+          amount,
+          accountId: String(entry.accountId ?? DEFAULT_CASH_ACCOUNT_ID),
+          counterAccountId: counterAccountFor(entry, kind),
+        }),
+        createdAt: String(entry.createdAt ?? new Date().toISOString()),
+        updatedAt: String(entry.updatedAt ?? new Date().toISOString()),
+      };
+    },
   );
 
   return { transactions };
+}
+
+/**
+ * Accounts used to carry an initialBalance field. In a ledger that number has
+ * to come from somewhere, so it becomes a dated transaction against equity.
+ */
+export function buildOpeningBalanceTransactions(
+  persistedAccounts: unknown,
+  date: string,
+): Transaction[] {
+  return readPersistedList(persistedAccounts, 'accounts')
+    .filter((entry) => Number(entry.initialBalance) !== 0)
+    .map((entry) => {
+      const amount = readPersistedMoney(entry.initialBalance);
+      return {
+        id: `opening-${String(entry.id)}`,
+        date,
+        description: 'Opening balance',
+        postings: [
+          { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -amount },
+          { accountId: String(entry.id), amount },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    });
 }

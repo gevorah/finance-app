@@ -1,12 +1,7 @@
-import { CATEGORY_TYPES, getCategoryKind } from '@/entities/category';
 import z from 'zod';
 
 export const budgetSchema = z.object({
-  category: z
-    .enum(CATEGORY_TYPES, { error: 'Category is required' })
-    .refine((id) => getCategoryKind(id) === 'expense', {
-      error: 'Budgets only apply to expense categories',
-    }),
+  accountId: z.string().min(1, { error: 'Category is required' }),
   monthlyLimit: z.number().positive({ error: 'Amount should be above 0' }),
 });
 

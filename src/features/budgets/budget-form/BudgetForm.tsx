@@ -1,12 +1,20 @@
 'use client';
 
-import { Budget, budgetSchema, BudgetValues } from '@/entities/budget';
-import { EXPENSE_CATEGORIES } from '@/entities/category';
+import {
+  ACCOUNT_ROOTS,
+  getAccountsByRoot,
+  useAccountStore,
+} from '@/entities/account';
+import {
+  Budget,
+  budgetSchema,
+  BudgetValues,
+  useBudgetStore,
+} from '@/entities/budget';
 import { Button } from '@/shared/components/ui/button';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
-import { useBudgetStore } from '@/entities/budget';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
@@ -23,21 +31,23 @@ interface BudgetFormProps {
 
 export default function BudgetForm({ budgetInfo }: BudgetFormProps) {
   const router = useRouter();
+  const { accounts } = useAccountStore();
   const { addBudget, updateBudget } = useBudgetStore();
+  const expenseAccounts = getAccountsByRoot(accounts, ACCOUNT_ROOTS.EXPENSES);
 
   const { control, handleSubmit } = useForm<BudgetValues>({
     resolver: zodResolver(budgetSchema),
     defaultValues: budgetInfo
       ? {
-          category: budgetInfo.category,
+          accountId: budgetInfo.accountId,
           monthlyLimit: toMajorUnits(budgetInfo.monthlyLimit),
         }
-      : undefined,
+      : { accountId: expenseAccounts[0]?.id },
   });
 
   const onSubmit: SubmitHandler<BudgetValues> = (data) => {
     const budget = {
-      category: data.category,
+      accountId: data.accountId,
       monthlyLimit: toMinorUnits(Number(data.monthlyLimit)),
     };
 
@@ -58,7 +68,7 @@ export default function BudgetForm({ budgetInfo }: BudgetFormProps) {
         </h1>
         <form className="budget-form" onSubmit={handleSubmit(onSubmit)}>
           <Controller
-            name="category"
+            name="accountId"
             control={control}
             render={({ field, fieldState }) => (
               <Select
@@ -67,10 +77,10 @@ export default function BudgetForm({ budgetInfo }: BudgetFormProps) {
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
-                items={EXPENSE_CATEGORIES}
+                items={expenseAccounts}
                 errorMessage={fieldState.error?.message}
               >
-                {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
               </Select>
             )}
           />

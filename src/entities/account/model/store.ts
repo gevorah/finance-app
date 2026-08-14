@@ -1,11 +1,10 @@
-import {
-  Account,
-  AccountInput,
-  ACCOUNT_TYPES,
-  DEFAULT_ACCOUNT_ID,
-} from './types';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+import { DEFAULT_CHART_OF_ACCOUNTS } from './chart';
+import { indexAccounts } from './selectors';
+import { Account, AccountInput } from './types';
 
 interface AccountStore {
   accounts: Account[];
@@ -15,21 +14,10 @@ interface AccountStore {
   deleteAccount: (id: string) => void;
 }
 
-const defaultAccount: Account = {
-  id: DEFAULT_ACCOUNT_ID,
-  name: 'Cash',
-  type: ACCOUNT_TYPES.CASH,
-  initialBalance: 0,
-  onBudget: true,
-  archived: false,
-  createdAt: '1970-01-01T00:00:00.000Z',
-  updatedAt: '1970-01-01T00:00:00.000Z',
-};
-
 export const useAccountStore = create<AccountStore>()(
   persist(
     (set) => ({
-      accounts: [defaultAccount],
+      accounts: DEFAULT_CHART_OF_ACCOUNTS,
 
       addAccount: (account) =>
         set((state) => {
@@ -61,7 +49,11 @@ export const useAccountStore = create<AccountStore>()(
         set((state) => ({
           accounts: state.accounts.map((account) =>
             account.id === id
-              ? { ...account, archived: true, updatedAt: new Date().toISOString() }
+              ? {
+                  ...account,
+                  archived: true,
+                  updatedAt: new Date().toISOString(),
+                }
               : account,
           ),
         })),
@@ -73,8 +65,13 @@ export const useAccountStore = create<AccountStore>()(
     }),
     {
       name: 'account-storage',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
     },
   ),
 );
+
+export function useAccountsById(): Map<string, Account> {
+  const accounts = useAccountStore((state) => state.accounts);
+  return useMemo(() => indexAccounts(accounts), [accounts]);
+}

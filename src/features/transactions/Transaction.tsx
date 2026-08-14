@@ -7,7 +7,11 @@ import { Button } from '@/shared/components/ui/button';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { getTransactionsByMonth } from '@/entities/transaction';
-import { useTransactionStore } from '@/entities/transaction';
+import { useAccountsById } from '@/entities/account';
+import {
+  describeTransaction,
+  useTransactionStore,
+} from '@/entities/transaction';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import {
   Calendar,
@@ -25,6 +29,7 @@ import { TransactionListSkeleton } from './transaction-list/TransactionListSkele
 export default function TransactionComponent() {
   const hydrated = useHydrated();
   const { transactions } = useTransactionStore();
+  const accountsById = useAccountsById();
   const router = useRouter();
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,7 +49,10 @@ export default function TransactionComponent() {
   const byType =
     filter === 'all'
       ? transactionsByMonth
-      : transactionsByMonth.filter((t) => t.type === filter);
+      : transactionsByMonth.filter(
+          (t) =>
+            describeTransaction(t, accountsById).kind === filter,
+        );
   const trimmedQuery = debouncedQuery.trim().toLowerCase();
   const filteredTransactions = trimmedQuery
     ? byType.filter((t) => t.description.toLowerCase().includes(trimmedQuery))

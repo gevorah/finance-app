@@ -1,6 +1,10 @@
 'use client';
 
-import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
+import {
+  getAccountIcon,
+  getAccountName,
+  useAccountStore,
+} from '@/entities/account';
 import { formatCurrency } from '@/shared/lib/currency';
 import Bar from '@/shared/components/ui/bar/bar';
 import { Card } from '@/shared/components/ui/card';
@@ -23,6 +27,7 @@ const HIGHLIGHT_LABELS: Record<BudgetHighlightKind, string> = {
 export function BudgetSummary() {
   const { budgets } = useBudgetStore();
   const { transactions } = useTransactionStore();
+  const { accounts } = useAccountStore();
   const highlights = getBudgetHighlights(budgets, transactions);
 
   if (highlights.length === 0) return null;
@@ -41,10 +46,13 @@ export function BudgetSummary() {
             <span className="budget-highlight__label">{HIGHLIGHT_LABELS[highlight.kind]}</span>
             <div className="budget-highlight__category">
               <span className="budget-highlight__icon">
-                {getCategoryIcon(highlight.budget.category, 16)}
+                {getAccountIcon(
+                  accounts.find((a) => a.id === highlight.budget.accountId),
+                  16,
+                )}
               </span>
               <span className="budget-highlight__name">
-                {getCategoryLabel(highlight.budget.category)}
+                {getAccountName(accounts, highlight.budget.accountId)}
               </span>
               <span className="budget-highlight__percentage">
                 {highlight.progress.percentage}%

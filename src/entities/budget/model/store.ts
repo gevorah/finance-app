@@ -2,7 +2,7 @@ import { Budget, BudgetInput } from './types';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { migrateBudgetsToV1 } from './migrations';
+import { migrateBudgetsToV2 } from './migrations';
 
 interface BudgetStore {
   budgets: Budget[];
@@ -48,12 +48,12 @@ export const useBudgetStore = create<BudgetStore>()(
     }),
     {
       name: 'budget-storage',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       migrate: (persisted, version) =>
-        version >= 1
+        version >= 2
           ? (persisted as { budgets: Budget[] })
-          : migrateBudgetsToV1(persisted),
+          : migrateBudgetsToV2(persisted),
     },
   ),
 );

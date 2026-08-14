@@ -1,18 +1,17 @@
-import { CategoryType } from '@/entities/category';
 import { Money } from '@/shared/lib/money';
 
-export type TransactionType = 'income' | 'expense' | 'transfer';
+export interface Posting {
+  accountId: string;
+  amount: Money;
+}
 
 export interface Transaction {
   id: string;
-  type: TransactionType;
-  accountId: string;
-  transferAccountId?: string;
-  category?: CategoryType;
-  amount: Money;
   date: string;
   description: string;
+  payee?: string;
   notes?: string;
+  postings: Posting[];
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +21,12 @@ export type TransactionInput = Omit<
   'id' | 'createdAt' | 'updatedAt'
 >;
 
-export function isTransfer(transaction: Transaction): boolean {
-  return transaction.type === 'transfer';
-}
+export const TRANSACTION_KINDS = {
+  EXPENSE: 'expense',
+  INCOME: 'income',
+  TRANSFER: 'transfer',
+  OPENING: 'opening',
+} as const;
+
+export type TransactionKind =
+  (typeof TRANSACTION_KINDS)[keyof typeof TRANSACTION_KINDS];

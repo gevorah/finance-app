@@ -9,23 +9,31 @@ import { useParams, useRouter } from 'next/navigation';
 
 import './BudgetDetails.scss';
 
-import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
+import {
+  getAccountIcon,
+  getAccountName,
+  useAccountStore,
+} from '@/entities/account';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
 import { getTopTransactions } from '@/entities/transaction';
 import { getBudgetProgress, getBudgetSpent } from '@/entities/budget';
-import { useTransactionStore } from '@/entities/transaction';
+import {
+  touchesAccount,
+  useTransactionStore,
+} from '@/entities/transaction';
 
 export function BudgetDetails() {
   const { id } = useParams();
   const router = useRouter();
   const { budgets } = useBudgetStore();
   const { transactions } = useTransactionStore();
+  const { accounts } = useAccountStore();
   const budgetDetail = budgets.find((item) => item.id === id);
-  const transactionsCategory = transactions.filter(
-    (t) => t.category === budgetDetail?.category,
+  const budgetTransactions = transactions.filter((t) =>
+    budgetDetail ? touchesAccount(t, budgetDetail.accountId) : false,
   );
-  const topTransactions = getTopTransactions(transactionsCategory, 3);
+  const topTransactions = getTopTransactions(budgetTransactions, 3);
 
   if (!budgetDetail) return null;
 
@@ -39,7 +47,7 @@ export function BudgetDetails() {
       : [now.getFullYear(), now.getMonth()];
   const prevSpent = getBudgetSpent(
     transactions,
-    budgetDetail.category,
+    budgetDetail.accountId,
     prevYear,
     prevMonth,
   );
@@ -60,9 +68,12 @@ export function BudgetDetails() {
 
       <section className="budget-header">
         <div className="budget-header__icon">
-          {getCategoryIcon(budgetDetail.category, 28)}
+          {getAccountIcon(
+            accounts.find((a) => a.id === budgetDetail.accountId),
+            28,
+          )}
         </div>
-        <h2 className="budget-header__category">{getCategoryLabel(budgetDetail.category)}</h2>
+        <h2 className="budget-header__category">{getAccountName(accounts, budgetDetail.accountId)}</h2>
         <p className="budget-header__daily-avg">
           {formatCurrency(dailyAvg)}/day avg
         </p>
@@ -110,7 +121,13 @@ export function BudgetDetails() {
                 {transaction.description} • {formatDate(transaction.date)}
               </span>
               <span className="budget-transactions__amount">
-                {formatCurrency(transaction.amount)}
+                {formatCurrency(
+                  Math.abs(
+                    transaction.postings.find(
+                      (posting) => posting.accountId === budgetDetail.accountId,
+                    )?.amount ?? 0,
+                  ),
+                )}
               </span>
             </div>
           ))}

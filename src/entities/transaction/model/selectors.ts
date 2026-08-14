@@ -1,18 +1,65 @@
-import { CategoryType } from '@/entities/category';
+import { Account, ACCOUNT_ROOTS } from '@/entities/account';
 import { Money } from '@/shared/lib/money';
 
 import { Transaction } from './types';
 
-export function getTotalIncome(transactions: Transaction[]): Money {
-  return transactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+export function getAccountPostingsTotal(
+  transactions: Transaction[],
+  accountId: string,
+): Money {
+  return transactions.reduce(
+    (total, transaction) =>
+      total +
+      transaction.postings
+        .filter((posting) => posting.accountId === accountId)
+        .reduce((sum, posting) => sum + posting.amount, 0),
+    0,
+  );
 }
 
-export function getTotalExpenses(transactions: Transaction[]): Money {
-  return transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+/**
+ * Expense accounts accumulate positive amounts and income accounts negative
+ * ones, so income is negated to read as a positive figure.
+ */
+export function getActivityByAccount(
+  transactions: Transaction[],
+  accounts: Account[],
+  root: Account['root'],
+): Record<string, Money> {
+  const sign = root === ACCOUNT_ROOTS.INCOME ? -1 : 1;
+
+  return accounts
+    .filter((account) => account.root === root)
+    .reduce<Record<string, Money>>((acc, account) => {
+      const total = sign * getAccountPostingsTotal(transactions, account.id);
+      if (total !== 0) acc[account.id] = total;
+      return acc;
+    }, {});
+}
+
+export function getTotalForRoot(
+  transactions: Transaction[],
+  accounts: Account[],
+  root: Account['root'],
+): Money {
+  return Object.values(getActivityByAccount(transactions, accounts, root)).reduce(
+    (total, amount) => total + amount,
+    0,
+  );
+}
+
+export function getTotalIncome(
+  transactions: Transaction[],
+  accounts: Account[],
+): Money {
+  return getTotalForRoot(transactions, accounts, ACCOUNT_ROOTS.INCOME);
+}
+
+export function getTotalExpenses(
+  transactions: Transaction[],
+  accounts: Account[],
+): Money {
+  return getTotalForRoot(transactions, accounts, ACCOUNT_ROOTS.EXPENSES);
 }
 
 export function getTransactionsByMonth(
@@ -28,80 +75,89 @@ export function getTransactionsByMonth(
 
 export function getMonthlyIncome(
   transactions: Transaction[],
+  accounts: Account[],
   year: number,
   month: number,
 ): Money {
-  return getTotalIncome(getTransactionsByMonth(transactions, year, month));
+  return getTotalIncome(
+    getTransactionsByMonth(transactions, year, month),
+    accounts,
+  );
 }
 
 export function getMonthlyExpenses(
   transactions: Transaction[],
+  accounts: Account[],
   year: number,
   month: number,
 ): Money {
-  return getTotalExpenses(getTransactionsByMonth(transactions, year, month));
+  return getTotalExpenses(
+    getTransactionsByMonth(transactions, year, month),
+    accounts,
+  );
 }
 
 function previousMonth(year: number, month: number): [number, number] {
   return month === 1 ? [year - 1, 12] : [year, month - 1];
 }
 
+function percentageChange(current: Money, previous: Money): number {
+  if (previous === 0) return 0;
+  return ((current - previous) / previous) * 100;
+}
+
 export function monthOverMonthExpenses(
   transactions: Transaction[],
+  accounts: Account[],
   year: number,
   month: number,
 ): number {
-  const current = getMonthlyExpenses(transactions, year, month);
   const [prevYear, prevMonth] = previousMonth(year, month);
-  const previous = getMonthlyExpenses(transactions, prevYear, prevMonth);
-  if (previous === 0) return 0;
-  return ((current - previous) / previous) * 100;
+  return percentageChange(
+    getMonthlyExpenses(transactions, accounts, year, month),
+    getMonthlyExpenses(transactions, accounts, prevYear, prevMonth),
+  );
 }
 
 export function monthOverMonthIncome(
   transactions: Transaction[],
+  accounts: Account[],
   year: number,
   month: number,
 ): number {
-  const current = getMonthlyIncome(transactions, year, month);
   const [prevYear, prevMonth] = previousMonth(year, month);
-  const previous = getMonthlyIncome(transactions, prevYear, prevMonth);
-  if (previous === 0) return 0;
-  return ((current - previous) / previous) * 100;
+  return percentageChange(
+    getMonthlyIncome(transactions, accounts, year, month),
+    getMonthlyIncome(transactions, accounts, prevYear, prevMonth),
+  );
 }
 
-export function getSpendingByCategory(
+export function getSpendingByAccount(
   transactions: Transaction[],
-): Record<CategoryType, Money> {
-  return transactions
-    .filter((t) => t.type === 'expense' && t.category !== undefined)
-    .reduce(
-      (acc, t) => {
-        const category = t.category as CategoryType;
-        acc[category] = (acc[category] ?? 0) + t.amount;
-        return acc;
-      },
-      {} as Record<CategoryType, Money>,
-    );
+  accounts: Account[],
+): Record<string, Money> {
+  return getActivityByAccount(transactions, accounts, ACCOUNT_ROOTS.EXPENSES);
 }
 
-export function getCategorySpendingPercentages(
+export function getSpendingPercentages(
   transactions: Transaction[],
-): Record<CategoryType, number> {
-  const spendingByCategory = getSpendingByCategory(transactions);
-  const total = getTotalExpenses(transactions);
-  return Object.entries(spendingByCategory).reduce(
-    (acc, [category, amount]) => {
-      acc[category as CategoryType] =
-        total > 0 ? Math.round((amount / total) * 100) : 0;
+  accounts: Account[],
+): Record<string, number> {
+  const spending = getSpendingByAccount(transactions, accounts);
+  const total = getTotalExpenses(transactions, accounts);
+
+  return Object.entries(spending).reduce<Record<string, number>>(
+    (acc, [accountId, amount]) => {
+      acc[accountId] = total > 0 ? Math.round((amount / total) * 100) : 0;
       return acc;
     },
-    {} as Record<CategoryType, number>,
+    {},
   );
 }
 
 export function getMonthIncomeExpense(
   transactions: Transaction[],
+  accounts: Account[],
   currentDate: Date,
   amountMonth: number,
 ) {
@@ -111,18 +167,18 @@ export function getMonthIncomeExpense(
       currentDate.getMonth() - index,
     );
     const month = date.getMonth() + 1;
-    const monthText = date.toLocaleString('default', { month: 'short' });
     const year = date.getFullYear();
     return {
-      monthText,
-      income: getMonthlyIncome(transactions, year, month),
-      expenses: getMonthlyExpenses(transactions, year, month),
+      monthText: date.toLocaleString('default', { month: 'short' }),
+      income: getMonthlyIncome(transactions, accounts, year, month),
+      expenses: getMonthlyExpenses(transactions, accounts, year, month),
     };
   });
 }
 
 export function getWeeklySpending(
   transactions: Transaction[],
+  accounts: Account[],
   currentDate: Date,
 ) {
   return Array.from({ length: 7 }).map((_, index) => {
@@ -131,12 +187,15 @@ export function getWeeklySpending(
       currentDate.getMonth(),
       currentDate.getDate() - index,
     );
-    const day = date.getDay();
-    const shortDayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-    const dayTransactions = getTotalExpenses(
-      transactions.filter((t) => t.date === date.toISOString().split('T')[0]),
-    );
-    return { day, shortDayName, dayTransactions };
+    const isoDate = date.toISOString().split('T')[0];
+    return {
+      day: date.getDay(),
+      shortDayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      dayTransactions: getTotalExpenses(
+        transactions.filter((t) => t.date === isoDate),
+        accounts,
+      ),
+    };
   });
 }
 
@@ -149,9 +208,18 @@ export function getRecentTransactions(
     .slice(0, count);
 }
 
+function transactionMagnitude(transaction: Transaction): Money {
+  return Math.max(
+    ...transaction.postings.map((posting) => Math.abs(posting.amount)),
+    0,
+  );
+}
+
 export function getTopTransactions(
   transactions: Transaction[],
   count: number,
 ): Transaction[] {
-  return [...transactions].sort((a, b) => b.amount - a.amount).slice(0, count);
+  return [...transactions]
+    .sort((a, b) => transactionMagnitude(b) - transactionMagnitude(a))
+    .slice(0, count);
 }

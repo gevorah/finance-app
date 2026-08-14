@@ -1,18 +1,26 @@
 import {
   Account,
-  ACCOUNT_TYPES,
-  DEFAULT_ACCOUNT_ID,
+  ACCOUNT_KINDS,
+  ACCOUNT_ROOTS,
+  DEFAULT_CASH_ACCOUNT_ID,
+  DEFAULT_CHART_OF_ACCOUNTS,
+  DEFAULT_INCOME_ACCOUNT_ID,
+  OPENING_BALANCE_ACCOUNT_ID,
   useAccountStore,
 } from '@/entities/account';
 import { Budget, useBudgetStore } from '@/entities/budget';
-import { CATEGORY_TYPES } from '@/entities/category';
 import { Debt, useDebtStore } from '@/entities/debt';
-import { Transaction, useTransactionStore } from '@/entities/transaction';
+import {
+  buildPostings,
+  Transaction,
+  TRANSACTION_KINDS,
+  TransactionKind,
+  useTransactionStore,
+} from '@/entities/transaction';
 import { toMinorUnits } from '@/shared/lib/money';
 
-
-const SAVINGS_ACCOUNT_ID = 'sample-savings';
-const CARD_ACCOUNT_ID = 'sample-card';
+const SAVINGS_ACCOUNT_ID = 'assets-savings';
+const CARD_ACCOUNT_ID = 'liabilities-card';
 
 const EPOCH = '2026-01-01T00:00:00.000Z';
 
@@ -23,21 +31,12 @@ function dayOfCurrentMonth(day: number): string {
 }
 
 export const SAMPLE_ACCOUNTS: Account[] = [
-  {
-    id: DEFAULT_ACCOUNT_ID,
-    name: 'Cash',
-    type: ACCOUNT_TYPES.CASH,
-    initialBalance: toMinorUnits(200000),
-    onBudget: true,
-    archived: false,
-    createdAt: EPOCH,
-    updatedAt: EPOCH,
-  },
+  ...DEFAULT_CHART_OF_ACCOUNTS,
   {
     id: SAVINGS_ACCOUNT_ID,
     name: 'Bancolombia Ahorros',
-    type: ACCOUNT_TYPES.SAVINGS,
-    initialBalance: toMinorUnits(1500000),
+    root: ACCOUNT_ROOTS.ASSETS,
+    kind: ACCOUNT_KINDS.SAVINGS,
     onBudget: false,
     archived: false,
     createdAt: EPOCH,
@@ -46,8 +45,8 @@ export const SAMPLE_ACCOUNTS: Account[] = [
   {
     id: CARD_ACCOUNT_ID,
     name: 'RappiCard',
-    type: ACCOUNT_TYPES.CREDIT_CARD,
-    initialBalance: toMinorUnits(-850000),
+    root: ACCOUNT_ROOTS.LIABILITIES,
+    kind: ACCOUNT_KINDS.CREDIT_CARD,
     onBudget: true,
     creditLimit: toMinorUnits(3000000),
     cutOffDay: 5,
@@ -58,69 +57,82 @@ export const SAMPLE_ACCOUNTS: Account[] = [
   },
 ];
 
-const sampleTransaction = (
+const openingBalance = (
   id: string,
-  type: Transaction['type'],
-  description: string,
-  category: Transaction['category'],
+  accountId: string,
   majorAmount: number,
-  day: number,
-  accountId: string = DEFAULT_ACCOUNT_ID,
 ): Transaction => ({
   id,
-  type,
-  accountId,
-  category,
-  description,
-  amount: toMinorUnits(majorAmount),
-  date: dayOfCurrentMonth(day),
+  date: dayOfCurrentMonth(1),
+  description: 'Opening balance',
+  postings: [
+    { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -toMinorUnits(majorAmount) },
+    { accountId, amount: toMinorUnits(majorAmount) },
+  ],
   createdAt: EPOCH,
   updatedAt: EPOCH,
 });
 
+const sampleTransaction = (
+  id: string,
+  kind: TransactionKind,
+  description: string,
+  counterAccountId: string,
+  majorAmount: number,
+  day: number,
+  accountId: string = DEFAULT_CASH_ACCOUNT_ID,
+): Transaction => ({
+  id,
+  date: dayOfCurrentMonth(day),
+  description,
+  postings: buildPostings({
+    kind,
+    amount: toMinorUnits(majorAmount),
+    accountId,
+    counterAccountId,
+  }),
+  createdAt: EPOCH,
+  updatedAt: EPOCH,
+});
+
+const { EXPENSE, INCOME, TRANSFER } = TRANSACTION_KINDS;
+
 export const SAMPLE_TRANSACTIONS: Transaction[] = [
-  sampleTransaction('s1', 'income', 'Monthly Salary', CATEGORY_TYPES.SALARY, 4500000, 1, SAVINGS_ACCOUNT_ID),
-  sampleTransaction('s2', 'expense', 'Electricity Bill', CATEGORY_TYPES.BILLS, 180000, 5),
-  sampleTransaction('s3', 'expense', 'Bus Pass', CATEGORY_TYPES.TRANSPORT, 60000, 3),
-  sampleTransaction('s4', 'expense', 'Zara', CATEGORY_TYPES.SHOPPING, 189000, 8, CARD_ACCOUNT_ID),
-  sampleTransaction('s5', 'expense', 'Helado', CATEGORY_TYPES.FOOD, 15000, 10),
-  sampleTransaction('s6', 'expense', 'Panadería', CATEGORY_TYPES.FOOD, 28000, 12),
-  sampleTransaction('s7', 'expense', 'Cita médica', CATEGORY_TYPES.HEALTH, 95000, 14),
-  sampleTransaction('s8', 'expense', 'Restaurant', CATEGORY_TYPES.FOOD, 85000, 15, CARD_ACCOUNT_ID),
-  sampleTransaction('s9', 'expense', 'Carulla', CATEGORY_TYPES.FOOD, 120000, 18),
-  sampleTransaction('s10', 'expense', 'Rappi Order', CATEGORY_TYPES.FOOD, 45000, 20, CARD_ACCOUNT_ID),
-  {
-    id: 's11',
-    type: 'transfer',
-    accountId: SAVINGS_ACCOUNT_ID,
-    transferAccountId: DEFAULT_ACCOUNT_ID,
-    description: 'Retiro cajero',
-    amount: toMinorUnits(300000),
-    date: dayOfCurrentMonth(2),
-    createdAt: EPOCH,
-    updatedAt: EPOCH,
-  },
+  openingBalance('open-cash', DEFAULT_CASH_ACCOUNT_ID, 200000),
+  openingBalance('open-savings', SAVINGS_ACCOUNT_ID, 1500000),
+  openingBalance('open-card', CARD_ACCOUNT_ID, -850000),
+  sampleTransaction('s1', INCOME, 'Monthly Salary', DEFAULT_INCOME_ACCOUNT_ID, 4500000, 1, SAVINGS_ACCOUNT_ID),
+  sampleTransaction('s2', TRANSFER, 'Retiro cajero', DEFAULT_CASH_ACCOUNT_ID, 300000, 2, SAVINGS_ACCOUNT_ID),
+  sampleTransaction('s3', EXPENSE, 'Bus Pass', 'expenses-transport', 60000, 3),
+  sampleTransaction('s4', EXPENSE, 'Electricity Bill', 'expenses-bills', 180000, 5),
+  sampleTransaction('s5', EXPENSE, 'Zara', 'expenses-shopping', 189000, 8, CARD_ACCOUNT_ID),
+  sampleTransaction('s6', EXPENSE, 'Helado', 'expenses-food', 15000, 10),
+  sampleTransaction('s7', EXPENSE, 'Panadería', 'expenses-food', 28000, 12),
+  sampleTransaction('s8', EXPENSE, 'Cita médica', 'expenses-health', 95000, 14),
+  sampleTransaction('s9', EXPENSE, 'Restaurant', 'expenses-food', 85000, 15, CARD_ACCOUNT_ID),
+  sampleTransaction('s10', EXPENSE, 'Carulla', 'expenses-food', 120000, 18),
+  sampleTransaction('s11', EXPENSE, 'Rappi Order', 'expenses-food', 45000, 20, CARD_ACCOUNT_ID),
 ];
 
 const sampleBudget = (
   id: string,
-  category: Budget['category'],
+  accountId: string,
   majorLimit: number,
 ): Budget => ({
   id,
-  category,
+  accountId,
   monthlyLimit: toMinorUnits(majorLimit),
   createdAt: EPOCH,
   updatedAt: EPOCH,
 });
 
 export const SAMPLE_BUDGETS: Budget[] = [
-  sampleBudget('b1', CATEGORY_TYPES.FOOD, 600000),
-  sampleBudget('b2', CATEGORY_TYPES.TRANSPORT, 200000),
-  sampleBudget('b3', CATEGORY_TYPES.SHOPPING, 250000),
-  sampleBudget('b4', CATEGORY_TYPES.BILLS, 2350000),
-  sampleBudget('b5', CATEGORY_TYPES.HEALTH, 150000),
-  sampleBudget('b6', CATEGORY_TYPES.OTHERS, 300000),
+  sampleBudget('b1', 'expenses-food', 600000),
+  sampleBudget('b2', 'expenses-transport', 200000),
+  sampleBudget('b3', 'expenses-shopping', 250000),
+  sampleBudget('b4', 'expenses-bills', 2350000),
+  sampleBudget('b5', 'expenses-health', 150000),
+  sampleBudget('b6', 'expenses-others', 300000),
 ];
 
 export const SAMPLE_DEBTS: Debt[] = [
@@ -142,27 +154,6 @@ export const SAMPLE_DEBTS: Debt[] = [
     startDate: '2025-09-01',
     description: 'Crédito libre inversión',
     priority: 1,
-    status: 'current',
-    createdAt: EPOCH,
-    updatedAt: EPOCH,
-  },
-  {
-    id: 'd2',
-    creditorName: 'RappiCard',
-    type: 'credit_card',
-    originalAmount: toMinorUnits(1000000),
-    currentBalance: toMinorUnits(850000),
-    interest: { type: 'fixed', rate: 2.1, period: 'monthly' },
-    paymentTerms: {
-      type: 'revolving',
-      minimumPayment: toMinorUnits(95000),
-      statementBalance: toMinorUnits(850000),
-      cutOffDay: 5,
-      nextPaymentDueDate: dayOfCurrentMonth(20),
-    },
-    startDate: '2026-06-01',
-    description: 'Tarjeta de crédito',
-    priority: 2,
     status: 'current',
     createdAt: EPOCH,
     updatedAt: EPOCH,

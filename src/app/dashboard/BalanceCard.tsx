@@ -1,4 +1,3 @@
-import { TransactionType } from '@/entities/transaction';
 import { formatCurrency } from '@/shared/lib/currency';
 import { Money } from '@/shared/lib/money';
 
@@ -7,13 +6,15 @@ import './BalanceCard.scss';
 import { Card } from '@/shared/components/ui/card';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 
+type MetricTone = 'income' | 'expense';
+
 interface CardBalanceProps {
   balance: Money;
   stats?: Stats[];
 }
 
 interface Stats {
-  icon: TransactionType;
+  icon: MetricTone;
   label: string;
   value: Money;
 }

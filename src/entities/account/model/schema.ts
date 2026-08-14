@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ACCOUNT_TYPES } from './types';
+import { ACCOUNT_KINDS, ACCOUNT_ROOTS } from './types';
 
 const dayOfMonth = z
   .number()
@@ -11,9 +11,10 @@ const dayOfMonth = z
 export const accountSchema = z
   .object({
     name: z.string().min(1, { error: 'Name is required' }),
-    type: z.enum(ACCOUNT_TYPES),
-    initialBalance: z.number({ error: 'Initial balance is required' }),
+    root: z.enum(ACCOUNT_ROOTS),
+    kind: z.enum(ACCOUNT_KINDS).optional(),
     onBudget: z.boolean(),
+    openingBalance: z.number().optional(),
     creditLimit: z
       .number()
       .positive({ error: 'Credit limit should be above 0' })
@@ -23,7 +24,7 @@ export const accountSchema = z
   })
   .refine(
     (data) =>
-      data.type !== ACCOUNT_TYPES.CREDIT_CARD || data.creditLimit !== undefined,
+      data.kind !== ACCOUNT_KINDS.CREDIT_CARD || data.creditLimit !== undefined,
     { error: 'Credit limit is required for a card', path: ['creditLimit'] },
   );
 

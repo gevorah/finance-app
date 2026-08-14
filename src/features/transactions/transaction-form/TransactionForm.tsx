@@ -1,10 +1,21 @@
 'use client';
 
-import { getCategoriesByKind } from '@/entities/category';
 import {
+  ACCOUNT_ROOTS,
+  getAccountsByRoot,
+  getRealAccounts,
+  useAccountsById,
+  useAccountStore,
+} from '@/entities/account';
+import {
+  buildPostings,
+  describeTransaction,
+  isEditableKind,
   Transaction,
+  TRANSACTION_KINDS,
   transactionSchema,
   TransactionValues,
+  useTransactionStore,
 } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
 import { DatePicker } from '@/shared/components/ui/date-picker';
@@ -12,15 +23,9 @@ import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
-import { toMinorUnits, toMajorUnits } from '@/shared/lib/money';
-import { useAccountStore } from '@/entities/account';
-import { useTransactionStore } from '@/entities/transaction';
+import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  getLocalTimeZone,
-  parseDate,
-  today,
-} from '@internationalized/date';
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import { useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
@@ -40,37 +45,61 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
   const router = useRouter();
   const { accounts } = useAccountStore();
   const { addTransaction, updateTransaction } = useTransactionStore();
-  const activeAccounts = accounts.filter((account) => !account.archived);
+
+  const realAccounts = getRealAccounts(accounts);
+  const expenseAccounts = getAccountsByRoot(accounts, ACCOUNT_ROOTS.EXPENSES);
+  const incomeAccounts = getAccountsByRoot(accounts, ACCOUNT_ROOTS.INCOME);
+
+  const accountsById = useAccountsById();
+
+  const initialView = initialData
+    ? describeTransaction(initialData, accountsById)
+    : undefined;
+
+  const editableKind = isEditableKind(initialView?.kind)
+    ? initialView!.kind
+    : TRANSACTION_KINDS.EXPENSE;
 
   const { handleSubmit, control } = useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: initialData
-      ? {
-          ...initialData,
-          amount: toMajorUnits(initialData.amount),
-          date: parseDate(initialData.date),
-        }
-      : {
-          type: 'expense',
-          accountId: activeAccounts[0]?.id,
-          date: today(getLocalTimeZone()),
-          description: '',
-        },
+    defaultValues:
+      initialData && initialView
+        ? {
+            kind: editableKind,
+            amount: toMajorUnits(initialView.amount),
+            accountId: initialView.accountId,
+            counterAccountId: initialView.counterAccountId,
+            description: initialData.description,
+            date: parseDate(initialData.date),
+          }
+        : {
+            kind: TRANSACTION_KINDS.EXPENSE,
+            accountId: realAccounts[0]?.id,
+            counterAccountId: expenseAccounts[0]?.id,
+            description: '',
+            date: today(getLocalTimeZone()),
+          },
   });
 
-  const type = useWatch({ control, name: 'type' });
-  const isTransfer = type === 'transfer';
-  const categories = getCategoriesByKind(type === 'income' ? 'income' : 'expense');
+  const kind = useWatch({ control, name: 'kind' });
+  const isTransfer = kind === TRANSACTION_KINDS.TRANSFER;
+
+  const counterAccounts = isTransfer
+    ? realAccounts
+    : kind === TRANSACTION_KINDS.INCOME
+      ? incomeAccounts
+      : expenseAccounts;
 
   const onSubmit: SubmitHandler<TransactionValues> = (data) => {
     const transaction = {
-      type: data.type,
-      accountId: data.accountId,
-      transferAccountId: isTransfer ? data.transferAccountId : undefined,
-      category: isTransfer ? undefined : data.category,
-      amount: toMinorUnits(Number(data.amount)),
       description: data.description,
       date: data.date.toString(),
+      postings: buildPostings({
+        kind: data.kind,
+        amount: toMinorUnits(Number(data.amount)),
+        accountId: data.accountId,
+        counterAccountId: data.counterAccountId,
+      }),
     };
 
     if (initialData) {
@@ -89,24 +118,26 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
           {initialData ? 'Edit Transaction' : 'New Transaction'}
         </h1>
         <Controller
-          name="type"
+          name="kind"
           control={control}
           render={({ field }) => (
             <ToggleButtonGroup
               className="type-toggle"
               selectedKeys={new Set([field.value])}
               onSelectionChange={(keys) => {
-                const selected = [...keys][0] as TransactionValues['type'];
-                field.onChange(selected);
+                field.onChange([...keys][0] as TransactionValues['kind']);
               }}
             >
-              <Toggle id="expense" className="toggle-expense">
+              <Toggle id={TRANSACTION_KINDS.EXPENSE} className="toggle-expense">
                 Expense
               </Toggle>
-              <Toggle id="income" className="toggle-income">
+              <Toggle id={TRANSACTION_KINDS.INCOME} className="toggle-income">
                 Income
               </Toggle>
-              <Toggle id="transfer" className="toggle-transfer">
+              <Toggle
+                id={TRANSACTION_KINDS.TRANSFER}
+                className="toggle-transfer"
+              >
                 Transfer
               </Toggle>
             </ToggleButtonGroup>
@@ -137,50 +168,30 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
-                items={activeAccounts}
+                items={realAccounts}
                 errorMessage={fieldState.error?.message}
               >
                 {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
               </Select>
             )}
           />
-          {isTransfer ? (
-            <Controller
-              name="transferAccountId"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Select
-                  label="To account"
-                  placeholder="Select account"
-                  name={field.name}
-                  value={field.value}
-                  onChange={field.onChange}
-                  items={activeAccounts}
-                  errorMessage={fieldState.error?.message}
-                >
-                  {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
-                </Select>
-              )}
-            />
-          ) : (
-            <Controller
-              name="category"
-              control={control}
-              render={({ field, fieldState }) => (
-                <Select
-                  label="Category"
-                  placeholder="Select Category"
-                  name={field.name}
-                  value={field.value}
-                  onChange={field.onChange}
-                  items={categories}
-                  errorMessage={fieldState.error?.message}
-                >
-                  {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
-                </Select>
-              )}
-            />
-          )}
+          <Controller
+            name="counterAccountId"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Select
+                label={isTransfer ? 'To account' : 'Category'}
+                placeholder={isTransfer ? 'Select account' : 'Select category'}
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                items={counterAccounts}
+                errorMessage={fieldState.error?.message}
+              >
+                {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+              </Select>
+            )}
+          />
           <Controller
             name="description"
             control={control}

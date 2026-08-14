@@ -6,7 +6,7 @@ import { SpendingChart } from '@/features/charts/spending-chart/SpendingChart';
 import TransactionList from '@/features/transactions/transaction-list/TransactionList';
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { useAccountStore } from '@/entities/account';
-import { getMonthIncomeExpense, getMonthlyExpenses, getMonthlyIncome, getRecentTransactions, getSpendingByCategory, getTotalExpenses, getTotalIncome, getWeeklySpending, monthOverMonthExpenses, monthOverMonthIncome } from '@/entities/transaction';
+import { getMonthIncomeExpense, getMonthlyExpenses, getMonthlyIncome, getRecentTransactions, getSpendingByAccount, getTotalExpenses, getTotalIncome, getWeeklySpending, monthOverMonthExpenses, monthOverMonthIncome } from '@/entities/transaction';
 import { getTotalBalance } from '@/entities/account';
 import { useTransactionStore } from '@/entities/transaction';
 import Link from 'next/link';
@@ -29,9 +29,12 @@ export default function DashboardPage() {
   const month = now.getMonth() + 1;
 
   const recentTransactions = getRecentTransactions(transactions, 5);
-  const weeklySpendingData = getWeeklySpending(transactions, now);
-  const spendingByCategoryData = getSpendingByCategory(transactions);
-  const comparisonData = getMonthIncomeExpense(transactions, now, 6);
+  const weeklySpendingData = getWeeklySpending(transactions, accounts, now);
+  const spendingByAccountData = getSpendingByAccount(transactions, accounts);
+  const accountNames = Object.fromEntries(
+    accounts.map((account) => [account.id, account.name]),
+  );
+  const comparisonData = getMonthIncomeExpense(transactions, accounts, now, 6);
 
   return (
     <div className="page">
@@ -43,31 +46,31 @@ export default function DashboardPage() {
               {
                 icon: 'income',
                 label: 'Income',
-                value: getTotalIncome(transactions),
+                value: getTotalIncome(transactions, accounts),
               },
               {
                 icon: 'expense',
                 label: 'Expenses',
-                value: getTotalExpenses(transactions),
+                value: getTotalExpenses(transactions, accounts),
               },
             ]}
           ></BalanceCard>
           <div className="metrics">
             <MetricCard
               title={'Monthly Expenses'}
-              value={getMonthlyExpenses(transactions, year, month)}
+              value={getMonthlyExpenses(transactions, accounts, year, month)}
               icon={'expense'}
               trend={
-                monthOverMonthExpenses(transactions, year, month).toFixed(1) +
+                monthOverMonthExpenses(transactions, accounts, year, month).toFixed(1) +
                 '% vs last month'
               }
             ></MetricCard>
             <MetricCard
               title={'Monthly Income'}
-              value={getMonthlyIncome(transactions, year, month)}
+              value={getMonthlyIncome(transactions, accounts, year, month)}
               icon={'income'}
               trend={
-                monthOverMonthIncome(transactions, year, month).toFixed(1) +
+                monthOverMonthIncome(transactions, accounts, year, month).toFixed(1) +
                 '% vs last month'
               }
             ></MetricCard>
@@ -75,7 +78,10 @@ export default function DashboardPage() {
         </div>
         <div className="chart-container">
           <WeeklySpendingChart data={weeklySpendingData} />
-          <SpendingChart data={spendingByCategoryData} />
+          <SpendingChart
+            data={spendingByAccountData}
+            accountNames={accountNames}
+          />
           <ComparisonChart data={comparisonData} />
         </div>
         <div className="transaction-header">

@@ -2,14 +2,22 @@
 
 import './TransactionDetails.scss';
 
-import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
+import {
+  getAccountIcon,
+  getAccountName,
+  useAccountsById,
+  useAccountStore,
+} from '@/entities/account';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDateLong } from '@/shared/lib/date';
-import { useAccountStore } from '@/entities/account';
-import { useTransactionStore } from '@/entities/transaction';
+import {
+  describeTransaction,
+  TRANSACTION_KINDS,
+  useTransactionStore,
+} from '@/entities/transaction';
 import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -18,6 +26,7 @@ import Link from 'next/link';
 export default function TransactionDetails() {
   const { transactions, deleteTransaction } = useTransactionStore();
   const { accounts } = useAccountStore();
+  const accountsById = useAccountsById();
   const { id } = useParams();
   const router = useRouter();
   const transaction = transactions.find((t) => t.id === id);
@@ -41,15 +50,10 @@ export default function TransactionDetails() {
     );
   }
 
+  const view = describeTransaction(transaction, accountsById);
   const signedAmount =
-    transaction.type === 'income' ? transaction.amount : -transaction.amount;
-
-  const categoryLabel = transaction.category
-    ? getCategoryLabel(transaction.category)
-    : 'Transfer';
-
-  const accountName = (id: string) =>
-    accounts.find((account) => account.id === id)?.name ?? 'Unknown account';
+    view.kind === TRANSACTION_KINDS.INCOME ? view.amount : -view.amount;
+  const counterName = getAccountName(accounts, view.counterAccountId);
 
   const handleDelete = () => {
     deleteTransaction(transaction.id);
@@ -70,14 +74,14 @@ export default function TransactionDetails() {
       <section className="transaction-details">
         <div className="details-header">
           <div
-            className={`transaction-icon transaction-icon--${transaction.type}`}
+            className={`transaction-icon transaction-icon--${view.kind}`}
           >
-            {getCategoryIcon(transaction.category, 28)}
+            {getAccountIcon(accountsById.get(view.counterAccountId), 28)}
           </div>
           <h1 className="details-header__title">{transaction.description}</h1>
-          <p className="details-header__category">{categoryLabel}</p>
+          <p className="details-header__category">{counterName}</p>
           <p
-            className={`details-header__amount details-header__amount--${transaction.type}`}
+            className={`details-header__amount details-header__amount--${view.kind}`}
           >
             {formatCurrency(signedAmount, { showSign: true })}
           </p>
@@ -86,16 +90,16 @@ export default function TransactionDetails() {
         <div className="transaction-information">
           <p className="transaction-information__title"> INFORMATION </p>
           <p className="transaction-information__row">
-            Type: {transaction.type}
+            Type: {view.kind}
           </p>
           <p className="transaction-information__row">
-            Category: {categoryLabel}
+            Category: {counterName}
           </p>
           <p className="transaction-information__row">
             Date: {formatDateLong(transaction.date)}
           </p>
           <p className="transaction-information__row">
-            Account: {accountName(transaction.accountId)}
+            Account: {getAccountName(accounts, view.accountId)}
           </p>
         </div>
       </section>
@@ -110,7 +114,7 @@ export default function TransactionDetails() {
           description={
             'Are you sure you want to delete this transaction? This action cannot be undone.'
           }
-          icon={getCategoryIcon(transaction.category, 24)}
+          icon={getAccountIcon(accountsById.get(view.counterAccountId), 24)}
         >
           <Button variant={'secondary'} size={'medium'}>
             Edit
