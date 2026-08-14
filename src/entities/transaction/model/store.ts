@@ -2,12 +2,6 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { isBalanced } from './ledger';
-import {
-  legacyDebtsToOpeningBalances,
-  readLegacyDebtStorage,
-} from '@/entities/account';
-
-import { buildDebtOpeningBalances, migrateTransactionsToV2 } from './migrations';
 import { Transaction, TransactionInput } from './types';
 
 interface TransactionStore {
@@ -74,24 +68,6 @@ export const useTransactionStore = create<TransactionStore>()(
       name: 'transaction-storage',
       version: 3,
       storage: createJSONStorage(() => localStorage),
-      migrate: (persisted, version) => {
-        const base =
-          version >= 2
-            ? (persisted as { transactions: Transaction[] })
-            : migrateTransactionsToV2(persisted);
-
-        if (version >= 3) return base;
-
-        return {
-          transactions: [
-            ...base.transactions,
-            ...buildDebtOpeningBalances(
-              legacyDebtsToOpeningBalances(readLegacyDebtStorage()),
-              new Date().toISOString().slice(0, 10),
-            ),
-          ],
-        };
-      },
     },
   ),
 );

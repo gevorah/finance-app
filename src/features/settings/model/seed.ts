@@ -169,7 +169,14 @@ export function loadSampleData(): void {
   useBudgetStore.setState({ budgets: SAMPLE_BUDGETS });
 }
 
+/** Wipes what is persisted, not just what is in memory. */
 export function clearAllData(): void {
+  useAccountStore.persist.clearStorage();
+  useTransactionStore.persist.clearStorage();
+  useBudgetStore.persist.clearStorage();
+  localStorage.removeItem('debt-storage');
+
+  useAccountStore.setState({ accounts: DEFAULT_CHART_OF_ACCOUNTS });
   useTransactionStore.setState({ transactions: [] });
   useBudgetStore.setState({ budgets: [] });
 }

@@ -2,7 +2,6 @@ export * from './model/types';
 export * from './model/chart';
 export * from './model/debt-terms';
 export * from './model/debt-schema';
-export * from './model/debt-migration';
 export * from './model/debt-selectors';
 export * from './model/schema';
 export * from './model/selectors';
