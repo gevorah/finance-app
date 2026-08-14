@@ -1,6 +1,5 @@
 'use client';
 
-import { getCategoryIcon } from '@/features/transactions/utils/getCategoryIcon';
 import Bar from '@/shared/components/ui/bar/bar';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
@@ -10,7 +9,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 import './BudgetDetails.scss';
 
-import { getCategoryLabel } from '@/entities/category';
+import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
 import {

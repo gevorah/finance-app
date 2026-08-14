@@ -1,7 +1,5 @@
 'use client';
 
-import { CategoryType } from '@/entities/category';
-import { getCategoryIcon } from '@/features/transactions/utils/getCategoryIcon';
 import clsx from 'clsx';
 import {
   Dialog as AriaDialog,
@@ -61,7 +59,7 @@ export function DialogTitle(props: HeadingProps) {
 }
 
 interface DialogProps {
-  category: CategoryType;
+  icon?: React.ReactNode;
   trigger: React.ReactNode;
   title: string;
   description: string;
@@ -69,7 +67,7 @@ interface DialogProps {
 }
 
 export function Dialog({
-  category,
+  icon,
   trigger,
   title,
   description,
@@ -81,9 +79,7 @@ export function Dialog({
       <DialogOverlay>
         <DialogContent>
           <div className={styles.header}>
-            <div className="transaction-icon">
-              {getCategoryIcon(category, 24)}
-            </div>
+            {icon && <div className="transaction-icon">{icon}</div>}
             <DialogTitle>{title}</DialogTitle>
           </div>
           <p className={styles.description}>{description}</p>

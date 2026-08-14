@@ -2,7 +2,7 @@
 
 import './TransactionDetails.scss';
 
-import { getCategoryLabel } from '@/entities/category';
+import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
 import { EmptyState } from '@/shared/components/ui/empty-state';
@@ -13,7 +13,6 @@ import { useTransactionStore } from '@/stores/transactionStore';
 import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
-import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
 import Link from 'next/link';
 
 export default function TransactionDetails() {
@@ -111,7 +110,7 @@ export default function TransactionDetails() {
           description={
             'Are you sure you want to delete this transaction? This action cannot be undone.'
           }
-          category={'food'}
+          icon={getCategoryIcon(transaction.category, 24)}
         >
           <Button variant={'secondary'} size={'medium'}>
             Edit

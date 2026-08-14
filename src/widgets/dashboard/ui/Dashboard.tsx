@@ -24,8 +24,8 @@ import {
 import { useTransactionStore } from '@/stores/transactionStore';
 import Link from 'next/link';
 
-import { ComparisonChart } from '../charts/comparison-chart/ComparisonChart';
-import { WeeklySpendingChart } from '../charts/weekly-spending-chart/WeeklySpendingChart';
+import { ComparisonChart } from '@/features/charts/comparison-chart/ComparisonChart';
+import { WeeklySpendingChart } from '@/features/charts/weekly-spending-chart/WeeklySpendingChart';
 import { DashboardSkeleton } from './DashboardSkeleton';
 
 export default function Dashboard() {

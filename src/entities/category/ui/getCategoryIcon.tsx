@@ -1,4 +1,4 @@
-import { CATEGORY_TYPES, CategoryType } from '@/entities/category';
+import { CATEGORY_TYPES, CategoryType } from '../model/types';
 import {
   ArrowLeftRight,
   Banknote,
@@ -23,7 +23,6 @@ const CATEGORY_ICONS: Record<CategoryType, LucideIcon> = {
   [CATEGORY_TYPES.OTHERS]: HelpCircle,
 };
 
-/** Transfers have no category, so they get the transfer icon instead. */
 export function getCategoryIcon(
   category: CategoryType | undefined,
   size: number = 20,

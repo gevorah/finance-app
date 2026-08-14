@@ -1,6 +1,6 @@
 import '@/shared/styles/globals.scss';
 
-import { AppShell } from '@/shared/components/shell/AppShell';
+import { AppShell } from '@/widgets/app-shell';
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import localFont from 'next/font/local';

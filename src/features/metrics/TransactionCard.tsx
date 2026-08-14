@@ -2,12 +2,11 @@ import { Card } from '@/shared/components/ui/card';
 
 import './TransactionCard.scss';
 
-import { getCategoryLabel } from '@/entities/category';
+import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
 import { Transaction } from '@/entities/transaction';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
 
-import { getCategoryIcon } from '../transactions/utils/getCategoryIcon';
 
 interface TransactionCardProps {
   transaction: Transaction;

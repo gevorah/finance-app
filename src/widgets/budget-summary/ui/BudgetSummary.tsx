@@ -1,7 +1,6 @@
 'use client';
 
-import { getCategoryLabel } from '@/entities/category';
-import { getCategoryIcon } from '@/features/transactions/utils/getCategoryIcon';
+import { getCategoryIcon, getCategoryLabel } from '@/entities/category';
 import { formatCurrency } from '@/shared/lib/currency';
 import Bar from '@/shared/components/ui/bar/bar';
 import { Card } from '@/shared/components/ui/card';
