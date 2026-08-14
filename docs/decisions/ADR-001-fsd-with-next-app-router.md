@@ -1,12 +1,14 @@
 ---
 status: 'accepted'
-date: 2026-08-14
+date: 2026-01-06
 decision-makers: Jhon
 ---
 
 # Use Next's app directory as the routing layer instead of an FSD app layer
 
 ## Context and Problem Statement
+
+Esta decisión se tomó al iniciar el repositorio y se registra en retrospectiva.
 
 A layered architecture and a framework can both claim the right to name the top
 of the folder tree. Feature-Sliced Design defines an ordered set of layers and
