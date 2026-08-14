@@ -1,11 +1,11 @@
 'use client';
 
 import { getCategoriesByKind } from '@/entities/category';
-import { Transaction } from '@/entities/transaction';
 import {
+  Transaction,
   transactionSchema,
   TransactionValues,
-} from '@/entities/transaction/model/schema';
+} from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
