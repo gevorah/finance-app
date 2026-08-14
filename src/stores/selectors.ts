@@ -237,3 +237,43 @@ export function getBudgetSummary(
     totals.limit > 0 ? Math.round((totals.spent / totals.limit) * 100) : 0;
   return { ...totals, remaining, percentage };
 }
+
+export interface BudgetHighlight {
+  label: string;
+  budget: Budget;
+  progress: BudgetProgress;
+}
+
+export function getBudgetHighlights(
+  budgets: Budget[],
+  transactions: Transaction[],
+  refDate: Date = new Date(),
+): BudgetHighlight[] {
+  const entries = budgets.map((budget) => ({
+    budget,
+    progress: getBudgetProgress(budget, transactions, refDate),
+  }));
+
+  if (entries.length === 0) return [];
+
+  const byPercentageDesc = [...entries].sort(
+    (a, b) => b.progress.percentage - a.progress.percentage,
+  );
+  const bySpentDesc = [...entries].sort(
+    (a, b) => b.progress.spent - a.progress.spent,
+  );
+
+  const candidates = [
+    { label: 'Most used', entry: bySpentDesc[0] },
+    { label: 'Closest to limit', entry: byPercentageDesc[0] },
+    { label: 'Healthiest', entry: byPercentageDesc[byPercentageDesc.length - 1] },
+  ];
+
+  const seen = new Set<string>();
+  return candidates.reduce<BudgetHighlight[]>((acc, { label, entry }) => {
+    if (seen.has(entry.budget.id)) return acc;
+    seen.add(entry.budget.id);
+    acc.push({ label, ...entry });
+    return acc;
+  }, []);
+}

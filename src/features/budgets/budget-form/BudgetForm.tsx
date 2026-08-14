@@ -45,7 +45,7 @@ export default function BudgetForm({ budgetInfo }: BudgetFormProps) {
         <h1 className="form-container__title">
           {budgetInfo ? 'Edit Budget' : 'New Budget'}
         </h1>
-        <form className="budget-form" onSubmit={handleSubmit(onSubmit, (errors) => console.log('Validation errors:', errors))}>
+        <form className="budget-form" onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name="name"
             control={control}
