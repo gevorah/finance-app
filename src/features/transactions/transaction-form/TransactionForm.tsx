@@ -10,6 +10,8 @@ import {
 import {
   buildPostings,
   describeTransaction,
+  getPayees,
+  getPayeeSuggestion,
   isEditableKind,
   Transaction,
   TRANSACTION_KINDS,
@@ -21,6 +23,7 @@ import { Button } from '@/shared/components/ui/button';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
+import { ComboBox, ComboBoxItem } from '@/shared/components/ui/combo-box';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
@@ -44,7 +47,8 @@ interface TransactionFormProps {
 export default function TransactionForm({ initialData }: TransactionFormProps) {
   const router = useRouter();
   const { accounts } = useAccountStore();
-  const { addTransaction, updateTransaction } = useTransactionStore();
+  const { transactions, addTransaction, updateTransaction } =
+    useTransactionStore();
 
   const realAccounts = getRealAccounts(accounts);
   const expenseAccounts = getAccountsByRoot(accounts, ACCOUNT_ROOTS.EXPENSES);
@@ -60,7 +64,8 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
     ? initialView!.kind
     : TRANSACTION_KINDS.EXPENSE;
 
-  const { handleSubmit, control } = useForm<TransactionValues>({
+  const { handleSubmit, control, setValue, formState } =
+    useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues:
       initialData && initialView
@@ -69,6 +74,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
             amount: toMajorUnits(initialView.amount),
             accountId: initialView.accountId,
             counterAccountId: initialView.counterAccountId,
+            payee: initialData.payee ?? '',
             description: initialData.description,
             date: parseDate(initialData.date),
           }
@@ -76,10 +82,11 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
             kind: TRANSACTION_KINDS.EXPENSE,
             accountId: realAccounts[0]?.id,
             counterAccountId: expenseAccounts[0]?.id,
+            payee: '',
             description: '',
             date: today(getLocalTimeZone()),
           },
-  });
+    });
 
   const kind = useWatch({ control, name: 'kind' });
   const isTransfer = kind === TRANSACTION_KINDS.TRANSFER;
@@ -90,8 +97,23 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
       ? incomeAccounts
       : expenseAccounts;
 
+  const payees = getPayees(transactions);
+
+  const applyPayeeSuggestion = (payee: string) => {
+    const suggestion = getPayeeSuggestion(payee, transactions, accountsById);
+    if (!suggestion) return;
+
+    if (!formState.dirtyFields.accountId) {
+      setValue('accountId', suggestion.accountId);
+    }
+    if (!formState.dirtyFields.counterAccountId) {
+      setValue('counterAccountId', suggestion.counterAccountId);
+    }
+  };
+
   const onSubmit: SubmitHandler<TransactionValues> = (data) => {
     const transaction = {
+      payee: data.payee?.trim() || undefined,
       description: data.description,
       date: data.date.toString(),
       postings: buildPostings({
@@ -190,6 +212,30 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               >
                 {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
               </Select>
+            )}
+          />
+          <Controller
+            name="payee"
+            control={control}
+            render={({ field, fieldState }) => (
+              <ComboBox
+                label="Payee"
+                placeholder="Where was it"
+                name={field.name}
+                allowsCustomValue
+                inputValue={field.value ?? ''}
+                onInputChange={field.onChange}
+                onSelectionChange={(key) => {
+                  if (key === null) return;
+                  field.onChange(String(key));
+                  applyPayeeSuggestion(String(key));
+                }}
+                onBlur={() => applyPayeeSuggestion(field.value ?? '')}
+                items={payees.map((payee) => ({ id: payee }))}
+                errorMessage={fieldState.error?.message}
+              >
+                {(item) => <ComboBoxItem id={item.id}>{item.id}</ComboBoxItem>}
+              </ComboBox>
             )}
           />
           <Controller

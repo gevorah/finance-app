@@ -17,6 +17,7 @@ export const transactionSchema = z
     amount: z.number().positive({ error: 'Amount should be above 0' }),
     accountId: z.string().min(1, { error: 'Account is required' }),
     counterAccountId: z.string().min(1, { error: 'Category is required' }),
+    payee: z.string().optional(),
     description: z.string().min(1, { error: 'Description is required' }),
     date: z.custom<DateValue>((val) => val !== undefined && val !== null, {
       error: 'Date is required',

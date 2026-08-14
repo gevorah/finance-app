@@ -1,6 +1,7 @@
 import { Account, ACCOUNT_ROOTS } from '@/entities/account';
 import { Money } from '@/shared/lib/money';
 
+import { describeTransaction } from './ledger';
 import { Transaction } from './types';
 
 export function getAccountPostingsTotal(
@@ -222,4 +223,43 @@ export function getTopTransactions(
   return [...transactions]
     .sort((a, b) => transactionMagnitude(b) - transactionMagnitude(a))
     .slice(0, count);
+}
+
+export function getPayees(transactions: Transaction[]): string[] {
+  const payees = transactions
+    .map((transaction) => transaction.payee?.trim())
+    .filter((payee): payee is string => Boolean(payee));
+
+  return [...new Set(payees)].sort((a, b) => a.localeCompare(b));
+}
+
+export interface PayeeSuggestion {
+  accountId: string;
+  counterAccountId: string;
+}
+
+/**
+ * Actual Budget learns a payee's category from what the user did last time
+ * instead of asking for a rule. The ledger already holds that history, so the
+ * suggestion is a query over it rather than something to store.
+ */
+export function getPayeeSuggestion(
+  payee: string,
+  transactions: Transaction[],
+  accountsById: Map<string, Account>,
+): PayeeSuggestion | undefined {
+  const normalized = payee.trim().toLowerCase();
+  if (!normalized) return undefined;
+
+  const lastMatch = [...transactions]
+    .filter((t) => t.payee?.trim().toLowerCase() === normalized)
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+
+  if (!lastMatch) return undefined;
+
+  const view = describeTransaction(lastMatch, accountsById);
+  return {
+    accountId: view.accountId,
+    counterAccountId: view.counterAccountId,
+  };
 }
