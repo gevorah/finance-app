@@ -116,12 +116,14 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
       payee: data.payee?.trim() || undefined,
       description: data.description,
       date: data.date.toString(),
-      postings: buildPostings({
-        kind: data.kind,
-        amount: toMinorUnits(Number(data.amount)),
-        accountId: data.accountId,
-        counterAccountId: data.counterAccountId,
-      }),
+      postings: buildPostings(
+        {
+          amount: toMinorUnits(Number(data.amount)),
+          accountId: data.accountId,
+          counterAccountId: data.counterAccountId,
+        },
+        accountsById,
+      ),
     };
 
     if (initialData) {

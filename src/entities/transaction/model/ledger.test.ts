@@ -1,9 +1,9 @@
 import {
   Account,
   ACCOUNT_ROOTS,
-  indexAccounts,
   DEFAULT_CASH_ACCOUNT_ID,
   DEFAULT_INCOME_ACCOUNT_ID,
+  indexAccounts,
   OPENING_BALANCE_ACCOUNT_ID,
 } from '@/entities/account';
 import { toMinorUnits } from '@/shared/lib/money';
@@ -70,20 +70,42 @@ describe('buildPostings', () => {
     },
   ] as const;
 
-  it.each(cases)('balances a $kind to zero', (draft) => {
-    const postings = buildPostings({ ...draft, amount: toMinorUnits(45000.5) });
+  it.each(cases)(
+    'balances a $kind to zero',
+    ({ accountId, counterAccountId }) => {
+      const postings = buildPostings(
+        { accountId, counterAccountId, amount: toMinorUnits(45000.5) },
+        accountsById,
+      );
 
-    expect(getPostingsTotal(postings)).toBe(0);
-    expect(isBalanced(postings)).toBe(true);
-  });
+      expect(getPostingsTotal(postings)).toBe(0);
+      expect(isBalanced(postings)).toBe(true);
+    },
+  );
+
+  it.each(cases)(
+    'writes a $kind that reads back as the same kind',
+    ({ kind, ...draft }) => {
+      const postings = buildPostings(
+        { ...draft, amount: toMinorUnits(45000.5) },
+        accountsById,
+      );
+
+      expect(
+        describeTransaction(transaction(postings), accountsById).kind,
+      ).toBe(kind);
+    },
+  );
 
   it('takes money out of the paying account on an expense', () => {
-    const postings = buildPostings({
-      kind: TRANSACTION_KINDS.EXPENSE,
-      amount: toMinorUnits(50000),
-      accountId: DEFAULT_CASH_ACCOUNT_ID,
-      counterAccountId: FOOD_ID,
-    });
+    const postings = buildPostings(
+      {
+        amount: toMinorUnits(50000),
+        accountId: DEFAULT_CASH_ACCOUNT_ID,
+        counterAccountId: FOOD_ID,
+      },
+      accountsById,
+    );
 
     expect(postings).toContainEqual({
       accountId: DEFAULT_CASH_ACCOUNT_ID,
@@ -93,12 +115,14 @@ describe('buildPostings', () => {
   });
 
   it('puts money into the receiving account on an income', () => {
-    const postings = buildPostings({
-      kind: TRANSACTION_KINDS.INCOME,
-      amount: toMinorUnits(4500000),
-      accountId: DEFAULT_CASH_ACCOUNT_ID,
-      counterAccountId: DEFAULT_INCOME_ACCOUNT_ID,
-    });
+    const postings = buildPostings(
+      {
+        amount: toMinorUnits(4500000),
+        accountId: DEFAULT_CASH_ACCOUNT_ID,
+        counterAccountId: DEFAULT_INCOME_ACCOUNT_ID,
+      },
+      accountsById,
+    );
 
     expect(postings).toContainEqual({
       accountId: DEFAULT_CASH_ACCOUNT_ID,
@@ -112,12 +136,14 @@ describe('buildPostings', () => {
 
   it('never drifts across many postings, unlike floats', () => {
     const postings = Array.from({ length: 30 }).flatMap(() =>
-      buildPostings({
-        kind: TRANSACTION_KINDS.EXPENSE,
-        amount: toMinorUnits(0.1),
-        accountId: DEFAULT_CASH_ACCOUNT_ID,
-        counterAccountId: FOOD_ID,
-      }),
+      buildPostings(
+        {
+          amount: toMinorUnits(0.1),
+          accountId: DEFAULT_CASH_ACCOUNT_ID,
+          counterAccountId: FOOD_ID,
+        },
+        accountsById,
+      ),
     );
 
     expect(getPostingsTotal(postings)).toBe(0);
@@ -150,7 +176,6 @@ describe('describeTransaction', () => {
     );
 
     expect(view).toMatchObject({
-      kind: TRANSACTION_KINDS.EXPENSE,
       amount: 5000000,
       accountId: DEFAULT_CASH_ACCOUNT_ID,
       counterAccountId: FOOD_ID,
@@ -227,14 +252,13 @@ describe('describeTransaction', () => {
 
   it('survives a round trip through the form draft', () => {
     const draft = {
-      kind: TRANSACTION_KINDS.EXPENSE,
       amount: toMinorUnits(120000),
       accountId: CARD_ID,
       counterAccountId: FOOD_ID,
     } as const;
 
     const view = describeTransaction(
-      transaction(buildPostings(draft)),
+      transaction(buildPostings(draft, accountsById)),
       accountsById,
     );
 

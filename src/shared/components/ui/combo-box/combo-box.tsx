@@ -16,8 +16,10 @@ import { ListBox, ListBoxItem } from '../list-box';
 import { Popover } from '../popover';
 import styles from './combo-box.module.scss';
 
-export interface ComboBoxProps<T extends object>
-  extends Omit<AriaComboBoxProps<T>, 'children'> {
+export interface ComboBoxProps<T extends object> extends Omit<
+  AriaComboBoxProps<T>,
+  'children'
+> {
   label?: string;
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);

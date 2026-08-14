@@ -5,46 +5,48 @@
 }
 
 .field {
-  position: relative;
   display: flex;
-  align-items: center;
-}
-
-.input {
   width: 100%;
-  height: var(--spacing-10);
-  padding: var(--spacing-2) var(--spacing-10) var(--spacing-2) var(--spacing-4);
-
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
+  align-items: center;
+  padding-right: var(--spacing-2);
 
   background-color: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  outline: none;
 
-  appearance: none;
   transition: border-color 0.15s ease-in-out;
 
-  &::placeholder {
-    color: var(--color-text-muted);
-  }
-
-  &[data-focused] {
+  &:has([data-focused]) {
     border-color: var(--color-primary);
   }
 
-  &[data-disabled] {
-    color: var(--color-text-muted);
+  &:has([data-disabled]) {
     cursor: not-allowed;
     opacity: 0.5;
   }
 }
 
-.trigger {
-  position: absolute;
-  right: var(--spacing-2);
+.input {
+  flex: 1;
+  height: var(--spacing-10);
+  min-width: 0;
+  padding: var(--spacing-2) var(--spacing-4);
 
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+
+  background: none;
+  border: none;
+  outline: none;
+
+  appearance: none;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.trigger {
   display: flex;
   align-items: center;
   justify-content: center;

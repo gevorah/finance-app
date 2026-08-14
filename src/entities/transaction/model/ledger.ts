@@ -33,7 +33,6 @@ export function touchesAccount(
 }
 
 export interface TransactionDraft {
-  kind: TransactionKind;
   amount: Money;
   /** Real account the money leaves from or arrives in. */
   accountId: string;
@@ -43,27 +42,27 @@ export interface TransactionDraft {
 
 /**
  * Money always leaves one account and arrives in another, so the two amounts
- * are mirror images and the transaction sums to zero.
+ * are mirror images and the transaction sums to zero. The direction is read
+ * from the counter account's root, the same rule describeTransaction uses, so
+ * writing and reading a transaction can never disagree about its type.
  */
-export function buildPostings({
-  kind,
-  amount,
-  accountId,
-  counterAccountId,
-}: TransactionDraft): Posting[] {
+export function buildPostings(
+  { amount, accountId, counterAccountId }: TransactionDraft,
+  accountsById: Map<string, Account>,
+): Posting[] {
   const magnitude = Math.abs(amount);
+  const moneyArrives =
+    accountsById.get(counterAccountId)?.root === ACCOUNT_ROOTS.INCOME;
 
-  if (kind === TRANSACTION_KINDS.INCOME) {
-    return [
-      { accountId: counterAccountId, amount: -magnitude },
-      { accountId, amount: magnitude },
-    ];
-  }
-
-  return [
-    { accountId, amount: -magnitude },
-    { accountId: counterAccountId, amount: magnitude },
-  ];
+  return moneyArrives
+    ? [
+        { accountId: counterAccountId, amount: -magnitude },
+        { accountId, amount: magnitude },
+      ]
+    : [
+        { accountId, amount: -magnitude },
+        { accountId: counterAccountId, amount: magnitude },
+      ];
 }
 
 export interface TransactionView {

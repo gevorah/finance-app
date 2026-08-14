@@ -1,5 +1,7 @@
 import {
   DEFAULT_CASH_ACCOUNT_ID,
+  DEFAULT_CHART_OF_ACCOUNTS,
+  indexAccounts,
   DEFAULT_INCOME_ACCOUNT_ID,
   OPENING_BALANCE_ACCOUNT_ID,
   UNCATEGORIZED_EXPENSE_ACCOUNT_ID,
@@ -38,6 +40,8 @@ function counterAccountFor(entry: PersistedRecord, kind: TransactionKind) {
   );
 }
 
+const DEFAULT_ACCOUNTS_BY_ID = indexAccounts(DEFAULT_CHART_OF_ACCOUNTS);
+
 /** Version 1 stored a single amount plus a type; version 2 stores balanced postings. */
 export function migrateTransactionsToV2(persisted: unknown): {
   transactions: Transaction[];
@@ -51,12 +55,14 @@ export function migrateTransactionsToV2(persisted: unknown): {
         id: String(entry.id),
         date: String(entry.date),
         description: String(entry.description ?? ''),
-        postings: buildPostings({
-          kind,
-          amount,
-          accountId: String(entry.accountId ?? DEFAULT_CASH_ACCOUNT_ID),
-          counterAccountId: counterAccountFor(entry, kind),
-        }),
+        postings: buildPostings(
+          {
+            amount,
+            accountId: String(entry.accountId ?? DEFAULT_CASH_ACCOUNT_ID),
+            counterAccountId: counterAccountFor(entry, kind),
+          },
+          DEFAULT_ACCOUNTS_BY_ID,
+        ),
         createdAt: String(entry.createdAt ?? new Date().toISOString()),
         updatedAt: String(entry.updatedAt ?? new Date().toISOString()),
       };

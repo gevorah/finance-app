@@ -5,6 +5,7 @@ import {
   DEFAULT_CASH_ACCOUNT_ID,
   DEFAULT_CHART_OF_ACCOUNTS,
   DEFAULT_INCOME_ACCOUNT_ID,
+  indexAccounts,
   OPENING_BALANCE_ACCOUNT_ID,
   useAccountStore,
 } from '@/entities/account';
@@ -73,6 +74,8 @@ const openingBalance = (
   updatedAt: EPOCH,
 });
 
+const SAMPLE_ACCOUNTS_BY_ID = indexAccounts(SAMPLE_ACCOUNTS);
+
 const sampleTransaction = (
   id: string,
   kind: TransactionKind,
@@ -85,12 +88,14 @@ const sampleTransaction = (
   id,
   date: dayOfCurrentMonth(day),
   description,
-  postings: buildPostings({
-    kind,
-    amount: toMinorUnits(majorAmount),
-    accountId,
-    counterAccountId,
-  }),
+  postings: buildPostings(
+    {
+      amount: toMinorUnits(majorAmount),
+      accountId,
+      counterAccountId,
+    },
+    SAMPLE_ACCOUNTS_BY_ID,
+  ),
   createdAt: EPOCH,
   updatedAt: EPOCH,
 });

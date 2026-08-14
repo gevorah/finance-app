@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPostings } from './ledger';
 import { getPayees, getPayeeSuggestion } from './selectors';
-import { Transaction, TRANSACTION_KINDS } from './types';
+import { Transaction } from './types';
 
 const CARD_ID = 'liabilities-card';
 const FOOD_ID = 'expenses-food';
@@ -43,11 +43,10 @@ const expense = (
   description: id,
   payee,
   postings: buildPostings({
-    kind: TRANSACTION_KINDS.EXPENSE,
     amount: 5000000,
     accountId,
     counterAccountId,
-  }),
+  }, accountsById),
   createdAt: '',
   updatedAt: '',
 });
