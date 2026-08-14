@@ -45,12 +45,16 @@ and the order in which debts should be paid is an ordering of accounts, so
 neither is stored.
 
 This is not forced by the decision to keep a ledger — a terms-only entity beside
-an account would satisfy that just as well. What settles it is that every
-reference implementation with real debt features reaches the same shape: GnuCash
-treats a loan as a liability with interest as an ongoing expense, and Firefly III,
-which offers the richest debt handling of the tools reviewed, keeps rate and
-period as fields on the liability account and states plainly that it does not
-calculate anything from them.
+an account would satisfy that just as well. What the references settle is the
+first half: all of them treat a debt as a liability account whose balance comes
+from its postings, with interest as an ongoing expense.
+
+They do not agree on where the terms belong. Firefly III keeps rate and period as
+fields on the liability account and states plainly that it calculates nothing from
+them. GnuCash puts them somewhere else entirely: its loan assistant stores the
+rate and the length of the loan in the scheduled transaction that repays it, and
+the account carries no rate at all. We follow Firefly because there is nothing
+here yet to schedule a payment with.
 
 ### Consequences
 
@@ -64,6 +68,10 @@ calculate anything from them.
   roots, and a reader may reasonably expect a liability to be its own type.
 - Bad, because a debt can no longer be marked as settled directly; it is settled
   by recording the payment that settles it, which is more honest and more typing.
+- Bad, because the payment schedule — amount, frequency, next due date — is a
+  recurring payment described in a second place. GnuCash keeps exactly that in a
+  scheduled transaction. Once recurring transactions exist, the schedule should
+  move there and only the rate should stay on the account.
 
 ## References
 
