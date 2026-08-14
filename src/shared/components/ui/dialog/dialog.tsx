@@ -6,7 +6,6 @@ import clsx from 'clsx';
 import {
   Dialog as AriaDialog,
   DialogTrigger as AriaDialogTrigger,
-  Button,
   DialogTriggerProps,
   Heading,
   HeadingProps,
