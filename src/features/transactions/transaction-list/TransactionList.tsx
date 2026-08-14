@@ -1,4 +1,4 @@
-import { TransactionCard } from '@/features/metrics/TransactionCard';
+import { TransactionCard } from '@/features/transactions/transaction-card/TransactionCard';
 
 import './TransactionList.scss';
 
