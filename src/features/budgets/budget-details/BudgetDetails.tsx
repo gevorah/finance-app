@@ -10,6 +10,8 @@ import { useParams, useRouter } from 'next/navigation';
 
 import './BudgetDetails.scss';
 
+import { getCategoryLabel } from '@/entities/category';
+import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
 import {
   getBudgetProgress,
@@ -21,9 +23,9 @@ import { useTransactionStore } from '@/stores/transactionStore';
 export function BudgetDetails() {
   const { id } = useParams();
   const router = useRouter();
-  const { budget } = useBudgetStore();
+  const { budgets } = useBudgetStore();
   const { transactions } = useTransactionStore();
-  const budgetDetail = budget.find((item) => item.id === id);
+  const budgetDetail = budgets.find((item) => item.id === id);
   const transactionsCategory = transactions.filter(
     (t) => t.category === budgetDetail?.category,
   );
@@ -64,18 +66,18 @@ export function BudgetDetails() {
         <div className="budget-header__icon">
           {getCategoryIcon(budgetDetail.category, 28)}
         </div>
-        <h2 className="budget-header__category">{budgetDetail.category}</h2>
+        <h2 className="budget-header__category">{getCategoryLabel(budgetDetail.category)}</h2>
         <p className="budget-header__daily-avg">
-          ${dailyAvg.toLocaleString()}/day avg
+          {formatCurrency(dailyAvg)}/day avg
         </p>
       </section>
 
       <section className="budget-summary">
         <h1 className="budget-summary__amounts">
           <span className="budget-summary__spent">
-            ${spent.toLocaleString()}
+            {formatCurrency(spent)}
           </span>{' '}
-          / ${budgetDetail.monthlyLimit.toLocaleString()}
+          / {formatCurrency(budgetDetail.monthlyLimit)}
         </h1>
         <Bar percentage={percentage} />
         <span className="budget-summary__change">{monthChange}</span>
@@ -86,11 +88,11 @@ export function BudgetDetails() {
         <ul className="budget-info__list">
           <li>
             <span>Spent</span>
-            <span>${spent.toLocaleString()}</span>
+            <span>{formatCurrency(spent)}</span>
           </li>
           <li>
             <span>Budget</span>
-            <span>${budgetDetail.monthlyLimit.toLocaleString()}</span>
+            <span>{formatCurrency(budgetDetail.monthlyLimit)}</span>
           </li>
           <li>
             <span>Used</span>
@@ -98,7 +100,7 @@ export function BudgetDetails() {
           </li>
           <li>
             <span>Daily Average</span>
-            <span>${dailyAvg.toLocaleString()}/day avg</span>
+            <span>{formatCurrency(dailyAvg)}/day avg</span>
           </li>
         </ul>
       </Card>
@@ -112,7 +114,7 @@ export function BudgetDetails() {
                 {transaction.description} • {formatDate(transaction.date)}
               </span>
               <span className="budget-transactions__amount">
-                ${transaction.amount.toLocaleString()}
+                {formatCurrency(transaction.amount)}
               </span>
             </div>
           ))}

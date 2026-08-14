@@ -1,67 +1,58 @@
+import { Account } from '@/entities/account';
 import { Budget } from '@/entities/budget';
 import { CategoryType } from '@/entities/category';
 import { Transaction } from '@/entities/transaction';
+import { Money } from '@/shared/lib/money';
 
-export function getTotalIncome(transactions: Transaction[]): number {
+export function getTotalIncome(transactions: Transaction[]): Money {
   return transactions
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 }
 
-export function getMonthlyIncome(
-  transactions: Transaction[],
-  year: number,
-  month: number,
-): number {
-  const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
-  return getTotalIncome(monthlyTransactions);
-}
-
-export function getMonthlyExpenses(
-  transactions: Transaction[],
-  year: number,
-  month: number,
-): number {
-  const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
-  return getTotalExpenses(monthlyTransactions);
-}
-
-export function monthOverMonthExpenses(
-  transactions: Transaction[],
-  year: number,
-  month: number,
-): number {
-  const actualMonth = getMonthlyExpenses(transactions, year, month);
-  const [prevYear, prevMonth] = month === 1 ? [year - 1, 12] : [year, month - 1];
-  const previousMonthExpenses = getMonthlyExpenses(
-    transactions,
-    prevYear,
-    prevMonth,
-  );
-  if (previousMonthExpenses === 0) return 0;
-  return ((actualMonth - previousMonthExpenses) / previousMonthExpenses) * 100;
-}
-
-export function monthOverMonthIncome(
-  transactions: Transaction[],
-  year: number,
-  month: number,
-): number {
-  const actualMonth = getMonthlyIncome(transactions, year, month);
-  const [prevYear, prevMonth] = month === 1 ? [year - 1, 12] : [year, month - 1];
-  const previousMonthIncome = getMonthlyIncome(transactions, prevYear, prevMonth);
-  if (previousMonthIncome === 0) return 0;
-  return ((actualMonth - previousMonthIncome) / previousMonthIncome) * 100;
-}
-
-export function getTotalExpenses(transactions: Transaction[]): number {
+export function getTotalExpenses(transactions: Transaction[]): Money {
   return transactions
     .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 }
 
-export function getBalance(transactions: Transaction[]): number {
-  return getTotalIncome(transactions) - getTotalExpenses(transactions);
+export function getAccountBalance(
+  account: Account,
+  transactions: Transaction[],
+): Money {
+  return transactions.reduce((balance, t) => {
+    if (t.type === 'transfer') {
+      if (t.accountId === account.id) return balance - t.amount;
+      if (t.transferAccountId === account.id) return balance + t.amount;
+      return balance;
+    }
+
+    if (t.accountId !== account.id) return balance;
+
+    return t.type === 'income' ? balance + t.amount : balance - t.amount;
+  }, account.initialBalance);
+}
+
+export function getTotalBalance(
+  accounts: Account[],
+  transactions: Transaction[],
+): Money {
+  return accounts
+    .filter((account) => !account.archived)
+    .reduce(
+      (total, account) => total + getAccountBalance(account, transactions),
+      0,
+    );
+}
+
+export function getOnBudgetBalance(
+  accounts: Account[],
+  transactions: Transaction[],
+): Money {
+  return getTotalBalance(
+    accounts.filter((account) => account.onBudget),
+    transactions,
+  );
 }
 
 export function getTransactionsByMonth(
@@ -75,79 +66,63 @@ export function getTransactionsByMonth(
   });
 }
 
+export function getMonthlyIncome(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): Money {
+  return getTotalIncome(getTransactionsByMonth(transactions, year, month));
+}
+
+export function getMonthlyExpenses(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): Money {
+  return getTotalExpenses(getTransactionsByMonth(transactions, year, month));
+}
+
+function previousMonth(year: number, month: number): [number, number] {
+  return month === 1 ? [year - 1, 12] : [year, month - 1];
+}
+
+export function monthOverMonthExpenses(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): number {
+  const current = getMonthlyExpenses(transactions, year, month);
+  const [prevYear, prevMonth] = previousMonth(year, month);
+  const previous = getMonthlyExpenses(transactions, prevYear, prevMonth);
+  if (previous === 0) return 0;
+  return ((current - previous) / previous) * 100;
+}
+
+export function monthOverMonthIncome(
+  transactions: Transaction[],
+  year: number,
+  month: number,
+): number {
+  const current = getMonthlyIncome(transactions, year, month);
+  const [prevYear, prevMonth] = previousMonth(year, month);
+  const previous = getMonthlyIncome(transactions, prevYear, prevMonth);
+  if (previous === 0) return 0;
+  return ((current - previous) / previous) * 100;
+}
+
 export function getSpendingByCategory(
   transactions: Transaction[],
-): Record<CategoryType, number> {
+): Record<CategoryType, Money> {
   return transactions
-    .filter((t) => t.type === 'expense')
+    .filter((t) => t.type === 'expense' && t.category !== undefined)
     .reduce(
       (acc, t) => {
-        acc[t.category] = (acc[t.category] ?? 0) + t.amount;
+        const category = t.category as CategoryType;
+        acc[category] = (acc[category] ?? 0) + t.amount;
         return acc;
       },
-      {} as Record<CategoryType, number>,
+      {} as Record<CategoryType, Money>,
     );
-}
-
-export function getMonthIncomeExpense(
-  transactions: Transaction[],
-  currentDate: Date,
-  amountMonth: number,
-) {
-  const monthIncomeExpense = Array.from({ length: amountMonth }).map(
-    (_, index) => {
-      const date = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - index,
-      );
-      const month = date.getMonth() + 1;
-      const monthText = date.toLocaleString('default', { month: 'short' });
-      const year = date.getFullYear();
-      const expenses = getMonthlyExpenses(transactions, year, month);
-      const income = getMonthlyIncome(transactions, year, month);
-      return { monthText, income, expenses };
-    },
-  );
-
-  return monthIncomeExpense;
-}
-
-export function getWeeklySpending(
-  transactions: Transaction[],
-  currentDate: Date,
-) {
-  const weeklySpending = Array.from({ length: 7 }).map((_, index) => {
-    const date = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate() - index,
-    );
-    const day = date.getDay();
-    const shortDayName = date.toLocaleDateString('en-US', {
-      weekday: 'short',
-    });
-    const dayTransactions = getTotalExpenses(
-      transactions.filter((t) => t.date === date.toISOString().split('T')[0]),
-    );
-    return { day, shortDayName, dayTransactions };
-  });
-  return weeklySpending;
-}
-
-export function getRecentTransactions(
-  transactions: Transaction[],
-  count: number,
-): Transaction[] {
-  return [...transactions]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, count);
-}
-
-export function getTopTransactions(
-  transactions: Transaction[],
-  count: number,
-): Transaction[]{
-  return [...transactions].sort((a, b) => b.amount - a.amount).slice(0, count);
 }
 
 export function getCategorySpendingPercentages(
@@ -165,20 +140,76 @@ export function getCategorySpendingPercentages(
   );
 }
 
+export function getMonthIncomeExpense(
+  transactions: Transaction[],
+  currentDate: Date,
+  amountMonth: number,
+) {
+  return Array.from({ length: amountMonth }).map((_, index) => {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - index,
+    );
+    const month = date.getMonth() + 1;
+    const monthText = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return {
+      monthText,
+      income: getMonthlyIncome(transactions, year, month),
+      expenses: getMonthlyExpenses(transactions, year, month),
+    };
+  });
+}
+
+export function getWeeklySpending(
+  transactions: Transaction[],
+  currentDate: Date,
+) {
+  return Array.from({ length: 7 }).map((_, index) => {
+    const date = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate() - index,
+    );
+    const day = date.getDay();
+    const shortDayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayTransactions = getTotalExpenses(
+      transactions.filter((t) => t.date === date.toISOString().split('T')[0]),
+    );
+    return { day, shortDayName, dayTransactions };
+  });
+}
+
+export function getRecentTransactions(
+  transactions: Transaction[],
+  count: number,
+): Transaction[] {
+  return [...transactions]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, count);
+}
+
+export function getTopTransactions(
+  transactions: Transaction[],
+  count: number,
+): Transaction[] {
+  return [...transactions].sort((a, b) => b.amount - a.amount).slice(0, count);
+}
+
 export function getBudgetSpent(
   transactions: Transaction[],
   category: CategoryType,
   year: number,
   month: number,
-): number {
+): Money {
   const monthlyTransactions = getTransactionsByMonth(transactions, year, month);
   return getSpendingByCategory(monthlyTransactions)[category] ?? 0;
 }
 
 export interface BudgetProgress {
-  spent: number;
-  limit: number;
-  remaining: number;
+  spent: Money;
+  limit: Money;
+  remaining: Money;
   percentage: number;
   isOverBudget: boolean;
 }
@@ -212,9 +243,9 @@ export function getNearLimitBudgets(
 }
 
 export interface BudgetSummary {
-  spent: number;
-  limit: number;
-  remaining: number;
+  spent: Money;
+  limit: Money;
+  remaining: Money;
   percentage: number;
 }
 
@@ -266,7 +297,10 @@ export function getBudgetHighlights(
   const candidates = [
     { label: 'Most used', entry: bySpentDesc[0] },
     { label: 'Closest to limit', entry: byPercentageDesc[0] },
-    { label: 'Healthiest', entry: byPercentageDesc[byPercentageDesc.length - 1] },
+    {
+      label: 'Healthiest',
+      entry: byPercentageDesc[byPercentageDesc.length - 1],
+    },
   ];
 
   const seen = new Set<string>();

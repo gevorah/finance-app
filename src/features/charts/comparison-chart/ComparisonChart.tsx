@@ -1,4 +1,6 @@
 import { Card } from '@/shared/components/ui/card';
+import { formatCurrency } from '@/shared/lib/currency';
+import { Money } from '@/shared/lib/money';
 
 import './ComparisonChart.scss';
 
@@ -14,7 +16,7 @@ import {
 import CardChart from '../card-chart/CardChart';
 
 interface ComparisonChartProps {
-  data: { monthText: string; income: number; expenses: number }[];
+  data: { monthText: string; income: Money; expenses: Money }[];
 }
 
 export function ComparisonChart({ data }: ComparisonChartProps) {
@@ -39,8 +41,13 @@ export function ComparisonChart({ data }: ComparisonChartProps) {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="monthText" />
-        <YAxis width="auto" />
-        <Tooltip />
+        <YAxis
+          width="auto"
+          tickFormatter={(value: Money) =>
+            formatCurrency(value, { compact: true, minimumFractionDigits: 0 })
+          }
+        />
+        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
         <Legend />
         <Bar
           dataKey="income"

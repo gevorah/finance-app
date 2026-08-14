@@ -1,4 +1,6 @@
-import { CATEGORY_OPTIONS } from '@/entities/category';
+'use client';
+
+import { getCategoriesByKind } from '@/entities/category';
 import { Transaction } from '@/entities/transaction';
 import {
   transactionSchema,
@@ -10,49 +12,85 @@ import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
+import { toMinorUnits, toMajorUnits } from '@/shared/lib/money';
+import { useAccountStore } from '@/stores/accountStore';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { parseDate } from '@internationalized/date';
+import {
+  getLocalTimeZone,
+  parseDate,
+  today,
+} from '@internationalized/date';
 import { useRouter } from 'next/navigation';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
 import './TransactionForm.scss';
+
+const MONEY_FORMAT = {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 2,
+} as const;
 
 interface TransactionFormProps {
   initialData?: Transaction;
 }
+
 export default function TransactionForm({ initialData }: TransactionFormProps) {
+  const router = useRouter();
+  const { accounts } = useAccountStore();
+  const { addTransaction, updateTransaction } = useTransactionStore();
+  const activeAccounts = accounts.filter((account) => !account.archived);
+
   const { handleSubmit, control } = useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: initialData
-      ? { ...initialData, date: parseDate(initialData.date) }
-      : undefined,
+      ? {
+          ...initialData,
+          amount: toMajorUnits(initialData.amount),
+          date: parseDate(initialData.date),
+        }
+      : {
+          type: 'expense',
+          accountId: activeAccounts[0]?.id,
+          date: today(getLocalTimeZone()),
+          description: '',
+        },
   });
-  const router = useRouter();
-  const { addTransaction, updateTransaction } = useTransactionStore();
+
+  const type = useWatch({ control, name: 'type' });
+  const isTransfer = type === 'transfer';
+  const categories = getCategoriesByKind(type === 'income' ? 'income' : 'expense');
+
   const onSubmit: SubmitHandler<TransactionValues> = (data) => {
-    const transactionData = {
+    const transaction = {
       type: data.type,
-      amount: Number(data.amount),
-      category: data.category,
+      accountId: data.accountId,
+      transferAccountId: isTransfer ? data.transferAccountId : undefined,
+      category: isTransfer ? undefined : data.category,
+      amount: toMinorUnits(Number(data.amount)),
       description: data.description,
       date: data.date.toString(),
     };
+
     if (initialData) {
-      updateTransaction(initialData.id, transactionData);
+      updateTransaction(initialData.id, transaction);
     } else {
-      addTransaction(transactionData);
+      addTransaction(transaction);
     }
+
     router.push('/transactions');
   };
+
   return (
     <main className="transaction-container">
       <section className="form-container">
-        <h1 className="form-container__title">{initialData ? 'Edit Transaction' : 'New Transaction'}</h1>
+        <h1 className="form-container__title">
+          {initialData ? 'Edit Transaction' : 'New Transaction'}
+        </h1>
         <Controller
           name="type"
           control={control}
-          defaultValue="expense"
           render={({ field }) => (
             <ToggleButtonGroup
               className="type-toggle"
@@ -68,6 +106,9 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               <Toggle id="income" className="toggle-income">
                 Income
               </Toggle>
+              <Toggle id="transfer" className="toggle-transfer">
+                Transfer
+              </Toggle>
             </ToggleButtonGroup>
           )}
         />
@@ -81,27 +122,65 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
+                formatOptions={MONEY_FORMAT}
                 errorMessage={fieldState.error?.message}
               />
             )}
           />
           <Controller
-            name="category"
+            name="accountId"
             control={control}
             render={({ field, fieldState }) => (
               <Select
-                label="Category"
-                placeholder="Select Category"
+                label={isTransfer ? 'From account' : 'Account'}
+                placeholder="Select account"
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
-                items={CATEGORY_OPTIONS}
+                items={activeAccounts}
                 errorMessage={fieldState.error?.message}
               >
-                {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
               </Select>
             )}
           />
+          {isTransfer ? (
+            <Controller
+              name="transferAccountId"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Select
+                  label="To account"
+                  placeholder="Select account"
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  items={activeAccounts}
+                  errorMessage={fieldState.error?.message}
+                >
+                  {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+                </Select>
+              )}
+            />
+          ) : (
+            <Controller
+              name="category"
+              control={control}
+              render={({ field, fieldState }) => (
+                <Select
+                  label="Category"
+                  placeholder="Select Category"
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  items={categories}
+                  errorMessage={fieldState.error?.message}
+                >
+                  {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                </Select>
+              )}
+            />
+          )}
           <Controller
             name="description"
             control={control}
@@ -134,6 +213,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               size={'large'}
               border={true}
               className="buttons-container__btn-cancel"
+              onPress={() => router.back()}
             >
               Cancel
             </Button>

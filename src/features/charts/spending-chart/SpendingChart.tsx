@@ -1,5 +1,7 @@
-import { CategoryType } from '@/entities/category';
+import { CategoryType, getCategoryLabel } from '@/entities/category';
 import { Card } from '@/shared/components/ui/card';
+import { formatCurrency } from '@/shared/lib/currency';
+import { Money } from '@/shared/lib/money';
 
 import "./SpendingChart.scss";
 
@@ -18,7 +20,7 @@ const COLORS = [
 ];
 
 interface SpendingChartProps {
-  data: Record<CategoryType, number>;
+  data: Record<CategoryType, Money>;
 }
 
 export function SpendingChart({ data: spendingByCategory }: SpendingChartProps) {
@@ -62,8 +64,8 @@ export function SpendingChart({ data: spendingByCategory }: SpendingChartProps) 
               <ul>
                 {payload?.map((entry, index) => (
                   <li key={index} style={{ color: entry.color }}>
-                    <span>{entry.value}</span>
-                    <span>${data[index].amount}</span>
+                    <span>{getCategoryLabel(entry.value as CategoryType)}</span>
+                    <span>{formatCurrency(data[index].amount)}</span>
                   </li>
                 ))}
               </ul>

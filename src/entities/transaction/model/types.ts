@@ -1,24 +1,27 @@
-import { ReactNode } from 'react';
 import { CategoryType } from '@/entities/category';
-import { PaymentMethod } from '@/entities/payment';
+import { Money } from '@/shared/lib/money';
 
-export type TransactionType = 'income' | 'expense';
+export type TransactionType = 'income' | 'expense' | 'transfer';
 
 export interface Transaction {
   id: string;
   type: TransactionType;
-  icon?: ReactNode;
-  category: CategoryType;
-  notes?: string;
-  amount: number;
+  accountId: string;
+  transferAccountId?: string;
+  category?: CategoryType;
+  amount: Money;
   date: string;
   description: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
-  paymentMethod?: PaymentMethod;
 }
 
 export type TransactionInput = Omit<
   Transaction,
   'id' | 'createdAt' | 'updatedAt'
 >;
+
+export function isTransfer(transaction: Transaction): boolean {
+  return transaction.type === 'transfer';
+}

@@ -7,9 +7,9 @@ import { useParams, useRouter } from 'next/navigation';
 import BudgetForm from '../budget-form/BudgetForm';
 
 export default function EditBudget() {
-  const { budget } = useBudgetStore();
+  const { budgets } = useBudgetStore();
   const { id } = useParams();
-  const budgetDetail = budget.find((budgetId) => budgetId.id === id);
+  const budgetDetail = budgets.find((budgetId) => budgetId.id === id);
   const router = useRouter();
   return (
     <main className="edit-budget-container">

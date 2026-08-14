@@ -1,3 +1,5 @@
+import { Money, toMajorUnits } from './money';
+
 interface CurrencyFormatOptions {
   currency?: string;
   locale?: string;
@@ -9,15 +11,15 @@ interface CurrencyFormatOptions {
 
 const DEFAULT_LOCALE = 'es-CO';
 const DEFAULT_CURRENCY = 'COP';
-const DEFAULT_FRACTION_DIGITS = 0;
+const DEFAULT_FRACTION_DIGITS = 2;
 
 export function formatCurrency(
-  value: number,
+  value: Money,
   {
     currency = DEFAULT_CURRENCY,
     locale = DEFAULT_LOCALE,
     minimumFractionDigits = DEFAULT_FRACTION_DIGITS,
-    maximumFractionDigits,
+    maximumFractionDigits = DEFAULT_FRACTION_DIGITS,
     compact = false,
     showSign = false,
   }: CurrencyFormatOptions = {},
@@ -33,5 +35,5 @@ export function formatCurrency(
     signDisplay: showSign ? 'exceptZero' : 'auto',
   });
 
-  return formatter.format(value);
+  return formatter.format(toMajorUnits(value));
 }

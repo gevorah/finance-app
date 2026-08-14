@@ -1,3 +1,5 @@
+import { Money } from '@/shared/lib/money';
+
 export type DebtType =
   | 'credit_card'
   | 'loan'
@@ -32,7 +34,7 @@ export type PaymentFrequency = 'weekly' | 'monthly' | 'yearly' | 'custom';
 export type DebtPaymentTerms =
   | {
       type: 'installments';
-      installmentAmount: number;
+      installmentAmount: Money;
       totalInstallments?: number;
       paidInstallments?: number;
       frequency: PaymentFrequency;
@@ -40,14 +42,14 @@ export type DebtPaymentTerms =
     }
   | {
       type: 'revolving';
-      minimumPayment?: number;
-      statementBalance?: number;
+      minimumPayment?: Money;
+      statementBalance?: Money;
       cutOffDay?: number;
       nextPaymentDueDate?: string;
     }
   | {
       type: 'flexible';
-      suggestedPaymentAmount?: number;
+      suggestedPaymentAmount?: Money;
       nextPaymentDueDate?: string;
     };
 
@@ -55,8 +57,8 @@ export interface Debt {
   id: string;
   creditorName: string;
   type: DebtType;
-  originalAmount: number;
-  currentBalance: number;
+  originalAmount: Money;
+  currentBalance: Money;
   interest: DebtInterest;
   paymentTerms: DebtPaymentTerms;
   startDate: string;

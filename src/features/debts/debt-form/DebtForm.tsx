@@ -12,6 +12,7 @@ import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
+import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { useDebtStore } from '@/stores/debtStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { parseDate } from '@internationalized/date';
@@ -74,6 +75,31 @@ const DEBT_TYPE_TO_PAYMENT_TYPE: Record<DebtType, DebtPaymentTerms['type']> = {
   other: 'flexible',
 };
 
+
+const MONEY_TERM_KEYS = [
+  'installmentAmount',
+  'minimumPayment',
+  'statementBalance',
+  'suggestedPaymentAmount',
+] as const;
+
+function convertTerms(
+  terms: Record<string, unknown>,
+  convert: (value: number) => number,
+): Record<string, number> {
+  return MONEY_TERM_KEYS.reduce<Record<string, number>>((acc, key) => {
+    const value = terms[key];
+    if (typeof value === 'number') acc[key] = convert(value);
+    return acc;
+  }, {});
+}
+
+const toMajorPaymentTerms = (terms: DebtPaymentTerms) =>
+  convertTerms(terms as unknown as Record<string, unknown>, toMajorUnits);
+
+const toMinorPaymentTerms = (terms: DebtValues['paymentTerms']) =>
+  convertTerms(terms as unknown as Record<string, unknown>, toMinorUnits);
+
 const getDefaultValues = (
   debt?: Debt,
 ): DefaultValues<DebtValues> | undefined => {
@@ -92,9 +118,12 @@ const getDefaultValues = (
 
   return {
     ...debt,
+    originalAmount: toMajorUnits(debt.originalAmount),
+    currentBalance: toMajorUnits(debt.currentBalance),
     startDate: parseDate(debt.startDate),
     paymentTerms: {
       ...debt.paymentTerms,
+      ...toMajorPaymentTerms(debt.paymentTerms),
       nextPaymentDueDate: debt.paymentTerms.nextPaymentDueDate
         ? parseDate(debt.paymentTerms.nextPaymentDueDate)
         : undefined,
@@ -126,13 +155,14 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
       creditorName: data.creditorName.trim(),
       type: data.type,
 
-      originalAmount: data.originalAmount,
-      currentBalance: data.currentBalance ?? data.originalAmount,
+      originalAmount: toMinorUnits(data.originalAmount),
+      currentBalance: toMinorUnits(data.currentBalance ?? data.originalAmount),
 
       interest: data.interest,
 
       paymentTerms: {
         ...data.paymentTerms,
+        ...toMinorPaymentTerms(data.paymentTerms),
         nextPaymentDueDate: data.paymentTerms.nextPaymentDueDate?.toString(),
       },
 

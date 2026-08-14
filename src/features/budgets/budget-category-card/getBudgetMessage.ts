@@ -1,4 +1,6 @@
 import { CategoryType, CATEGORY_TYPES } from '@/entities/category';
+import { formatCurrency } from '@/shared/lib/currency';
+import { Money } from '@/shared/lib/money';
 
 interface BudgetMessage {
   text: string;
@@ -7,7 +9,7 @@ interface BudgetMessage {
 
 type RangeKey = 'over' | 'high' | 'mid' | 'low';
 
-const categoryMessages: Record<CategoryType, Record<RangeKey, string>> = {
+const categoryMessages: Partial<Record<CategoryType, Record<RangeKey, string>>> = {
   [CATEGORY_TYPES.FOOD]: {
     over: 'Over budget — try cooking more at home',
     high: 'Getting close — plan your meals this week',
@@ -38,12 +40,6 @@ const categoryMessages: Record<CategoryType, Record<RangeKey, string>> = {
     mid: 'On track — health spending is balanced',
     low: 'Well controlled — healthy and efficient',
   },
-  [CATEGORY_TYPES.INCOME]: {
-    over: 'Exceeded expectations — great month',
-    high: 'Almost at target — keep going',
-    mid: 'On track with income goals',
-    low: 'Below target — look for extra opportunities',
-  },
   [CATEGORY_TYPES.OTHERS]: {
     over: 'Over budget — review miscellaneous expenses',
     high: 'Getting close to the limit',
@@ -66,21 +62,23 @@ function getTone(percentage: number): BudgetMessage['tone'] {
   return 'success';
 }
 
+const fallbackMessages = categoryMessages[CATEGORY_TYPES.OTHERS]!;
+
 export function getBudgetMessage(
   category: CategoryType,
   percentage: number,
-  remaining: number,
+  remaining: Money,
 ): BudgetMessage {
   const range = getRange(percentage);
   const tone = getTone(percentage);
 
-  let text = categoryMessages[category]?.[range] ?? categoryMessages[CATEGORY_TYPES.OTHERS][range];
+  let text = categoryMessages[category]?.[range] ?? fallbackMessages[range];
 
   if (range === 'over') {
-    const overAmount = Math.abs(remaining);
-    text = `$${overAmount.toLocaleString()} over budget — ${text.split('—')[1]?.trim() ?? 'review your spending'}`;
+    const overAmount = formatCurrency(Math.abs(remaining));
+    text = `${overAmount} over budget — ${text.split('—')[1]?.trim() ?? 'review your spending'}`;
   } else if (range === 'high' || range === 'mid') {
-    text = `$${remaining.toLocaleString()} left — ${text.toLowerCase()}`;
+    text = `${formatCurrency(remaining)} left — ${text.toLowerCase()}`;
   }
 
   return { text, tone };

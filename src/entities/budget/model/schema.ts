@@ -1,13 +1,13 @@
-import { CATEGORY_TYPES } from '@/entities/category';
-import { DateValue } from 'react-aria-components';
+import { CATEGORY_TYPES, getCategoryKind } from '@/entities/category';
 import z from 'zod';
-import { PERIOD_VALUES } from './types';
 
 export const budgetSchema = z.object({
-  name: z.string({error: 'Name is required'}),
-  amount: z.number().positive({error: 'Number should be above 0'}),
-  period: z.enum(PERIOD_VALUES),
-  category: z.enum(CATEGORY_TYPES),
-})
+  category: z
+    .enum(CATEGORY_TYPES, { error: 'Category is required' })
+    .refine((id) => getCategoryKind(id) === 'expense', {
+      error: 'Budgets only apply to expense categories',
+    }),
+  monthlyLimit: z.number().positive({ error: 'Amount should be above 0' }),
+});
 
-export type budgetData= z.infer<typeof budgetSchema>;
+export type BudgetValues = z.infer<typeof budgetSchema>;

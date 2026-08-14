@@ -1,4 +1,5 @@
 import { Card } from '@/shared/components/ui/card';
+import { Money } from '@/shared/lib/money';
 
 import './WeeklySpendingChart.scss';
 
@@ -7,7 +8,7 @@ import { Area, AreaChart, XAxis } from 'recharts';
 import CardChart from '../card-chart/CardChart';
 
 interface WeeklySpendingChartProps {
-  data: { day: number; shortDayName: string; dayTransactions: number }[];
+  data: { day: number; shortDayName: string; dayTransactions: Money }[];
 }
 
 export function WeeklySpendingChart({ data }: WeeklySpendingChartProps) {

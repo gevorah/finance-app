@@ -7,6 +7,8 @@ import type {
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { migrateDebtsToV1 } from './migrations';
+
 interface DebtStore {
   debts: Debt[];
 
@@ -37,59 +39,7 @@ export const getDebtStatus = (debt: {
 export const useDebtStore = create<DebtStore>()(
   persist(
     (set) => ({
-      debts: [
-        {
-          id: '1',
-          creditorName: 'Bancolombia',
-          type: 'loan',
-          originalAmount: 30000000,
-          currentBalance: 22000000,
-          interest: {
-            type: 'fixed',
-            rate: 1.8,
-            period: 'monthly',
-          },
-          paymentTerms: {
-            type: 'installments',
-            installmentAmount: 1219706,
-            totalInstallments: 36,
-            paidInstallments: 10,
-            frequency: 'monthly',
-            nextPaymentDueDate: '2026-07-15',
-          },
-          startDate: '2025-09-01',
-          description: 'Crédito libre inversión',
-          priority: 1,
-          status: 'current',
-          createdAt: '2026-06-20T10:00:00.000Z',
-          updatedAt: '2026-06-20T10:00:00.000Z',
-        },
-        {
-          id: '2',
-          creditorName: 'RappiCard',
-          type: 'credit_card',
-          originalAmount: 1000000,
-          currentBalance: 850000,
-          interest: {
-            type: 'fixed',
-            rate: 2.1,
-            period: 'monthly',
-          },
-          paymentTerms: {
-            type: 'revolving',
-            minimumPayment: 95000,
-            statementBalance: 850000,
-            cutOffDay: 5,
-            nextPaymentDueDate: '2026-07-20',
-          },
-          startDate: '2026-06-01',
-          description: 'Tarjeta de crédito',
-          priority: 2,
-          status: 'current',
-          createdAt: '2026-06-18T10:00:00.000Z',
-          updatedAt: '2026-06-18T10:00:00.000Z',
-        },
-      ],
+      debts: [],
 
       addDebt: (debt) =>
         set((state) => {
@@ -152,7 +102,12 @@ export const useDebtStore = create<DebtStore>()(
     }),
     {
       name: 'debt-storage',
+      version: 1,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persisted, version) =>
+        version >= 1
+          ? (persisted as { debts: Debt[] })
+          : migrateDebtsToV1(persisted),
     },
   ),
 );

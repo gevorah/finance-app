@@ -7,13 +7,14 @@ import { BalanceCard } from '@/features/metrics/BalanceCard';
 import { MetricCard } from '@/features/metrics/MetricCard';
 import TransactionList from '@/features/transactions/transaction-list/TransactionList';
 import { useHydrated } from '@/shared/hooks/useHydrated';
+import { useAccountStore } from '@/stores/accountStore';
 import {
-  getBalance,
   getMonthIncomeExpense,
   getMonthlyExpenses,
   getMonthlyIncome,
   getRecentTransactions,
   getSpendingByCategory,
+  getTotalBalance,
   getTotalExpenses,
   getTotalIncome,
   getWeeklySpending,
@@ -30,6 +31,7 @@ import { DashboardSkeleton } from './DashboardSkeleton';
 export default function Dashboard() {
   const hydrated = useHydrated();
   const { transactions } = useTransactionStore();
+  const { accounts } = useAccountStore();
 
   if (!hydrated) return <DashboardSkeleton />;
 
@@ -47,7 +49,7 @@ export default function Dashboard() {
       <section className="page-container">
         <div className="balance-cards">
           <BalanceCard
-            balance={getBalance(transactions)}
+            balance={getTotalBalance(accounts, transactions)}
             stats={[
               {
                 icon: 'income',

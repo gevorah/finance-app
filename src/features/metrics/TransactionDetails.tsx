@@ -2,11 +2,13 @@
 
 import './TransactionDetails.scss';
 
+import { getCategoryLabel } from '@/entities/category';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog } from '@/shared/components/ui/dialog';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDateLong } from '@/shared/lib/date';
+import { useAccountStore } from '@/stores/accountStore';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -16,6 +18,7 @@ import Link from 'next/link';
 
 export default function TransactionDetails() {
   const { transactions, deleteTransaction } = useTransactionStore();
+  const { accounts } = useAccountStore();
   const { id } = useParams();
   const router = useRouter();
   const transaction = transactions.find((t) => t.id === id);
@@ -42,6 +45,13 @@ export default function TransactionDetails() {
   const signedAmount =
     transaction.type === 'income' ? transaction.amount : -transaction.amount;
 
+  const categoryLabel = transaction.category
+    ? getCategoryLabel(transaction.category)
+    : 'Transfer';
+
+  const accountName = (id: string) =>
+    accounts.find((account) => account.id === id)?.name ?? 'Unknown account';
+
   const handleDelete = () => {
     deleteTransaction(transaction.id);
     router.push('/transactions');
@@ -66,7 +76,7 @@ export default function TransactionDetails() {
             {getCategoryIcon(transaction.category, 28)}
           </div>
           <h1 className="details-header__title">{transaction.description}</h1>
-          <p className="details-header__category">{transaction.category}</p>
+          <p className="details-header__category">{categoryLabel}</p>
           <p
             className={`details-header__amount details-header__amount--${transaction.type}`}
           >
@@ -80,12 +90,14 @@ export default function TransactionDetails() {
             Type: {transaction.type}
           </p>
           <p className="transaction-information__row">
-            Category: {transaction.category}
+            Category: {categoryLabel}
           </p>
           <p className="transaction-information__row">
             Date: {formatDateLong(transaction.date)}
           </p>
-          <p className="transaction-information__row">Payment:</p>
+          <p className="transaction-information__row">
+            Account: {accountName(transaction.accountId)}
+          </p>
         </div>
       </section>
       <div className="btns-container">
