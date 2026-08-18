@@ -10,6 +10,7 @@ import { toMinorUnits } from '@/shared/lib/money';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildOpeningPostings,
   buildPostings,
   describeTransaction,
   getPostingsTotal,
@@ -147,6 +148,53 @@ describe('buildPostings', () => {
     );
 
     expect(getPostingsTotal(postings)).toBe(0);
+  });
+});
+
+describe('buildOpeningPostings', () => {
+  it('leaves an asset holding what it already held', () => {
+    const postings = buildOpeningPostings({
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      amount: toMinorUnits(440000),
+      root: ACCOUNT_ROOTS.ASSETS,
+    });
+
+    expect(postings).toContainEqual({
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      amount: 44000000,
+    });
+    expect(getPostingsTotal(postings)).toBe(0);
+  });
+
+  it('leaves a liability owing what is owed, not holding it', () => {
+    const postings = buildOpeningPostings({
+      accountId: CARD_ID,
+      amount: toMinorUnits(850000),
+      root: ACCOUNT_ROOTS.LIABILITIES,
+    });
+
+    expect(postings).toContainEqual({
+      accountId: CARD_ID,
+      amount: -85000000,
+    });
+    expect(getPostingsTotal(postings)).toBe(0);
+  });
+
+  it('reads back as an opening balance whichever side it opens', () => {
+    const roots = [ACCOUNT_ROOTS.ASSETS, ACCOUNT_ROOTS.LIABILITIES] as const;
+
+    for (const root of roots) {
+      const postings = buildOpeningPostings({
+        accountId:
+          root === ACCOUNT_ROOTS.ASSETS ? DEFAULT_CASH_ACCOUNT_ID : CARD_ID,
+        amount: toMinorUnits(100000),
+        root,
+      });
+
+      expect(
+        describeTransaction(transaction(postings), accountsById).kind,
+      ).toBe(TRANSACTION_KINDS.OPENING);
+    }
   });
 });
 

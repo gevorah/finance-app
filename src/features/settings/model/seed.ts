@@ -2,15 +2,16 @@ import {
   Account,
   ACCOUNT_KINDS,
   ACCOUNT_ROOTS,
+  AccountRoot,
   DEFAULT_CASH_ACCOUNT_ID,
   DEFAULT_CHART_OF_ACCOUNTS,
   DEFAULT_INCOME_ACCOUNT_ID,
   indexAccounts,
-  OPENING_BALANCE_ACCOUNT_ID,
   useAccountStore,
 } from '@/entities/account';
 import { Budget, useBudgetStore } from '@/entities/budget';
 import {
+  buildOpeningPostings,
   buildPostings,
   Transaction,
   TRANSACTION_KINDS,
@@ -83,15 +84,17 @@ export const SAMPLE_ACCOUNTS: Account[] = [
 const openingBalance = (
   id: string,
   accountId: string,
+  root: AccountRoot,
   majorAmount: number,
 ): Transaction => ({
   id,
   date: dayOfCurrentMonth(1),
   description: 'Opening balance',
-  postings: [
-    { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -toMinorUnits(majorAmount) },
-    { accountId, amount: toMinorUnits(majorAmount) },
-  ],
+  postings: buildOpeningPostings({
+    accountId,
+    amount: toMinorUnits(majorAmount),
+    root,
+  }),
   createdAt: EPOCH,
   updatedAt: EPOCH,
 });
@@ -123,12 +126,13 @@ const sampleTransaction = (
 });
 
 const { EXPENSE, INCOME, TRANSFER } = TRANSACTION_KINDS;
+const { ASSETS, LIABILITIES } = ACCOUNT_ROOTS;
 
 export const SAMPLE_TRANSACTIONS: Transaction[] = [
-  openingBalance('open-cash', DEFAULT_CASH_ACCOUNT_ID, 200000),
-  openingBalance('open-savings', SAVINGS_ACCOUNT_ID, 1500000),
-  openingBalance('open-card', CARD_ACCOUNT_ID, -850000),
-  openingBalance('open-loan', LOAN_ACCOUNT_ID, -22000000),
+  openingBalance('open-cash', DEFAULT_CASH_ACCOUNT_ID, ASSETS, 200000),
+  openingBalance('open-savings', SAVINGS_ACCOUNT_ID, ASSETS, 1500000),
+  openingBalance('open-card', CARD_ACCOUNT_ID, LIABILITIES, 850000),
+  openingBalance('open-loan', LOAN_ACCOUNT_ID, LIABILITIES, 22000000),
   sampleTransaction('s1', INCOME, 'Monthly Salary', DEFAULT_INCOME_ACCOUNT_ID, 4500000, 1, SAVINGS_ACCOUNT_ID),
   sampleTransaction('s2', TRANSFER, 'Retiro cajero', DEFAULT_CASH_ACCOUNT_ID, 300000, 2, SAVINGS_ACCOUNT_ID),
   sampleTransaction('s3', EXPENSE, 'Bus Pass', 'expenses-transport', 60000, 3),

@@ -1,4 +1,4 @@
-import type { Transaction } from '@/entities/transaction';
+import { buildOpeningPostings, type Transaction } from '@/entities/transaction';
 import { toMinorUnits } from '@/shared/lib/money';
 import { describe, expect, it } from 'vitest';
 
@@ -28,7 +28,12 @@ const liability = (
   onBudget: true,
   debtTerms: {
     interest: rate === 0 ? { type: 'none' } : { type: 'fixed', rate, period },
-    paymentTerms: { type: 'installments', installmentAmount: 0, frequency: 'monthly', nextPaymentDueDate },
+    paymentTerms: {
+      type: 'installments',
+      installmentAmount: 0,
+      frequency: 'monthly',
+      nextPaymentDueDate,
+    },
   } as DebtTerms,
   archived: false,
   createdAt: '',
@@ -39,10 +44,11 @@ const owe = (id: string, accountId: string, major: number): Transaction => ({
   id,
   date: '2026-08-01',
   description: id,
-  postings: [
-    { accountId: 'equity-opening-balances', amount: toMinorUnits(major) },
-    { accountId, amount: -toMinorUnits(major) },
-  ],
+  postings: buildOpeningPostings({
+    accountId,
+    amount: toMinorUnits(major),
+    root: ACCOUNT_ROOTS.LIABILITIES,
+  }),
   createdAt: '',
   updatedAt: '',
 });
@@ -73,6 +79,10 @@ const transactions = [
 describe('getAmountOwed', () => {
   it('reads the liability balance as a positive figure', () => {
     expect(getAmountOwed(small, transactions)).toBe(toMinorUnits(500000));
+  });
+
+  it('is owed, not settled, right after the debt is opened', () => {
+    expect(getDebtStatus(small, transactions, '2026-08-14')).toBe('current');
   });
 
   it('goes down when a payment is registered, with nothing to edit by hand', () => {

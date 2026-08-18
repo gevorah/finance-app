@@ -1,4 +1,9 @@
-import { Account, ACCOUNT_ROOTS, AccountRoot } from '@/entities/account';
+import {
+  Account,
+  ACCOUNT_ROOTS,
+  AccountRoot,
+  OPENING_BALANCE_ACCOUNT_ID,
+} from '@/entities/account';
 import { Money } from '@/shared/lib/money';
 
 import {
@@ -63,6 +68,33 @@ export function buildPostings(
         { accountId, amount: -magnitude },
         { accountId: counterAccountId, amount: magnitude },
       ];
+}
+
+export interface OpeningBalanceDraft {
+  accountId: string;
+  /** What the account holds, or what is owed on it, always as a positive figure. */
+  amount: Money;
+  root: AccountRoot;
+}
+
+/**
+ * An opening balance is what the account already held before the ledger existed,
+ * so the other side is equity. An asset is debited and a liability credited, and
+ * the direction cannot be read from the counter account because equity sits on
+ * both sides.
+ */
+export function buildOpeningPostings({
+  accountId,
+  amount,
+  root,
+}: OpeningBalanceDraft): Posting[] {
+  const magnitude = Math.abs(amount);
+  const signed = root === ACCOUNT_ROOTS.LIABILITIES ? -magnitude : magnitude;
+
+  return [
+    { accountId, amount: signed },
+    { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -signed },
+  ];
 }
 
 export interface TransactionView {

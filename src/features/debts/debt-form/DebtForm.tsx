@@ -11,13 +11,14 @@ import {
   INTEREST_TYPE_OPTIONS,
   LIABILITY_KIND_OPTIONS,
   LIABILITY_KIND_TO_PAYMENT_TYPE,
-  OPENING_BALANCE_ACCOUNT_ID,
   PAYMENT_FREQUENCY_OPTIONS,
   PAYMENT_TERMS_OPTIONS,
-  useAccountsById,
   useAccountStore,
 } from '@/entities/account';
-import { buildPostings, useTransactionStore } from '@/entities/transaction';
+import {
+  buildOpeningPostings,
+  useTransactionStore,
+} from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
@@ -88,7 +89,6 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
   const router = useRouter();
   const { addAccount, updateAccount } = useAccountStore();
   const { transactions, addTransaction } = useTransactionStore();
-  const accountsById = useAccountsById();
 
   const amountOwed = debtInfo ? getAmountOwed(debtInfo, transactions) : 0;
 
@@ -136,14 +136,11 @@ export default function DebtForm({ debtInfo }: DebtFormProps) {
     addTransaction({
       date: data.startDate.toString(),
       description: `${data.name.trim()} opening balance`,
-      postings: buildPostings(
-        {
-          amount: toMinorUnits(data.amountOwed),
-          accountId: OPENING_BALANCE_ACCOUNT_ID,
-          counterAccountId: id,
-        },
-        accountsById,
-      ),
+      postings: buildOpeningPostings({
+        accountId: id,
+        amount: toMinorUnits(data.amountOwed),
+        root: ACCOUNT_ROOTS.LIABILITIES,
+      }),
     });
 
     router.push('/debts');
