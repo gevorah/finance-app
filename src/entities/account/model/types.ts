@@ -98,6 +98,21 @@ export const LIABILITY_KINDS: AccountKind[] = [
   ACCOUNT_KINDS.PERSONAL,
 ];
 
+/**
+ * A card is spent from every month, so it belongs to the budget. A mortgage or
+ * a long-term loan is not this month's cash flow and would swallow whatever is
+ * left to spend.
+ */
+const OFF_BUDGET_KINDS: AccountKind[] = [
+  ACCOUNT_KINDS.MORTGAGE,
+  ACCOUNT_KINDS.VEHICLE,
+  ACCOUNT_KINDS.STUDENT,
+];
+
+export function isOnBudgetByDefault(kind: AccountKind): boolean {
+  return !OFF_BUDGET_KINDS.includes(kind);
+}
+
 export function getRootForKind(kind: AccountKind): AccountRoot {
   return LIABILITY_KINDS.includes(kind)
     ? ACCOUNT_ROOTS.LIABILITIES

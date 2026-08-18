@@ -1,4 +1,8 @@
-import { ACCOUNT_KINDS, accountSchema } from '@/entities/account';
+import {
+  ACCOUNT_KINDS,
+  accountSchema,
+  isOnBudgetByDefault,
+} from '@/entities/account';
 import { describe, expect, it } from 'vitest';
 
 const existing = [
@@ -67,4 +71,18 @@ describe('opening an account without its optional terms', () => {
       expect(result.success).toBe(true);
     },
   );
+});
+
+describe('where a new account lands by default', () => {
+  it.each([
+    [ACCOUNT_KINDS.CREDIT_CARD, true],
+    [ACCOUNT_KINDS.CASH, true],
+    [ACCOUNT_KINDS.CHECKING, true],
+    [ACCOUNT_KINDS.LOAN, true],
+    [ACCOUNT_KINDS.MORTGAGE, false],
+    [ACCOUNT_KINDS.VEHICLE, false],
+    [ACCOUNT_KINDS.STUDENT, false],
+  ])('puts %s in the budget: %s', (kind, expected) => {
+    expect(isOnBudgetByDefault(kind)).toBe(expected);
+  });
 });

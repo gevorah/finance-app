@@ -13,6 +13,7 @@ import {
   getAccountBalance,
   getRealAccounts,
   getRootForKind,
+  isOnBudgetByDefault,
   LIABILITY_KIND_TO_PAYMENT_TYPE,
   LIABILITY_KINDS,
   useAccountStore,
@@ -47,9 +48,16 @@ const MONEY_FORMAT = {
 } as const;
 
 const BUDGET_HINTS = {
-  in: 'Counts towards what you have available to spend this month.',
-  aside:
-    'Savings and anything you are not planning to touch. It stays out of what is available.',
+  asset: {
+    in: 'Counts towards what you have available to spend this month.',
+    aside:
+      'Savings and anything you are not planning to touch. It stays out of what is available.',
+  },
+  debt: {
+    in: 'You pay it off month to month, so it comes out of what is available.',
+    aside:
+      'Long-term debt you are not settling this month. It stays out of what is available.',
+  },
 };
 
 function toDebtTerms(data: AccountValues): Account['debtTerms'] {
@@ -111,48 +119,50 @@ export default function AccountForm({ account }: AccountFormProps) {
     [accounts, account?.id],
   );
 
-  const { control, handleSubmit, setValue } = useForm<AccountValues>({
-    resolver: zodResolver(schema),
-    defaultValues: account
-      ? ({
-          name: account.name,
-          kind: account.kind ?? ACCOUNT_KINDS.CASH,
-          onBudget: account.onBudget,
-          description: account.description ?? '',
-          creditLimit: account.creditLimit
-            ? toMajorUnits(account.creditLimit)
-            : undefined,
-          cutOffDay: account.cutOffDay,
-          paymentDueDay: account.paymentDueDay,
-          interest: account.debtTerms?.interest ?? { type: 'none' },
-          paymentTerms: terms
-            ? {
-                ...terms,
-                installmentAmount:
-                  'installmentAmount' in terms && terms.installmentAmount
-                    ? toMajorUnits(terms.installmentAmount)
+  const { control, handleSubmit, setValue, formState } = useForm<AccountValues>(
+    {
+      resolver: zodResolver(schema),
+      defaultValues: account
+        ? ({
+            name: account.name,
+            kind: account.kind ?? ACCOUNT_KINDS.CASH,
+            onBudget: account.onBudget,
+            description: account.description ?? '',
+            creditLimit: account.creditLimit
+              ? toMajorUnits(account.creditLimit)
+              : undefined,
+            cutOffDay: account.cutOffDay,
+            paymentDueDay: account.paymentDueDay,
+            interest: account.debtTerms?.interest ?? { type: 'none' },
+            paymentTerms: terms
+              ? {
+                  ...terms,
+                  installmentAmount:
+                    'installmentAmount' in terms && terms.installmentAmount
+                      ? toMajorUnits(terms.installmentAmount)
+                      : undefined,
+                  minimumPayment:
+                    'minimumPayment' in terms && terms.minimumPayment
+                      ? toMajorUnits(terms.minimumPayment)
+                      : undefined,
+                  nextPaymentDueDate: terms.nextPaymentDueDate
+                    ? parseDate(terms.nextPaymentDueDate)
                     : undefined,
-                minimumPayment:
-                  'minimumPayment' in terms && terms.minimumPayment
-                    ? toMajorUnits(terms.minimumPayment)
-                    : undefined,
-                nextPaymentDueDate: terms.nextPaymentDueDate
-                  ? parseDate(terms.nextPaymentDueDate)
-                  : undefined,
-              }
-            : { type: 'revolving' },
-        } as AccountValues)
-      : ({
-          name: '',
-          kind: initialKind,
-          onBudget: true,
-          description: '',
-          interest: { type: 'none' },
-          paymentTerms: {
-            type: LIABILITY_KIND_TO_PAYMENT_TYPE[initialKind] ?? 'revolving',
-          },
-        } as AccountValues),
-  });
+                }
+              : { type: 'revolving' },
+          } as AccountValues)
+        : ({
+            name: '',
+            kind: initialKind,
+            onBudget: isOnBudgetByDefault(initialKind),
+            description: '',
+            interest: { type: 'none' },
+            paymentTerms: {
+              type: LIABILITY_KIND_TO_PAYMENT_TYPE[initialKind] ?? 'revolving',
+            },
+          } as AccountValues),
+    },
+  );
 
   const kind = useWatch({ control, name: 'kind' });
   const onBudget = useWatch({ control, name: 'onBudget' });
@@ -239,9 +249,12 @@ export default function AccountForm({ account }: AccountFormProps) {
               value={field.value}
               onChange={(value) => {
                 field.onChange(value);
-                const next =
-                  LIABILITY_KIND_TO_PAYMENT_TYPE[value as AccountKind];
+                const nextKind = value as AccountKind;
+                const next = LIABILITY_KIND_TO_PAYMENT_TYPE[nextKind];
                 if (next) setValue('paymentTerms.type', next);
+                if (!account && !formState.dirtyFields.onBudget) {
+                  setValue('onBudget', isOnBudgetByDefault(nextKind));
+                }
               }}
               items={availableKinds}
               description={
@@ -310,7 +323,11 @@ export default function AccountForm({ account }: AccountFormProps) {
                 <Toggle id="aside">Set aside</Toggle>
               </ToggleButtonGroup>
               <p className="account-form__budget-hint">
-                {onBudget ? BUDGET_HINTS.in : BUDGET_HINTS.aside}
+                {
+                  BUDGET_HINTS[isLiability ? 'debt' : 'asset'][
+                    onBudget ? 'in' : 'aside'
+                  ]
+                }
               </p>
             </div>
           )}
