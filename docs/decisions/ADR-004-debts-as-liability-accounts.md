@@ -39,7 +39,8 @@ The third has nothing to keep in agreement.
 
 A debt is an account whose root is liabilities. What is owed is its balance, read
 as a positive figure. Interest and payment terms hang off the account and are
-descriptive only: nothing recalculates them and none of them is a balance.
+descriptive only: nothing recalculates them, and a field belongs there when it
+changes because the agreement changed, never because money moved.
 Whether a debt is settled or overdue is read from its balance and its due date,
 and the order in which debts should be paid is an ordering of accounts, so
 neither is stored.
@@ -56,6 +57,12 @@ rate and the length of the loan in the scheduled transaction that repays it, and
 the account carries no rate at all. We follow Firefly because there is nothing
 here yet to schedule a payment with.
 
+Nor is the rule about what may sit on the account only a habit of these tools.
+IFRS 9 measures a liability at amortised cost by discounting the contractual cash
+flows at the effective interest rate: the agreed terms are the input, and the
+carrying amount is what comes out of applying them. A count of instalments already
+paid is neither one nor the other, which is why nothing of that kind belongs here.
+
 ### Consequences
 
 - Good, because a payment is an ordinary transaction and the amount owed follows
@@ -69,12 +76,17 @@ here yet to schedule a payment with.
 - Bad, because a debt can no longer be marked as settled directly; it is settled
   by recording the payment that settles it, which is more honest and more typing.
 - Bad, because the payment schedule — amount, frequency, next due date — is a
-  recurring payment described in a second place. GnuCash keeps exactly that in a
-  scheduled transaction. Once recurring transactions exist, the schedule should
-  move there and only the rate should stay on the account.
+  recurring payment described in a second place, and the next due date is the one
+  field kept here that moves when a payment is made rather than when the agreement
+  changes. Both references keep the calendar off the account: GnuCash in the
+  scheduled transaction that repays the loan, Firefly III in a subscription, whose
+  expected date it calls purely cosmetic. Once recurring transactions exist, the
+  schedule should move there and only the rate should stay on the account.
 
 ## References
 
 - [GnuCash — Loans: Basic Concepts](https://www.gnucash.org/docs/v5/C/gnucash-guide/loans_concepts1.html)
 - [Firefly III — Liabilities](https://docs.firefly-iii.org/explanation/financial-concepts/liabilities/)
+- [Firefly III — Subscriptions](https://docs.firefly-iii.org/explanation/financial-concepts/subscriptions/)
 - [IASB — Conceptual Framework for Financial Reporting](https://www.ifrs.org/issued-standards/list-of-standards/conceptual-framework/)
+- [IFRS 9 — Financial Instruments](https://www.ifrs.org/content/dam/ifrs/publications/html-standards/english/2025/issued/ifrs9.html)
