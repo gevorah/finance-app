@@ -71,20 +71,40 @@ export function isCreditAccount(account: Account): boolean {
   return account.kind === ACCOUNT_KINDS.CREDIT_CARD;
 }
 
-export const ACCOUNT_KIND_OPTIONS = [
-  { id: ACCOUNT_KINDS.CASH, label: 'Cash' },
-  { id: ACCOUNT_KINDS.CHECKING, label: 'Checking' },
-  { id: ACCOUNT_KINDS.SAVINGS, label: 'Savings' },
-] as const;
+export const ACCOUNT_KIND_LABELS: Record<AccountKind, string> = {
+  [ACCOUNT_KINDS.CASH]: 'Cash',
+  [ACCOUNT_KINDS.CHECKING]: 'Checking',
+  [ACCOUNT_KINDS.SAVINGS]: 'Savings',
+  [ACCOUNT_KINDS.CREDIT_CARD]: 'Credit card',
+  [ACCOUNT_KINDS.LOAN]: 'Loan',
+  [ACCOUNT_KINDS.MORTGAGE]: 'Mortgage',
+  [ACCOUNT_KINDS.VEHICLE]: 'Vehicle',
+  [ACCOUNT_KINDS.STUDENT]: 'Student',
+  [ACCOUNT_KINDS.PERSONAL]: 'Personal',
+};
 
-export const LIABILITY_KIND_OPTIONS = [
-  { id: ACCOUNT_KINDS.CREDIT_CARD, label: 'Credit card' },
-  { id: ACCOUNT_KINDS.LOAN, label: 'Loan' },
-  { id: ACCOUNT_KINDS.MORTGAGE, label: 'Mortgage' },
-  { id: ACCOUNT_KINDS.VEHICLE, label: 'Vehicle' },
-  { id: ACCOUNT_KINDS.STUDENT, label: 'Student' },
-  { id: ACCOUNT_KINDS.PERSONAL, label: 'Personal' },
-] as const;
+export const ASSET_KINDS: AccountKind[] = [
+  ACCOUNT_KINDS.CASH,
+  ACCOUNT_KINDS.CHECKING,
+  ACCOUNT_KINDS.SAVINGS,
+];
+
+export const LIABILITY_KINDS: AccountKind[] = [
+  ACCOUNT_KINDS.CREDIT_CARD,
+  ACCOUNT_KINDS.LOAN,
+  ACCOUNT_KINDS.MORTGAGE,
+  ACCOUNT_KINDS.VEHICLE,
+  ACCOUNT_KINDS.STUDENT,
+  ACCOUNT_KINDS.PERSONAL,
+];
+
+const toKindOption = (id: AccountKind) => ({
+  id,
+  label: ACCOUNT_KIND_LABELS[id],
+});
+
+export const ACCOUNT_KIND_OPTIONS = ASSET_KINDS.map(toKindOption);
+export const LIABILITY_KIND_OPTIONS = LIABILITY_KINDS.map(toKindOption);
 
 /** A credit card revolves; everything else that is owed is paid in installments. */
 export const LIABILITY_KIND_TO_PAYMENT_TYPE: Record<string, string> = {

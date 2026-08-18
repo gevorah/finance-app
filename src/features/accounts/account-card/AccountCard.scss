@@ -1,0 +1,48 @@
+@use 'shared/styles/mixins' as *;
+
+.account-card {
+  @include flex(space-between, center);
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-5);
+
+  &__link {
+    display: block;
+  }
+
+  &__icon {
+    @include flex();
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-inset);
+    border-radius: var(--radius-md);
+  }
+
+  &__info {
+    @include flex(center, flex-start, column);
+    gap: var(--spacing-1);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__meta {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  &__amount {
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+
+    &--negative {
+      color: var(--color-danger);
+    }
+  }
+}
