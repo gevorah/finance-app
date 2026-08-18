@@ -1,33 +1,39 @@
 'use client';
 
-import { getCategoryIcon } from '@/features/transactions/utils/getCategoryIcon';
 import Bar from '@/shared/components/ui/bar/bar';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import { useBudgetStore } from '@/stores/budgetStore';
+import { useBudgetStore } from '@/entities/budget';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import './BudgetDetails.scss';
 
-import { formatDate } from '@/shared/lib/date';
 import {
-  getBudgetProgress,
-  getBudgetSpent,
-  getTopTransactions,
-} from '@/stores/selectors';
-import { useTransactionStore } from '@/stores/transactionStore';
+  getAccountIcon,
+  getAccountName,
+  useAccountStore,
+} from '@/entities/account';
+import { formatCurrency } from '@/shared/lib/currency';
+import { formatDate } from '@/shared/lib/date';
+import { getTopTransactions } from '@/entities/transaction';
+import { getBudgetProgress, getBudgetSpent } from '@/entities/budget';
+import {
+  touchesAccount,
+  useTransactionStore,
+} from '@/entities/transaction';
 
 export function BudgetDetails() {
   const { id } = useParams();
   const router = useRouter();
-  const { budget } = useBudgetStore();
+  const { budgets } = useBudgetStore();
   const { transactions } = useTransactionStore();
-  const budgetDetail = budget.find((item) => item.id === id);
-  const transactionsCategory = transactions.filter(
-    (t) => t.category === budgetDetail?.category,
+  const { accounts } = useAccountStore();
+  const budgetDetail = budgets.find((item) => item.id === id);
+  const budgetTransactions = transactions.filter((t) =>
+    budgetDetail ? touchesAccount(t, budgetDetail.accountId) : false,
   );
-  const topTransactions = getTopTransactions(transactionsCategory, 3);
+  const topTransactions = getTopTransactions(budgetTransactions, 3);
 
   if (!budgetDetail) return null;
 
@@ -41,7 +47,7 @@ export function BudgetDetails() {
       : [now.getFullYear(), now.getMonth()];
   const prevSpent = getBudgetSpent(
     transactions,
-    budgetDetail.category,
+    budgetDetail.accountId,
     prevYear,
     prevMonth,
   );
@@ -62,20 +68,23 @@ export function BudgetDetails() {
 
       <section className="budget-header">
         <div className="budget-header__icon">
-          {getCategoryIcon(budgetDetail.category, 28)}
+          {getAccountIcon(
+            accounts.find((a) => a.id === budgetDetail.accountId),
+            28,
+          )}
         </div>
-        <h2 className="budget-header__category">{budgetDetail.category}</h2>
+        <h2 className="budget-header__category">{getAccountName(accounts, budgetDetail.accountId)}</h2>
         <p className="budget-header__daily-avg">
-          ${dailyAvg.toLocaleString()}/day avg
+          {formatCurrency(dailyAvg)}/day avg
         </p>
       </section>
 
       <section className="budget-summary">
         <h1 className="budget-summary__amounts">
           <span className="budget-summary__spent">
-            ${spent.toLocaleString()}
+            {formatCurrency(spent)}
           </span>{' '}
-          / ${budgetDetail.monthlyLimit.toLocaleString()}
+          / {formatCurrency(budgetDetail.monthlyLimit)}
         </h1>
         <Bar percentage={percentage} />
         <span className="budget-summary__change">{monthChange}</span>
@@ -86,11 +95,11 @@ export function BudgetDetails() {
         <ul className="budget-info__list">
           <li>
             <span>Spent</span>
-            <span>${spent.toLocaleString()}</span>
+            <span>{formatCurrency(spent)}</span>
           </li>
           <li>
             <span>Budget</span>
-            <span>${budgetDetail.monthlyLimit.toLocaleString()}</span>
+            <span>{formatCurrency(budgetDetail.monthlyLimit)}</span>
           </li>
           <li>
             <span>Used</span>
@@ -98,7 +107,7 @@ export function BudgetDetails() {
           </li>
           <li>
             <span>Daily Average</span>
-            <span>${dailyAvg.toLocaleString()}/day avg</span>
+            <span>{formatCurrency(dailyAvg)}/day avg</span>
           </li>
         </ul>
       </Card>
@@ -112,7 +121,13 @@ export function BudgetDetails() {
                 {transaction.description} • {formatDate(transaction.date)}
               </span>
               <span className="budget-transactions__amount">
-                ${transaction.amount.toLocaleString()}
+                {formatCurrency(
+                  Math.abs(
+                    transaction.postings.find(
+                      (posting) => posting.accountId === budgetDetail.accountId,
+                    )?.amount ?? 0,
+                  ),
+                )}
               </span>
             </div>
           ))}

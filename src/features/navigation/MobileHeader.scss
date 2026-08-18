@@ -1,0 +1,22 @@
+@use '../../shared/styles/mixins.scss' as *;
+
+.mobile-header {
+  display: none;
+
+  @include mobile {
+    @include flex(space-between, center);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    padding: var(--spacing-4);
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+  }
+}

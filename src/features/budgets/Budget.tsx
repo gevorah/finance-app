@@ -8,16 +8,16 @@ import { BudgetCard } from './budget-card/BudgetCard';
 
 import './Budget.scss';
 
-import { useBudgetStore } from '@/stores/budgetStore';
+import { useBudgetStore } from '@/entities/budget';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import BudgetCategoryCard from './budget-category-card/BudgetCategoryCard';
 
 export default function BudgetComponent() {
-  const { budget } = useBudgetStore();
+  const { budgets } = useBudgetStore();
   const router = useRouter();
-  if (budget.length === 0) {
+  if (budgets.length === 0) {
     return (
       <div className="budget-list">
         <EmptyState
@@ -52,7 +52,7 @@ export default function BudgetComponent() {
         </Button>
       </section>
       <section className="budget-list-items">
-        {budget.map((item) => (
+        {budgets.map((item) => (
           <Link href={`/budgets/${item.id}`} key={item.id}>
             <BudgetCategoryCard budget={item} />
           </Link>

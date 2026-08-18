@@ -1,4 +1,4 @@
-import TransactionDetails from "@/features/metrics/TransactionDetails";
+import TransactionDetails from "@/features/transactions/transaction-details/TransactionDetails";
 
 export default function TransactionDetail() {
     return (

@@ -1,24 +1,31 @@
-import { ReactNode } from 'react';
-import { CategoryType } from '@/entities/category';
-import { PaymentMethod } from '@/entities/payment';
+import { Money } from '@/shared/lib/money';
 
-export type TransactionType = 'income' | 'expense';
+export interface Posting {
+  accountId: string;
+  amount: Money;
+}
 
 export interface Transaction {
   id: string;
-  type: TransactionType;
-  icon?: ReactNode;
-  category: CategoryType;
-  notes?: string;
-  amount: number;
   date: string;
   description: string;
+  payee?: string;
+  postings: Posting[];
   createdAt: string;
   updatedAt: string;
-  paymentMethod?: PaymentMethod;
 }
 
 export type TransactionInput = Omit<
   Transaction,
   'id' | 'createdAt' | 'updatedAt'
 >;
+
+export const TRANSACTION_KINDS = {
+  EXPENSE: 'expense',
+  INCOME: 'income',
+  TRANSFER: 'transfer',
+  OPENING: 'opening',
+} as const;
+
+export type TransactionKind =
+  (typeof TRANSACTION_KINDS)[keyof typeof TRANSACTION_KINDS];

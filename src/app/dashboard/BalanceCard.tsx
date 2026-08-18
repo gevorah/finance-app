@@ -1,0 +1,50 @@
+import { formatCurrency } from '@/shared/lib/currency';
+import { Money } from '@/shared/lib/money';
+
+import './BalanceCard.scss';
+
+import { Card } from '@/shared/components/ui/card';
+import { ArrowDown, ArrowUp } from 'lucide-react';
+
+type MetricTone = 'income' | 'expense';
+
+interface CardBalanceProps {
+  balance: Money;
+  stats?: Stats[];
+}
+
+interface Stats {
+  icon: MetricTone;
+  label: string;
+  value: Money;
+}
+
+export function BalanceCard({ balance, stats = [] }: CardBalanceProps) {
+  return (
+    <Card type="primary" className="balance-card">
+      <div className="balance-header">
+        <p className="balance-header__title">total balance</p>
+        <p className="balance-header__description">{formatCurrency(balance)}</p>
+      </div>
+      <section className="stats">
+        {stats.map((stat, index) => (
+          <div key={index} className={`stat-item`}>
+            <div className={`stat-item__icon stat-item__icon--${stat.icon}`}>
+              {stat.icon === 'income' ? (
+                <ArrowUp size={16} />
+              ) : (
+                <ArrowDown size={16} />
+              )}
+            </div>
+            <div>
+              <p className={`stat-item__label`}>{stat.label}</p>
+              <p className={`stat-item__value stat-item__value--${stat.icon}`}>
+                {formatCurrency(stat.value)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </section>
+    </Card>
+  );
+}

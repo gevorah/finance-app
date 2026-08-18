@@ -1,72 +1,168 @@
-import { CATEGORY_OPTIONS } from '@/entities/category';
-import { Transaction } from '@/entities/transaction';
+'use client';
+
 import {
+  ACCOUNT_ROOTS,
+  getAccountsByRoot,
+  getRealAccounts,
+  useAccountsById,
+  useAccountStore,
+} from '@/entities/account';
+import {
+  buildPostings,
+  describeTransaction,
+  getPayees,
+  getPayeeSuggestion,
+  isEditableKind,
+  Transaction,
+  TRANSACTION_KINDS,
   transactionSchema,
   TransactionValues,
-} from '@/entities/transaction/model/schema';
+  useTransactionStore,
+} from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
+import { ComboBox, ComboBoxItem } from '@/shared/components/ui/combo-box';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { parseDate } from '@internationalized/date';
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import { useRouter } from 'next/navigation';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
 import './TransactionForm.scss';
+
+const MONEY_FORMAT = {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 2,
+} as const;
 
 interface TransactionFormProps {
   initialData?: Transaction;
 }
+
 export default function TransactionForm({ initialData }: TransactionFormProps) {
-  const { handleSubmit, control } = useForm<TransactionValues>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: initialData
-      ? { ...initialData, date: parseDate(initialData.date) }
-      : undefined,
-  });
   const router = useRouter();
-  const { addTransaction, updateTransaction } = useTransactionStore();
+  const { accounts } = useAccountStore();
+  const { transactions, addTransaction, updateTransaction } =
+    useTransactionStore();
+
+  const realAccounts = getRealAccounts(accounts);
+  const expenseAccounts = getAccountsByRoot(accounts, ACCOUNT_ROOTS.EXPENSES);
+  const incomeAccounts = getAccountsByRoot(accounts, ACCOUNT_ROOTS.INCOME);
+
+  const accountsById = useAccountsById();
+
+  const initialView = initialData
+    ? describeTransaction(initialData, accountsById)
+    : undefined;
+
+  const editableKind = isEditableKind(initialView?.kind)
+    ? initialView!.kind
+    : TRANSACTION_KINDS.EXPENSE;
+
+  const { handleSubmit, control, setValue, formState } =
+    useForm<TransactionValues>({
+    resolver: zodResolver(transactionSchema),
+    defaultValues:
+      initialData && initialView
+        ? {
+            kind: editableKind,
+            amount: toMajorUnits(initialView.amount),
+            accountId: initialView.accountId,
+            counterAccountId: initialView.counterAccountId,
+            payee: initialData.payee ?? '',
+            description: initialData.description,
+            date: parseDate(initialData.date),
+          }
+        : {
+            kind: TRANSACTION_KINDS.EXPENSE,
+            accountId: realAccounts[0]?.id,
+            counterAccountId: expenseAccounts[0]?.id,
+            payee: '',
+            description: '',
+            date: today(getLocalTimeZone()),
+          },
+    });
+
+  const kind = useWatch({ control, name: 'kind' });
+  const isTransfer = kind === TRANSACTION_KINDS.TRANSFER;
+
+  const counterAccounts = isTransfer
+    ? realAccounts
+    : kind === TRANSACTION_KINDS.INCOME
+      ? incomeAccounts
+      : expenseAccounts;
+
+  const payees = getPayees(transactions);
+
+  const applyPayeeSuggestion = (payee: string) => {
+    const suggestion = getPayeeSuggestion(payee, transactions, accountsById);
+    if (!suggestion) return;
+
+    if (!formState.dirtyFields.accountId) {
+      setValue('accountId', suggestion.accountId);
+    }
+    if (!formState.dirtyFields.counterAccountId) {
+      setValue('counterAccountId', suggestion.counterAccountId);
+    }
+  };
+
   const onSubmit: SubmitHandler<TransactionValues> = (data) => {
-    const transactionData = {
-      type: data.type,
-      amount: Number(data.amount),
-      category: data.category,
+    const transaction = {
+      payee: data.payee?.trim() || undefined,
       description: data.description,
       date: data.date.toString(),
+      postings: buildPostings(
+        {
+          amount: toMinorUnits(Number(data.amount)),
+          accountId: data.accountId,
+          counterAccountId: data.counterAccountId,
+        },
+        accountsById,
+      ),
     };
+
     if (initialData) {
-      updateTransaction(initialData.id, transactionData);
+      updateTransaction(initialData.id, transaction);
     } else {
-      addTransaction(transactionData);
+      addTransaction(transaction);
     }
+
     router.push('/transactions');
   };
+
   return (
     <main className="transaction-container">
       <section className="form-container">
-        <h1 className="form-container__title">{initialData ? 'Edit Transaction' : 'New Transaction'}</h1>
+        <h1 className="form-container__title">
+          {initialData ? 'Edit Transaction' : 'New Transaction'}
+        </h1>
         <Controller
-          name="type"
+          name="kind"
           control={control}
-          defaultValue="expense"
           render={({ field }) => (
             <ToggleButtonGroup
               className="type-toggle"
               selectedKeys={new Set([field.value])}
               onSelectionChange={(keys) => {
-                const selected = [...keys][0] as TransactionValues['type'];
-                field.onChange(selected);
+                field.onChange([...keys][0] as TransactionValues['kind']);
               }}
             >
-              <Toggle id="expense" className="toggle-expense">
+              <Toggle id={TRANSACTION_KINDS.EXPENSE} className="toggle-expense">
                 Expense
               </Toggle>
-              <Toggle id="income" className="toggle-income">
+              <Toggle id={TRANSACTION_KINDS.INCOME} className="toggle-income">
                 Income
+              </Toggle>
+              <Toggle
+                id={TRANSACTION_KINDS.TRANSFER}
+                className="toggle-transfer"
+              >
+                Transfer
               </Toggle>
             </ToggleButtonGroup>
           )}
@@ -81,25 +177,67 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
+                formatOptions={MONEY_FORMAT}
                 errorMessage={fieldState.error?.message}
               />
             )}
           />
           <Controller
-            name="category"
+            name="accountId"
             control={control}
             render={({ field, fieldState }) => (
               <Select
-                label="Category"
-                placeholder="Select Category"
+                label={isTransfer ? 'From account' : 'Account'}
+                placeholder="Select account"
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}
-                items={CATEGORY_OPTIONS}
+                items={realAccounts}
                 errorMessage={fieldState.error?.message}
               >
-                {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
               </Select>
+            )}
+          />
+          <Controller
+            name="counterAccountId"
+            control={control}
+            render={({ field, fieldState }) => (
+              <Select
+                label={isTransfer ? 'To account' : 'Category'}
+                placeholder={isTransfer ? 'Select account' : 'Select category'}
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                items={counterAccounts}
+                errorMessage={fieldState.error?.message}
+              >
+                {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+              </Select>
+            )}
+          />
+          <Controller
+            name="payee"
+            control={control}
+            render={({ field, fieldState }) => (
+              <ComboBox
+                label="Payee"
+                placeholder="Where was it"
+                name={field.name}
+                allowsCustomValue
+                inputValue={field.value ?? ''}
+                onInputChange={field.onChange}
+                onSelectionChange={(key) => {
+                  if (key === null) return;
+                  field.onChange(String(key));
+                  applyPayeeSuggestion(String(key));
+                }}
+                onBlur={() => applyPayeeSuggestion(field.value ?? '')}
+                items={payees.map((payee) => ({ id: payee }))}
+                errorMessage={fieldState.error?.message}
+              >
+                {(item) => <ComboBoxItem id={item.id}>{item.id}</ComboBoxItem>}
+              </ComboBox>
             )}
           />
           <Controller
@@ -134,6 +272,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               size={'large'}
               border={true}
               className="buttons-container__btn-cancel"
+              onPress={() => router.back()}
             >
               Cancel
             </Button>

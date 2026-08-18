@@ -5,9 +5,10 @@ import { Card } from '@/shared/components/ui/card';
 import './BudgetCard.scss';
 
 import Bar from '@/shared/components/ui/bar/bar';
-import { getBudgetSummary } from '@/stores/selectors';
-import { useBudgetStore } from '@/stores/budgetStore';
-import { useTransactionStore } from '@/stores/transactionStore';
+import { formatCurrency } from '@/shared/lib/currency';
+import { getBudgetSummary } from '@/entities/budget';
+import { useBudgetStore } from '@/entities/budget';
+import { useTransactionStore } from '@/entities/transaction';
 
 function daysLeftInMonth(date: Date): number {
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -21,10 +22,10 @@ function getSummaryMessage(percentage: number, daysLeft: number): string {
 }
 
 export function BudgetCard() {
-  const { budget } = useBudgetStore();
+  const { budgets } = useBudgetStore();
   const { transactions } = useTransactionStore();
   const { spent, limit, remaining, percentage } = getBudgetSummary(
-    budget,
+    budgets,
     transactions,
   );
   const daysLeft = daysLeftInMonth(new Date());
@@ -34,15 +35,15 @@ export function BudgetCard() {
       <div className="budget-header">
         <h3 className="budget-header__title">MONTHLY BUDGET</h3>
         <p className="budget-header__remaining">
-          ${remaining.toLocaleString()} remaining
+          {formatCurrency(remaining)} remaining
         </p>
       </div>
       <section className="budget-info">
         <p className="budget-amount">
           <span className="budget-amount__spent">
-            ${spent.toLocaleString()}{' '}
+            {formatCurrency(spent)}{' '}
           </span>
-          of ${limit.toLocaleString()}
+          of {formatCurrency(limit)}
         </p>
         <Bar percentage={percentage} />
         <p className="budget-message">

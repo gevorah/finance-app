@@ -1,17 +1,18 @@
 'use client';
 
+import { getDebtAccounts, useAccountStore } from '@/entities/account';
 import { Button } from '@/shared/components/ui/button';
-import { useDebtStore } from '@/stores/debtStore';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import DebtForm from '../debt-form/DebtForm';
 
 export default function EditDebt() {
-  const { debts } = useDebtStore();
+  const { accounts } = useAccountStore();
   const { id } = useParams();
-  const debtDetail = debts.find((debt) => debt.id === id);
   const router = useRouter();
+  const debtDetail = getDebtAccounts(accounts).find((debt) => debt.id === id);
+
   return (
     <main className="edit-debt-container">
       <div className="back-section">
