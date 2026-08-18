@@ -98,6 +98,12 @@ export const LIABILITY_KINDS: AccountKind[] = [
   ACCOUNT_KINDS.PERSONAL,
 ];
 
+export function getRootForKind(kind: AccountKind): AccountRoot {
+  return LIABILITY_KINDS.includes(kind)
+    ? ACCOUNT_ROOTS.LIABILITIES
+    : ACCOUNT_ROOTS.ASSETS;
+}
+
 const toKindOption = (id: AccountKind) => ({
   id,
   label: ACCOUNT_KIND_LABELS[id],

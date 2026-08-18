@@ -180,6 +180,20 @@ describe('buildOpeningPostings', () => {
     expect(getPostingsTotal(postings)).toBe(0);
   });
 
+  it('keeps an asset that is already overdrawn below zero', () => {
+    const postings = buildOpeningPostings({
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      amount: -toMinorUnits(120000),
+      root: ACCOUNT_ROOTS.ASSETS,
+    });
+
+    expect(postings).toContainEqual({
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      amount: -12000000,
+    });
+    expect(getPostingsTotal(postings)).toBe(0);
+  });
+
   it('reads back as an opening balance whichever side it opens', () => {
     const roots = [ACCOUNT_ROOTS.ASSETS, ACCOUNT_ROOTS.LIABILITIES] as const;
 

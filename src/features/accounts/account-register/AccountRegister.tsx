@@ -163,7 +163,16 @@ export default function AccountRegister() {
         )}
       </section>
 
-      <h3 className="account-register__title">Movements</h3>
+      <section className="account-register__section">
+        <h3 className="account-register__title">Movements</h3>
+        <Button
+          variant="secondary"
+          size="small"
+          onPress={() => router.push(`/accounts/${account.id}/edit`)}
+        >
+          Edit
+        </Button>
+      </section>
 
       {rows.length === 0 ? (
         <EmptyState

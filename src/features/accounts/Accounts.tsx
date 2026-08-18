@@ -9,11 +9,13 @@ import {
   useAccountStore,
 } from '@/entities/account';
 import { Transaction, useTransactionStore } from '@/entities/transaction';
+import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { formatCurrency } from '@/shared/lib/currency';
-import { Wallet } from 'lucide-react';
+import { Plus, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { AccountCard } from './account-card/AccountCard';
 
@@ -56,6 +58,7 @@ export default function Accounts() {
   const hydrated = useHydrated();
   const { accounts } = useAccountStore();
   const { transactions } = useTransactionStore();
+  const router = useRouter();
 
   if (!hydrated) {
     return (
@@ -94,13 +97,31 @@ export default function Accounts() {
         </div>
       </section>
 
-      <h3 className="accounts__title">Your accounts</h3>
+      <section className="accounts__header">
+        <h3 className="accounts__title">Your accounts</h3>
+        <Button
+          size="small"
+          className="accounts__add"
+          onPress={() => router.push('/accounts/new')}
+        >
+          <Plus size={14} /> Add
+        </Button>
+      </section>
 
       {realAccounts.length === 0 ? (
         <EmptyState
           icon={<Wallet size={28} />}
           title="No accounts yet"
           description="Add the accounts and cards you actually use, and your balance will follow from what you register."
+          action={
+            <Button
+              variant="primary"
+              size="small"
+              onPress={() => router.push('/accounts/new')}
+            >
+              Add account
+            </Button>
+          }
         />
       ) : (
         <>

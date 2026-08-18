@@ -72,7 +72,7 @@ export function buildPostings(
 
 export interface OpeningBalanceDraft {
   accountId: string;
-  /** What the account holds, or what is owed on it, always as a positive figure. */
+  /** What the account holds, or what is owed on it as a positive figure. */
   amount: Money;
   root: AccountRoot;
 }
@@ -88,8 +88,8 @@ export function buildOpeningPostings({
   amount,
   root,
 }: OpeningBalanceDraft): Posting[] {
-  const magnitude = Math.abs(amount);
-  const signed = root === ACCOUNT_ROOTS.LIABILITIES ? -magnitude : magnitude;
+  const signed =
+    root === ACCOUNT_ROOTS.LIABILITIES ? -Math.abs(amount) : amount;
 
   return [
     { accountId, amount: signed },

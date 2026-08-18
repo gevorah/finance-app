@@ -1,0 +1,66 @@
+@use 'shared/styles/mixins' as *;
+
+.account-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4) var(--spacing-5);
+  align-items: start;
+
+  &__full {
+    grid-column: 1 / -1;
+  }
+
+  &__budget {
+    grid-column: 1 / -1;
+    @include flex(normal, normal, column);
+    gap: var(--spacing-2);
+  }
+
+  &__budget-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__budget-toggle {
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-1);
+
+    button {
+      flex: 1;
+    }
+  }
+
+  &__budget-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-form__figure {
+  @include flex(normal, normal, column);
+  gap: var(--spacing-1);
+
+  &-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &-value {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+
+    a {
+      color: var(--color-primary-muted);
+      text-decoration: underline;
+    }
+  }
+}

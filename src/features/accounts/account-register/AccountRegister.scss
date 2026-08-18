@@ -48,6 +48,10 @@
     font-weight: var(--font-weight-semibold);
   }
 
+  &__section {
+    @include flex(space-between, center);
+  }
+
   &__title {
     font-size: var(--text-md);
     font-weight: var(--font-weight-semibold);
