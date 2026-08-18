@@ -15,6 +15,7 @@ import { formatCurrency } from '@/shared/lib/currency';
 import { formatDateLong } from '@/shared/lib/date';
 import {
   describeTransaction,
+  isEditableKind,
   TRANSACTION_KINDS,
   useTransactionStore,
 } from '@/entities/transaction';
@@ -54,6 +55,7 @@ export default function TransactionDetails() {
   const signedAmount =
     view.kind === TRANSACTION_KINDS.INCOME ? view.amount : -view.amount;
   const counterName = getAccountName(accounts, view.counterAccountId);
+  const isEditable = isEditableKind(view.kind);
 
   const handleDelete = () => {
     deleteTransaction(transaction.id);
@@ -116,18 +118,20 @@ export default function TransactionDetails() {
           }
           icon={getAccountIcon(accountsById.get(view.counterAccountId), 24)}
         >
-          <Button variant={'secondary'} size={'medium'}>
-            Edit
+          <Button variant={'secondary'} size={'medium'} slot="close">
+            Cancel
           </Button>
-          <Button variant={'primary'} size={'medium'} onClick={handleDelete}>
+          <Button variant={'primary'} size={'medium'} onPress={handleDelete}>
             Delete
           </Button>
         </Dialog>
-        <Link href={`/transactions/${transaction.id}/edit/`} key={transaction.id}>
-          <Button variant={'primary'} size={'medium'}>
-            Edit
-          </Button>
-        </Link>
+        {isEditable && (
+          <Link href={`/transactions/${transaction.id}/edit/`} key={transaction.id}>
+            <Button variant={'primary'} size={'medium'}>
+              Edit
+            </Button>
+          </Link>
+        )}
       </div>
     </main>
   );
