@@ -16,19 +16,22 @@ import styles from './disclosure.module.scss';
 interface DisclosureSectionProps extends Omit<DisclosureProps, 'children'> {
   title: string;
   description?: string;
+  /** Match the surrounding outline so headings stay in order. */
+  headingLevel?: number;
   children: React.ReactNode;
 }
 
 export function Disclosure({
   title,
   description,
+  headingLevel = 3,
   children,
   className,
   ...props
 }: DisclosureSectionProps) {
   return (
     <AriaDisclosure className={clsx(styles.root, className)} {...props}>
-      <Heading level={2} className={styles.heading}>
+      <Heading level={headingLevel} className={styles.heading}>
         <Button slot="trigger" className={styles.trigger}>
           <span className={styles.label}>
             {title}

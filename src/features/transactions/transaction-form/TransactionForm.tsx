@@ -20,6 +20,7 @@ import {
   useTransactionStore,
 } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
+import { EmptyState } from '@/shared/components/ui/empty-state';
 import { DatePicker } from '@/shared/components/ui/date-picker';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
@@ -29,6 +30,7 @@ import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
+import { Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
@@ -134,6 +136,25 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
 
     router.push('/transactions');
   };
+
+  if (realAccounts.length === 0) {
+    return (
+      <EmptyState
+        icon={<Wallet size={28} />}
+        title="No account to register this against"
+        description="Every movement leaves or arrives somewhere, so add an account first."
+        action={
+          <Button
+            variant="primary"
+            size="small"
+            onPress={() => router.push('/accounts/new')}
+          >
+            Add account
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
     <main className="transaction-container">

@@ -1,5 +1,31 @@
 @use 'shared/styles/mixins' as *;
 
+.form-container {
+  max-width: 720px;
+  margin-inline: auto;
+
+  &__title {
+    text-align: center;
+    margin-bottom: var(--spacing-6);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.buttons-container {
+  @include flex(center, normal, row);
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+
+  &__btn-cancel {
+    flex: 1;
+  }
+
+  &__btn-save {
+    flex: 2;
+  }
+}
+
 .account-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -74,4 +100,12 @@
   @include mobile {
     grid-template-columns: 1fr;
   }
+}
+
+.account-form__danger {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-10);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--color-border);
 }

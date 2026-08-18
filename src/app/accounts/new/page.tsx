@@ -1,9 +1,12 @@
+import { Suspense } from 'react';
 import AddAccount from '@/features/accounts/add-account/AddAccount';
 
 export default function Page() {
   return (
     <main>
-      <AddAccount />
+      <Suspense>
+        <AddAccount />
+      </Suspense>
     </main>
   );
 }

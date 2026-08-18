@@ -4,6 +4,7 @@ import {
   Account,
   ACCOUNT_ROOTS,
   getAccountBalance,
+  isRealAccount,
   useAccountsById,
   useAccountStore,
 } from '@/entities/account';
@@ -110,7 +111,7 @@ export default function AccountRegister() {
 
   if (!hydrated) return null;
 
-  if (!account) {
+  if (!account || !isRealAccount(account)) {
     return (
       <EmptyState
         icon={<SearchX size={28} />}

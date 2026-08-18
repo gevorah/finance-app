@@ -45,7 +45,7 @@ export default function Debts() {
         <Button
           size="small"
           className="debts-header__button"
-          onPress={() => router.push('/accounts/new')}
+          onPress={() => router.push('/accounts/new?kind=credit_card')}
         >
           <Plus size={14} /> Add
         </Button>
@@ -60,7 +60,7 @@ export default function Debts() {
             <Button
               variant="primary"
               size="small"
-              onPress={() => router.push('/accounts/new')}
+              onPress={() => router.push('/accounts/new?kind=credit_card')}
             >
               Add debt
             </Button>

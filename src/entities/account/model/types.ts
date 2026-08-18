@@ -1,6 +1,6 @@
 import { Money } from '@/shared/lib/money';
 
-import { DebtTerms } from './debt-terms';
+import { DebtPaymentTerms, DebtTerms } from './debt-terms';
 
 export const ACCOUNT_ROOTS = {
   ASSETS: 'assets',
@@ -113,7 +113,9 @@ export const ACCOUNT_KIND_OPTIONS = ASSET_KINDS.map(toKindOption);
 export const LIABILITY_KIND_OPTIONS = LIABILITY_KINDS.map(toKindOption);
 
 /** A credit card revolves; everything else that is owed is paid in installments. */
-export const LIABILITY_KIND_TO_PAYMENT_TYPE: Record<string, string> = {
+export const LIABILITY_KIND_TO_PAYMENT_TYPE: Partial<
+  Record<AccountKind, DebtPaymentTerms['type']>
+> = {
   [ACCOUNT_KINDS.CREDIT_CARD]: 'revolving',
   [ACCOUNT_KINDS.LOAN]: 'installments',
   [ACCOUNT_KINDS.MORTGAGE]: 'installments',

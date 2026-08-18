@@ -6,10 +6,12 @@ import {
   getRealAccounts,
   getTotalBalance,
   getTotalDebt,
+  isRealAccount,
   useAccountStore,
 } from '@/entities/account';
 import { Transaction, useTransactionStore } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
+import { Disclosure } from '@/shared/components/ui/disclosure';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useHydrated } from '@/shared/hooks/useHydrated';
@@ -73,6 +75,9 @@ export default function Accounts() {
   const realAccounts = getRealAccounts(accounts);
   const inBudget = realAccounts.filter((account) => account.onBudget);
   const setAside = realAccounts.filter((account) => !account.onBudget);
+  const closed = accounts.filter(
+    (account) => isRealAccount(account) && account.archived,
+  );
 
   const available = getOnBudgetBalance(accounts, transactions);
   const setAsideTotal = getTotalBalance(accounts, transactions) - available;
@@ -141,6 +146,23 @@ export default function Accounts() {
             />
           )}
         </>
+      )}
+
+      {closed.length > 0 && (
+        <Disclosure
+          title="Closed accounts"
+          description="Their movements still count towards past balances."
+        >
+          <div className="accounts-group__items">
+            {closed.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                transactions={transactions}
+              />
+            ))}
+          </div>
+        </Disclosure>
       )}
     </div>
   );

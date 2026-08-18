@@ -97,6 +97,22 @@ export function buildOpeningPostings({
   ];
 }
 
+/**
+ * Emptying an account is its balance moved somewhere else, so the amount keeps
+ * the sign the balance already had instead of being a magnitude plus a
+ * direction. The account is left at zero whichever side it was on.
+ */
+export function buildBalanceTransferPostings(
+  accountId: string,
+  destinationAccountId: string,
+  balance: Money,
+): Posting[] {
+  return [
+    { accountId, amount: -balance },
+    { accountId: destinationAccountId, amount: balance },
+  ];
+}
+
 export interface TransactionView {
   kind: TransactionKind;
   amount: Money;

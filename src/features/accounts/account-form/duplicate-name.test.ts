@@ -41,3 +41,30 @@ describe('unique account name', () => {
     expect(withUniqueName().safeParse(values('Nequi')).success).toBe(true);
   });
 });
+
+describe('opening an account without its optional terms', () => {
+  const base = {
+    name: 'Bancolombia',
+    onBudget: true,
+    openingBalance: 22000000,
+  };
+
+  it.each([
+    ['loan', ACCOUNT_KINDS.LOAN, 'installments'],
+    ['mortgage', ACCOUNT_KINDS.MORTGAGE, 'installments'],
+    ['credit card', ACCOUNT_KINDS.CREDIT_CARD, 'revolving'],
+    ['personal', ACCOUNT_KINDS.PERSONAL, 'flexible'],
+  ])(
+    'accepts a %s with nothing but the four required fields',
+    (_, kind, terms) => {
+      const result = accountSchema.safeParse({
+        ...base,
+        kind,
+        interest: { type: 'none' },
+        paymentTerms: { type: terms },
+      });
+
+      expect(result.success).toBe(true);
+    },
+  );
+});

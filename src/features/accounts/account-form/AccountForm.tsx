@@ -11,6 +11,7 @@ import {
   AccountValues,
   ASSET_KINDS,
   getAccountBalance,
+  getRealAccounts,
   getRootForKind,
   LIABILITY_KIND_TO_PAYMENT_TYPE,
   LIABILITY_KINDS,
@@ -31,9 +32,10 @@ import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
+import { CloseAccount } from '../close-account/CloseAccount';
 import { DebtDetails } from './DebtDetails';
 
 import './AccountForm.scss';
@@ -75,8 +77,15 @@ interface AccountFormProps {
 const kindOptions = (kinds: readonly AccountKind[]) =>
   kinds.map((id) => ({ id, label: ACCOUNT_KIND_LABELS[id] }));
 
+const isKind = (value: string | null): value is AccountKind =>
+  value !== null && Object.values(ACCOUNT_KINDS).includes(value as AccountKind);
+
 export default function AccountForm({ account }: AccountFormProps) {
   const router = useRouter();
+  const requestedKind = useSearchParams().get('kind');
+  const initialKind = isKind(requestedKind)
+    ? requestedKind
+    : ACCOUNT_KINDS.CASH;
   const { accounts, addAccount, updateAccount } = useAccountStore();
   const { transactions, addTransaction } = useTransactionStore();
 
@@ -89,7 +98,7 @@ export default function AccountForm({ account }: AccountFormProps) {
     () =>
       accountSchema.refine(
         (data) =>
-          !accounts.some(
+          !getRealAccounts(accounts).some(
             (item) =>
               item.id !== account?.id &&
               item.name.trim().toLowerCase() === data.name.trim().toLowerCase(),
@@ -120,7 +129,7 @@ export default function AccountForm({ account }: AccountFormProps) {
             ? {
                 ...terms,
                 installmentAmount:
-                  'installmentAmount' in terms
+                  'installmentAmount' in terms && terms.installmentAmount
                     ? toMajorUnits(terms.installmentAmount)
                     : undefined,
                 minimumPayment:
@@ -135,11 +144,13 @@ export default function AccountForm({ account }: AccountFormProps) {
         } as AccountValues)
       : ({
           name: '',
-          kind: ACCOUNT_KINDS.CASH,
+          kind: initialKind,
           onBudget: true,
           description: '',
           interest: { type: 'none' },
-          paymentTerms: { type: 'revolving' },
+          paymentTerms: {
+            type: LIABILITY_KIND_TO_PAYMENT_TYPE[initialKind] ?? 'revolving',
+          },
         } as AccountValues),
   });
 
@@ -228,8 +239,9 @@ export default function AccountForm({ account }: AccountFormProps) {
               value={field.value}
               onChange={(value) => {
                 field.onChange(value);
-                const next = LIABILITY_KIND_TO_PAYMENT_TYPE[String(value)];
-                if (next) setValue('paymentTerms.type', next as never);
+                const next =
+                  LIABILITY_KIND_TO_PAYMENT_TYPE[value as AccountKind];
+                if (next) setValue('paymentTerms.type', next);
               }}
               items={availableKinds}
               description={
@@ -307,6 +319,7 @@ export default function AccountForm({ account }: AccountFormProps) {
         {isLiability && (
           <Disclosure
             className="account-form__full"
+            headingLevel={2}
             title="Card and loan details"
             description="Optional. Needed for available credit, due dates and the avalanche order."
             defaultExpanded={Boolean(account?.debtTerms)}
@@ -335,6 +348,12 @@ export default function AccountForm({ account }: AccountFormProps) {
           </Button>
         </div>
       </form>
+
+      {account && (
+        <section className="account-form__danger">
+          <CloseAccount account={account} />
+        </section>
+      )}
     </section>
   );
 }

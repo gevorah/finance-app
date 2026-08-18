@@ -2,7 +2,7 @@ import { ACCOUNT_ROOTS, DEFAULT_CASH_ACCOUNT_ID } from '@/entities/account';
 import { toMinorUnits } from '@/shared/lib/money';
 import { describe, expect, it } from 'vitest';
 
-import { buildOpeningPostings } from './ledger';
+import { buildBalanceTransferPostings, buildOpeningPostings } from './ledger';
 import { getAccountRegister } from './selectors';
 import { Posting, Transaction } from './types';
 
@@ -144,5 +144,53 @@ describe('getAccountRegister counter side', () => {
 
     expect(row.isSplit).toBe(true);
     expect(row.counterAccountIds).toEqual([FOOD_ID, TRANSPORT_ID]);
+  });
+});
+
+describe('buildBalanceTransferPostings', () => {
+  const balanceOf = (postings: Posting[], accountId: string) =>
+    postings
+      .filter((posting) => posting.accountId === accountId)
+      .reduce((total, posting) => total + posting.amount, 0);
+
+  it('empties an account that holds money into the destination', () => {
+    const postings = buildBalanceTransferPostings(
+      DEFAULT_CASH_ACCOUNT_ID,
+      'assets-savings',
+      toMinorUnits(440000),
+    );
+
+    expect(balanceOf(postings, DEFAULT_CASH_ACCOUNT_ID)).toBe(
+      -toMinorUnits(440000),
+    );
+    expect(balanceOf(postings, 'assets-savings')).toBe(toMinorUnits(440000));
+  });
+
+  it('empties an account that owes money without flipping the sign', () => {
+    const owed = -toMinorUnits(850000);
+    const postings = buildBalanceTransferPostings(
+      CARD_ID,
+      'liabilities-loan',
+      owed,
+    );
+
+    expect(balanceOf(postings, CARD_ID)).toBe(toMinorUnits(850000));
+    expect(balanceOf(postings, 'liabilities-loan')).toBe(owed);
+  });
+
+  it('leaves the closed account at zero and balances to zero', () => {
+    const opening = buildOpeningPostings({
+      accountId: CARD_ID,
+      amount: toMinorUnits(850000),
+      root: ACCOUNT_ROOTS.LIABILITIES,
+    });
+    const closing = buildBalanceTransferPostings(
+      CARD_ID,
+      'liabilities-loan',
+      -toMinorUnits(850000),
+    );
+
+    expect(balanceOf([...opening, ...closing], CARD_ID)).toBe(0);
+    expect(closing.reduce((total, p) => total + p.amount, 0)).toBe(0);
   });
 });

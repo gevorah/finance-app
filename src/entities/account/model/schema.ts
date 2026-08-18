@@ -33,9 +33,10 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
     type: z.literal('installments'),
     installmentAmount: z
       .number()
-      .positive({ error: 'Installment amount should be above 0' }),
+      .positive({ error: 'Installment amount should be above 0' })
+      .optional(),
     totalInstallments: z.number().int().positive().optional(),
-    frequency: z.enum(['weekly', 'monthly', 'yearly', 'custom']),
+    frequency: z.enum(['weekly', 'monthly', 'yearly', 'custom']).optional(),
     nextPaymentDueDate: dueDate,
   }),
   z.object({

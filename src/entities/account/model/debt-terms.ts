@@ -17,9 +17,9 @@ export type PaymentFrequency = 'weekly' | 'monthly' | 'yearly' | 'custom';
 export type DebtPaymentTerms =
   | {
       type: 'installments';
-      installmentAmount: Money;
+      installmentAmount?: Money;
       totalInstallments?: number;
-      frequency: PaymentFrequency;
+      frequency?: PaymentFrequency;
       nextPaymentDueDate?: string;
     }
   | {
