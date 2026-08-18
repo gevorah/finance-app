@@ -115,10 +115,9 @@ const REAL_ROOTS: AccountRoot[] = [
 ];
 
 /**
- * Firefly III derives the transaction type from the roots its postings touch
- * instead of storing it, and only lets the counter side be split — an expense
- * leaves one account and may land in several. Both rules are applied here, so
- * the amount is always the funding side rather than any single posting.
+ * The type is derived from the roots the postings touch rather than stored, and
+ * only the counter side may be split — an expense leaves one account and may
+ * land in several. So the amount is the funding side, never a single posting.
  */
 export function describeTransaction(
   transaction: Transaction,

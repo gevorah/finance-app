@@ -34,9 +34,8 @@ export type DebtPaymentTerms =
     };
 
 /**
- * Descriptive only, like Firefly III's liability fields: nothing here is
- * recalculated, and none of it is a balance. What is owed comes from the
- * postings on the account.
+ * Descriptive only: a field belongs here when it changes because the agreement
+ * changed, never because money moved. What is owed comes from the postings.
  */
 export interface DebtTerms {
   interest: DebtInterest;
