@@ -59,7 +59,7 @@ export function DebtCard({ debt }: DebtCardProps) {
             variant="ghost"
             className="debt-card__edit"
             aria-label="Edit debt"
-            onPress={() => router.push(`/debts/${debt.id}/edit`)}
+            onPress={() => router.push(`/accounts/${debt.id}/edit`)}
           >
             <Pencil size={14} />
           </Button>

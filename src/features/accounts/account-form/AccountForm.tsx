@@ -1,15 +1,18 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   Account,
   ACCOUNT_KIND_LABELS,
   ACCOUNT_KINDS,
   ACCOUNT_ROOTS,
+  AccountKind,
   accountSchema,
   AccountValues,
   ASSET_KINDS,
   getAccountBalance,
   getRootForKind,
+  LIABILITY_KIND_TO_PAYMENT_TYPE,
   LIABILITY_KINDS,
   useAccountStore,
 } from '@/entities/account';
@@ -18,17 +21,20 @@ import {
   useTransactionStore,
 } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
+import { Disclosure } from '@/shared/components/ui/disclosure';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { formatCurrency } from '@/shared/lib/currency';
-import { toMinorUnits } from '@/shared/lib/money';
+import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getLocalTimeZone, today } from '@internationalized/date';
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
+
+import { DebtDetails } from './DebtDetails';
 
 import './AccountForm.scss';
 
@@ -44,12 +50,30 @@ const BUDGET_HINTS = {
     'Savings and anything you are not planning to touch. It stays out of what is available.',
 };
 
+function toDebtTerms(data: AccountValues): Account['debtTerms'] {
+  const terms = data.paymentTerms ?? { type: 'revolving' as const };
+
+  return {
+    interest: data.interest ?? { type: 'none' },
+    paymentTerms: {
+      ...terms,
+      ...('installmentAmount' in terms && terms.installmentAmount
+        ? { installmentAmount: toMinorUnits(terms.installmentAmount) }
+        : {}),
+      ...('minimumPayment' in terms && terms.minimumPayment
+        ? { minimumPayment: toMinorUnits(terms.minimumPayment) }
+        : {}),
+      nextPaymentDueDate: terms.nextPaymentDueDate?.toString(),
+    },
+  } as Account['debtTerms'];
+}
+
 interface AccountFormProps {
   account?: Account;
 }
 
-const kindOptions = (kinds: readonly string[]) =>
-  kinds.map((id) => ({ id, label: ACCOUNT_KIND_LABELS[id as never] }));
+const kindOptions = (kinds: readonly AccountKind[]) =>
+  kinds.map((id) => ({ id, label: ACCOUNT_KIND_LABELS[id] }));
 
 export default function AccountForm({ account }: AccountFormProps) {
   const router = useRouter();
@@ -59,15 +83,64 @@ export default function AccountForm({ account }: AccountFormProps) {
   const balance = account ? getAccountBalance(account, transactions) : 0;
   const isEditingLiability = account?.root === ACCOUNT_ROOTS.LIABILITIES;
 
-  const { control, handleSubmit } = useForm<AccountValues>({
-    resolver: zodResolver(accountSchema),
+  const terms = account?.debtTerms?.paymentTerms;
+
+  const schema = useMemo(
+    () =>
+      accountSchema.refine(
+        (data) =>
+          !accounts.some(
+            (item) =>
+              item.id !== account?.id &&
+              item.name.trim().toLowerCase() === data.name.trim().toLowerCase(),
+          ),
+        {
+          error: 'You already have an account with that name',
+          path: ['name'],
+        },
+      ),
+    [accounts, account?.id],
+  );
+
+  const { control, handleSubmit, setValue } = useForm<AccountValues>({
+    resolver: zodResolver(schema),
     defaultValues: account
-      ? {
+      ? ({
           name: account.name,
           kind: account.kind ?? ACCOUNT_KINDS.CASH,
           onBudget: account.onBudget,
-        }
-      : { name: '', kind: ACCOUNT_KINDS.CASH, onBudget: true },
+          description: account.description ?? '',
+          creditLimit: account.creditLimit
+            ? toMajorUnits(account.creditLimit)
+            : undefined,
+          cutOffDay: account.cutOffDay,
+          paymentDueDay: account.paymentDueDay,
+          interest: account.debtTerms?.interest ?? { type: 'none' },
+          paymentTerms: terms
+            ? {
+                ...terms,
+                installmentAmount:
+                  'installmentAmount' in terms
+                    ? toMajorUnits(terms.installmentAmount)
+                    : undefined,
+                minimumPayment:
+                  'minimumPayment' in terms && terms.minimumPayment
+                    ? toMajorUnits(terms.minimumPayment)
+                    : undefined,
+                nextPaymentDueDate: terms.nextPaymentDueDate
+                  ? parseDate(terms.nextPaymentDueDate)
+                  : undefined,
+              }
+            : { type: 'revolving' },
+        } as AccountValues)
+      : ({
+          name: '',
+          kind: ACCOUNT_KINDS.CASH,
+          onBudget: true,
+          description: '',
+          interest: { type: 'none' },
+          paymentTerms: { type: 'revolving' },
+        } as AccountValues),
   });
 
   const kind = useWatch({ control, name: 'kind' });
@@ -80,7 +153,25 @@ export default function AccountForm({ account }: AccountFormProps) {
 
   const onSubmit: SubmitHandler<AccountValues> = (data) => {
     const name = data.name.trim();
-    const shared = { name, kind: data.kind, onBudget: data.onBudget };
+    const root = getRootForKind(data.kind);
+    const isDebt = root === ACCOUNT_ROOTS.LIABILITIES;
+
+    const shared = {
+      name,
+      kind: data.kind,
+      onBudget: data.onBudget,
+      description: data.description?.trim() || undefined,
+      ...(isDebt
+        ? {
+            creditLimit: data.creditLimit
+              ? toMinorUnits(data.creditLimit)
+              : undefined,
+            cutOffDay: data.cutOffDay,
+            paymentDueDay: data.paymentDueDay,
+            debtTerms: toDebtTerms(data),
+          }
+        : {}),
+    };
 
     if (account) {
       updateAccount(account.id, shared);
@@ -88,7 +179,6 @@ export default function AccountForm({ account }: AccountFormProps) {
       return;
     }
 
-    const root = getRootForKind(data.kind);
     const id = addAccount({ ...shared, root });
 
     if (data.openingBalance) {
@@ -106,13 +196,6 @@ export default function AccountForm({ account }: AccountFormProps) {
     router.push('/accounts');
   };
 
-  const isDuplicateName = (value: string) =>
-    accounts.some(
-      (item) =>
-        item.id !== account?.id &&
-        item.name.trim().toLowerCase() === value.trim().toLowerCase(),
-    );
-
   return (
     <section className="form-container">
       <h1 className="form-container__title">
@@ -123,11 +206,6 @@ export default function AccountForm({ account }: AccountFormProps) {
         <Controller
           name="name"
           control={control}
-          rules={{
-            validate: (value) =>
-              !isDuplicateName(value) ||
-              'You already have an account with that name',
-          }}
           render={({ field, fieldState }) => (
             <TextField
               label="Name"
@@ -148,7 +226,11 @@ export default function AccountForm({ account }: AccountFormProps) {
               placeholder="Select a type"
               name={field.name}
               value={field.value}
-              onChange={field.onChange}
+              onChange={(value) => {
+                field.onChange(value);
+                const next = LIABILITY_KIND_TO_PAYMENT_TYPE[String(value)];
+                if (next) setValue('paymentTerms.type', next as never);
+              }}
               items={availableKinds}
               description={
                 account
@@ -221,6 +303,17 @@ export default function AccountForm({ account }: AccountFormProps) {
             </div>
           )}
         />
+
+        {isLiability && (
+          <Disclosure
+            className="account-form__full"
+            title="Card and loan details"
+            description="Optional. Needed for available credit, due dates and the avalanche order."
+            defaultExpanded={Boolean(account?.debtTerms)}
+          >
+            <DebtDetails control={control} />
+          </Disclosure>
+        )}
 
         <div className="account-form__full buttons-container">
           <Button
