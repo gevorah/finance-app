@@ -57,7 +57,6 @@ export const SAMPLE_ACCOUNTS: Account[] = [
         type: 'installments',
         installmentAmount: toMinorUnits(1219706),
         totalInstallments: 36,
-        paidInstallments: 10,
         frequency: 'monthly',
         nextPaymentDueDate: dayOfCurrentMonth(15),
       },

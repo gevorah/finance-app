@@ -19,7 +19,6 @@ export type DebtPaymentTerms =
       type: 'installments';
       installmentAmount: Money;
       totalInstallments?: number;
-      paidInstallments?: number;
       frequency: PaymentFrequency;
       nextPaymentDueDate?: string;
     }

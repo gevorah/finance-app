@@ -10,7 +10,6 @@ export interface Transaction {
   date: string;
   description: string;
   payee?: string;
-  notes?: string;
   postings: Posting[];
   createdAt: string;
   updatedAt: string;
