@@ -9,9 +9,8 @@ import {
 import { Transaction } from '@/entities/transaction';
 import { Card } from '@/shared/components/ui/card';
 import { formatCurrency } from '@/shared/lib/currency';
+import { ordinal } from '@/shared/lib/ordinal';
 import Link from 'next/link';
-
-import { ordinal } from '../lib/ordinal';
 
 import './AccountCard.scss';
 

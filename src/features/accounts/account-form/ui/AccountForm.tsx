@@ -7,12 +7,10 @@ import {
   ACCOUNT_KINDS,
   ACCOUNT_ROOTS,
   AccountKind,
-  accountSchema,
   AccountValues,
   ASSET_KINDS,
   budgetPlacementVaries,
   getAccountBalance,
-  getRealAccounts,
   getRootForKind,
   isOnBudgetByDefault,
   LIABILITY_KIND_TO_PAYMENT_TYPE,
@@ -39,7 +37,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Form } from 'react-aria-components';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
-import { CloseAccount } from '../close-account/CloseAccount';
+import { withUniqueName } from '../model/unique-name';
 import { DebtDetails } from './DebtDetails';
 
 import './AccountForm.scss';
@@ -96,7 +94,7 @@ const kindOptions = (kinds: readonly AccountKind[]) =>
 const isKind = (value: string | null): value is AccountKind =>
   value !== null && Object.values(ACCOUNT_KINDS).includes(value as AccountKind);
 
-export default function AccountForm({ account }: AccountFormProps) {
+export function AccountForm({ account }: AccountFormProps) {
   const router = useRouter();
   const requestedKind = useSearchParams().get('kind');
   const initialKind = isKind(requestedKind)
@@ -111,19 +109,7 @@ export default function AccountForm({ account }: AccountFormProps) {
   const terms = account?.debtTerms?.paymentTerms;
 
   const schema = useMemo(
-    () =>
-      accountSchema.refine(
-        (data) =>
-          !getRealAccounts(accounts).some(
-            (item) =>
-              item.id !== account?.id &&
-              item.name.trim().toLowerCase() === data.name.trim().toLowerCase(),
-          ),
-        {
-          error: 'You already have an account with that name',
-          path: ['name'],
-        },
-      ),
+    () => withUniqueName(accounts, account?.id),
     [accounts, account?.id],
   );
 
@@ -245,165 +231,153 @@ export default function AccountForm({ account }: AccountFormProps) {
   };
 
   return (
-    <section className="form-container">
-      <h1 className="form-container__title">
-        {account ? 'Edit account' : 'New account'}
-      </h1>
+    <Form
+      className="account-form"
+      validationBehavior="aria"
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      <Controller
+        name="name"
+        control={control}
+        render={({ field, fieldState }) => (
+          <TextField
+            label="Name"
+            name={field.name}
+            inputRef={field.ref}
+            value={field.value}
+            onChange={field.onChange}
+            errorMessage={fieldState.error?.message}
+          />
+        )}
+      />
 
-      <Form
-        className="account-form"
-        validationBehavior="aria"
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      <Controller
+        name="kind"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Select
+            label="Type"
+            placeholder="Select a type"
+            name={field.name}
+            inputRef={field.ref}
+            value={field.value}
+            onChange={(value) => {
+              field.onChange(value);
+              const nextKind = value as AccountKind;
+              const next = LIABILITY_KIND_TO_PAYMENT_TYPE[nextKind];
+              if (next) setValue('paymentTerms.type', next);
+              if (!account && !formState.dirtyFields.onBudget) {
+                setValue('onBudget', isOnBudgetByDefault(nextKind));
+              }
+            }}
+            items={availableKinds}
+            description={
+              account
+                ? 'Only types from the same group — swapping sides would change what the balance means'
+                : undefined
+            }
+            errorMessage={fieldState.error?.message}
+          >
+            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+          </Select>
+        )}
+      />
+
+      {account ? (
+        <div className="account-form__figure">
+          <p className="account-form__figure-label">
+            {isEditingLiability ? 'Amount owed' : 'Balance'}
+          </p>
+          <p className="account-form__figure-value">
+            {formatCurrency(isEditingLiability ? -balance : balance)}
+          </p>
+          <p className="account-form__figure-hint">
+            Comes from the ledger.{' '}
+            <Link href={`/accounts/${account.id}`}>Register a movement</Link> to
+            change it.
+          </p>
+        </div>
+      ) : (
         <Controller
-          name="name"
+          name="openingBalance"
           control={control}
           render={({ field, fieldState }) => (
-            <TextField
-              label="Name"
+            <NumberField
+              label={isLiability ? 'Amount owed' : 'Balance'}
               name={field.name}
               inputRef={field.ref}
               value={field.value}
               onChange={field.onChange}
+              formatOptions={MONEY_FORMAT}
+              description={
+                isLiability
+                  ? 'What you still owe today. Leave it empty to start from zero.'
+                  : 'What it holds today — use a negative amount if it is overdrawn.'
+              }
               errorMessage={fieldState.error?.message}
             />
           )}
         />
+      )}
 
+      {(account || budgetPlacementVaries(kind)) && (
         <Controller
-          name="kind"
+          name="onBudget"
           control={control}
-          render={({ field, fieldState }) => (
-            <Select
-              label="Type"
-              placeholder="Select a type"
-              name={field.name}
-              inputRef={field.ref}
-              value={field.value}
-              onChange={(value) => {
-                field.onChange(value);
-                const nextKind = value as AccountKind;
-                const next = LIABILITY_KIND_TO_PAYMENT_TYPE[nextKind];
-                if (next) setValue('paymentTerms.type', next);
-                if (!account && !formState.dirtyFields.onBudget) {
-                  setValue('onBudget', isOnBudgetByDefault(nextKind));
-                }
-              }}
-              items={availableKinds}
-              description={
-                account
-                  ? 'Only types from the same group — swapping sides would change what the balance means'
-                  : undefined
-              }
-              errorMessage={fieldState.error?.message}
-            >
-              {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
-            </Select>
+          render={({ field }) => (
+            <div className="account-form__budget">
+              <p className="account-form__budget-label">Budget</p>
+              <ToggleButtonGroup
+                className="account-form__budget-toggle"
+                selectedKeys={new Set([field.value ? 'in' : 'aside'])}
+                onSelectionChange={(keys) => {
+                  const selected = [...keys][0];
+                  if (selected) field.onChange(selected === 'in');
+                }}
+              >
+                <Toggle id="in">{labels.in}</Toggle>
+                <Toggle id="aside">{labels.aside}</Toggle>
+              </ToggleButtonGroup>
+              <p className="account-form__budget-hint">
+                {BUDGET_HINTS[side][onBudget ? 'in' : 'aside']}
+              </p>
+            </div>
           )}
         />
-
-        {account ? (
-          <div className="account-form__figure">
-            <p className="account-form__figure-label">
-              {isEditingLiability ? 'Amount owed' : 'Balance'}
-            </p>
-            <p className="account-form__figure-value">
-              {formatCurrency(isEditingLiability ? -balance : balance)}
-            </p>
-            <p className="account-form__figure-hint">
-              Comes from the ledger.{' '}
-              <Link href={`/accounts/${account.id}`}>Register a movement</Link>{' '}
-              to change it.
-            </p>
-          </div>
-        ) : (
-          <Controller
-            name="openingBalance"
-            control={control}
-            render={({ field, fieldState }) => (
-              <NumberField
-                label={isLiability ? 'Amount owed' : 'Balance'}
-                name={field.name}
-                inputRef={field.ref}
-                value={field.value}
-                onChange={field.onChange}
-                formatOptions={MONEY_FORMAT}
-                description={
-                  isLiability
-                    ? 'What you still owe today. Leave it empty to start from zero.'
-                    : 'What it holds today — use a negative amount if it is overdrawn.'
-                }
-                errorMessage={fieldState.error?.message}
-              />
-            )}
-          />
-        )}
-
-        {(account || budgetPlacementVaries(kind)) && (
-          <Controller
-            name="onBudget"
-            control={control}
-            render={({ field }) => (
-              <div className="account-form__budget">
-                <p className="account-form__budget-label">Budget</p>
-                <ToggleButtonGroup
-                  className="account-form__budget-toggle"
-                  selectedKeys={new Set([field.value ? 'in' : 'aside'])}
-                  onSelectionChange={(keys) => {
-                    const selected = [...keys][0];
-                    if (selected) field.onChange(selected === 'in');
-                  }}
-                >
-                  <Toggle id="in">{labels.in}</Toggle>
-                  <Toggle id="aside">{labels.aside}</Toggle>
-                </ToggleButtonGroup>
-                <p className="account-form__budget-hint">
-                  {BUDGET_HINTS[side][onBudget ? 'in' : 'aside']}
-                </p>
-              </div>
-            )}
-          />
-        )}
-
-        {isLiability && (
-          <Disclosure
-            className="account-form__full"
-            headingLevel={2}
-            title="Card and loan details"
-            description="Optional. Needed for available credit, due dates and the avalanche order."
-            isExpanded={detailsOpen}
-            onExpandedChange={setDetailsOpen}
-          >
-            <DebtDetails control={control} />
-          </Disclosure>
-        )}
-
-        <div className="account-form__full buttons-container">
-          <Button
-            variant="secondary"
-            size="large"
-            border
-            className="buttons-container__btn-cancel"
-            onPress={() => router.back()}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="large"
-            type="submit"
-            className="buttons-container__btn-save"
-          >
-            {account ? 'Save account' : 'Add account'}
-          </Button>
-        </div>
-      </Form>
-
-      {account && (
-        <section className="account-form__danger">
-          <CloseAccount account={account} />
-        </section>
       )}
-    </section>
+
+      {isLiability && (
+        <Disclosure
+          className="account-form__full"
+          headingLevel={2}
+          title="Card and loan details"
+          description="Optional. Needed for available credit, due dates and the avalanche order."
+          isExpanded={detailsOpen}
+          onExpandedChange={setDetailsOpen}
+        >
+          <DebtDetails control={control} />
+        </Disclosure>
+      )}
+
+      <div className="account-form__full buttons-container">
+        <Button
+          variant="secondary"
+          size="large"
+          border
+          className="buttons-container__btn-cancel"
+          onPress={() => router.back()}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          size="large"
+          type="submit"
+          className="buttons-container__btn-save"
+        >
+          {account ? 'Save account' : 'Add account'}
+        </Button>
+      </div>
+    </Form>
   );
 }

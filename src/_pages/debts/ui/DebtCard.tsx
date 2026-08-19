@@ -37,9 +37,7 @@ export function DebtCard({ debt }: DebtCardProps) {
           <p className="debt-card__description">{debt.description}</p>
         )}
         {rate > 0 && (
-          <p className="debt-card__description">
-            {rate.toFixed(2)}% monthly
-          </p>
+          <p className="debt-card__description">{rate.toFixed(2)}% monthly</p>
         )}
         {nextPaymentDueDate && status !== 'paid_off' && (
           <p className="debt-card__due">Due {formatDate(nextPaymentDueDate)}</p>

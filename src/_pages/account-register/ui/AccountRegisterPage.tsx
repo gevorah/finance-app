@@ -19,10 +19,9 @@ import { EmptyState } from '@/shared/components/ui/empty-state';
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
+import { ordinal } from '@/shared/lib/ordinal';
 import { ArrowLeft, Receipt, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-
-import { ordinal } from '../lib/ordinal';
 
 import './AccountRegister.scss';
 
@@ -99,7 +98,7 @@ function RegisterLine({
   );
 }
 
-export default function AccountRegister() {
+export function AccountRegisterPage() {
   const hydrated = useHydrated();
   const { accounts } = useAccountStore();
   const { transactions } = useTransactionStore();

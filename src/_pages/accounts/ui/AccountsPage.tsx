@@ -20,7 +20,7 @@ import { formatCurrency } from '@/shared/lib/currency';
 import { Plus, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { AccountCard } from './account-card/AccountCard';
+import { AccountCard } from './AccountCard';
 
 import './Accounts.scss';
 
@@ -57,7 +57,7 @@ function AccountGroup({
   );
 }
 
-export default function Accounts() {
+export function AccountsPage() {
   const hydrated = useHydrated();
   const { accounts } = useAccountStore();
   const { transactions } = useTransactionStore();

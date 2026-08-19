@@ -1,9 +1,1 @@
-import AccountRegister from '@/features/accounts/account-register/AccountRegister';
-
-export default function Page() {
-  return (
-    <main>
-      <AccountRegister />
-    </main>
-  );
-}
+export { AccountRegisterPage as default } from '@/_pages/account-register';

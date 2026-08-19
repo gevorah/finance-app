@@ -1,15 +1,17 @@
 'use client';
 
 import { isRealAccount, useAccountStore } from '@/entities/account';
+import { AccountForm } from '@/features/accounts/account-form';
+import { CloseAccount } from '@/features/accounts/close-account';
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { useHydrated } from '@/shared/hooks/useHydrated';
 import { ArrowLeft, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
-import AccountForm from '../account-form/AccountForm';
+import { AccountPageShell } from './AccountPageShell';
 
-export default function EditAccount() {
+export function EditAccountPage() {
   const hydrated = useHydrated();
   const { accounts } = useAccountStore();
   const { id } = useParams();
@@ -39,16 +41,11 @@ export default function EditAccount() {
   }
 
   return (
-    <main className="account-page">
-      <Button
-        variant="secondary"
-        size="small"
-        className="account-page__back"
-        onPress={() => router.back()}
-      >
-        <ArrowLeft size={16} /> <span>Back</span>
-      </Button>
+    <AccountPageShell
+      title="Edit account"
+      footer={<CloseAccount account={account} />}
+    >
       <AccountForm account={account} />
-    </main>
+    </AccountPageShell>
   );
 }

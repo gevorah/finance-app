@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   DEBT_STRATEGIES,
   DebtStrategy,
@@ -13,9 +14,8 @@ import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { HandCoins, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
-import { DebtCard } from './debt-card/DebtCard';
+import { DebtCard } from './DebtCard';
 
 import './Debts.scss';
 
@@ -24,7 +24,7 @@ const STRATEGY_HINTS: Record<DebtStrategy, string> = {
   avalanche: 'Highest interest first — cheaper overall.',
 };
 
-export default function Debts() {
+export function DebtsPage() {
   const { accounts } = useAccountStore();
   const { transactions } = useTransactionStore();
   const router = useRouter();

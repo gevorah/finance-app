@@ -1,9 +1,1 @@
-import Accounts from '@/features/accounts/Accounts';
-
-export default function Page() {
-  return (
-    <main>
-      <Accounts />
-    </main>
-  );
-}
+export { AccountsPage as default } from '@/_pages/accounts';
