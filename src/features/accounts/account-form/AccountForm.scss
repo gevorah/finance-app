@@ -1,5 +1,17 @@
 @use 'shared/styles/mixins' as *;
 
+.account-page {
+  max-width: 720px;
+  margin-inline: auto;
+
+  /* The button's own padding would push the arrow inside the content edge. */
+  &__back {
+    gap: var(--spacing-2);
+    margin-left: calc(var(--spacing-4) * -1);
+    margin-bottom: var(--spacing-4);
+  }
+}
+
 .form-container {
   max-width: 720px;
   margin-inline: auto;

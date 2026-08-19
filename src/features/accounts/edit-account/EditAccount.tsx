@@ -39,12 +39,15 @@ export default function EditAccount() {
   }
 
   return (
-    <main>
-      <div className="back-section">
-        <Button variant="secondary" size="small" onPress={() => router.back()}>
-          <ArrowLeft /> <span>Back</span>
-        </Button>
-      </div>
+    <main className="account-page">
+      <Button
+        variant="secondary"
+        size="small"
+        className="account-page__back"
+        onPress={() => router.back()}
+      >
+        <ArrowLeft size={16} /> <span>Back</span>
+      </Button>
       <AccountForm account={account} />
     </main>
   );
