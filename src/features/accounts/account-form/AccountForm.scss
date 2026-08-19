@@ -28,7 +28,7 @@
 
 .account-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
   gap: var(--spacing-4) var(--spacing-5);
   align-items: start;
 
@@ -59,10 +59,6 @@
   &__budget-hint {
     font-size: var(--text-xs);
     color: var(--color-text-muted);
-  }
-
-  @include mobile {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -99,13 +95,9 @@
 
 .account-form__details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
   gap: var(--spacing-4) var(--spacing-5);
   align-items: start;
-
-  @include mobile {
-    grid-template-columns: 1fr;
-  }
 }
 
 .account-form__danger {
