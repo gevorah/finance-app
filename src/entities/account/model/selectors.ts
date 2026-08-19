@@ -37,15 +37,15 @@ export function getTotalBalance(
   );
 }
 
-function sumAssets(
+function sumGroup(
   accounts: Account[],
   transactions: Transaction[],
+  root: Account['root'],
   onBudget: boolean,
 ): Money {
   return getRealAccounts(accounts)
     .filter(
-      (account) =>
-        account.root === ACCOUNT_ROOTS.ASSETS && account.onBudget === onBudget,
+      (account) => account.root === root && account.onBudget === onBudget,
     )
     .reduce(
       (total, account) => total + getAccountBalance(account, transactions),
@@ -54,22 +54,37 @@ function sumAssets(
 }
 
 /**
- * What can be spent is money actually held, not a net position: subtracting a
- * card without a category holding the money to repay it would report a figure
- * nobody can act on. What is owed is reported on its own.
+ * The four figures classify both sides of the ledger by the same timeframe, so
+ * what is held this month can be read against what falls due in it. Reporting
+ * only one side classified would hide a card behind a mortgage. None of them
+ * clamps: together they always add back up to the sum of every posting.
  */
 export function getAvailableBalance(
   accounts: Account[],
   transactions: Transaction[],
 ): Money {
-  return sumAssets(accounts, transactions, true);
+  return sumGroup(accounts, transactions, ACCOUNT_ROOTS.ASSETS, true);
 }
 
 export function getSetAsideBalance(
   accounts: Account[],
   transactions: Transaction[],
 ): Money {
-  return sumAssets(accounts, transactions, false);
+  return sumGroup(accounts, transactions, ACCOUNT_ROOTS.ASSETS, false);
+}
+
+export function getDueNowBalance(
+  accounts: Account[],
+  transactions: Transaction[],
+): Money {
+  return -sumGroup(accounts, transactions, ACCOUNT_ROOTS.LIABILITIES, true);
+}
+
+export function getLongTermBalance(
+  accounts: Account[],
+  transactions: Transaction[],
+): Money {
+  return -sumGroup(accounts, transactions, ACCOUNT_ROOTS.LIABILITIES, false);
 }
 
 export function getAccountsByRoot(

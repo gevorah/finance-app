@@ -3,9 +3,10 @@
 import {
   Account,
   getAvailableBalance,
+  getDueNowBalance,
+  getLongTermBalance,
   getRealAccounts,
   getSetAsideBalance,
-  getTotalDebt,
   isRealAccount,
   useAccountStore,
 } from '@/entities/account';
@@ -23,8 +24,8 @@ import { AccountCard } from './account-card/AccountCard';
 
 import './Accounts.scss';
 
-const SET_ASIDE_NOTE =
-  'Money you are not planning to spend this month. It does not count towards what is available.';
+const LONG_TERM_NOTE =
+  'Money you are not spending this month, and debt you are not settling in it. Neither counts towards what is available.';
 
 interface AccountGroupProps {
   title: string;
@@ -79,9 +80,13 @@ export default function Accounts() {
     (account) => isRealAccount(account) && account.archived,
   );
 
+  const figures = [
+    { label: 'Set aside', value: getSetAsideBalance(accounts, transactions) },
+    { label: 'Due now', value: getDueNowBalance(accounts, transactions) },
+    { label: 'Long term', value: getLongTermBalance(accounts, transactions) },
+  ];
+
   const available = getAvailableBalance(accounts, transactions);
-  const setAsideTotal = getSetAsideBalance(accounts, transactions);
-  const owed = getTotalDebt(accounts, transactions);
 
   return (
     <div className="accounts">
@@ -89,16 +94,14 @@ export default function Accounts() {
         <p className="accounts-total__label">Available</p>
         <p className="accounts-total__amount">{formatCurrency(available)}</p>
         <div className="accounts-total__split">
-          <div className="accounts-total__item">
-            <p className="accounts-total__item-label">Set aside</p>
-            <p className="accounts-total__item-value">
-              {formatCurrency(setAsideTotal)}
-            </p>
-          </div>
-          <div className="accounts-total__item">
-            <p className="accounts-total__item-label">Owed</p>
-            <p className="accounts-total__item-value">{formatCurrency(owed)}</p>
-          </div>
+          {figures.map((figure) => (
+            <div className="accounts-total__item" key={figure.label}>
+              <p className="accounts-total__item-label">{figure.label}</p>
+              <p className="accounts-total__item-value">
+                {formatCurrency(figure.value)}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -132,15 +135,15 @@ export default function Accounts() {
         <>
           {inBudget.length > 0 && (
             <AccountGroup
-              title="In the budget"
+              title="This month"
               accounts={inBudget}
               transactions={transactions}
             />
           )}
           {setAside.length > 0 && (
             <AccountGroup
-              title="Set aside"
-              description={SET_ASIDE_NOTE}
+              title="Long term"
+              description={LONG_TERM_NOTE}
               accounts={setAside}
               transactions={transactions}
             />

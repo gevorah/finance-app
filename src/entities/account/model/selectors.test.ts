@@ -1,11 +1,12 @@
 import type { Transaction } from '@/entities/transaction';
 import { describe, expect, it } from 'vitest';
 
-import { getTotalDebt } from './debt-selectors';
 import {
   canDeleteAccount,
   getAccountPostingCount,
   getAvailableBalance,
+  getDueNowBalance,
+  getLongTermBalance,
   getSetAsideBalance,
   getTotalBalance,
 } from './selectors';
@@ -69,39 +70,53 @@ describe('what the accounts header reports', () => {
     account('cash', ACCOUNT_ROOTS.ASSETS, true),
     account('savings', ACCOUNT_ROOTS.ASSETS, false),
     account('card', ACCOUNT_ROOTS.LIABILITIES, true),
+    account('mortgage', ACCOUNT_ROOTS.LIABILITIES, false),
   ];
 
   const transactions = [
     opening('cash', 100000),
     opening('savings', 5000000),
     opening('card', -290000000),
+    opening('mortgage', -18000000000),
   ];
 
-  it('reports what can be spent without subtracting the card', () => {
-    expect(getAvailableBalance(accounts, transactions)).toBe(100000);
+  const figures = (txs: Transaction[]) => ({
+    available: getAvailableBalance(accounts, txs),
+    setAside: getSetAsideBalance(accounts, txs),
+    dueNow: getDueNowBalance(accounts, txs),
+    longTerm: getLongTermBalance(accounts, txs),
   });
 
-  it('reports what is set aside on its own', () => {
-    expect(getSetAsideBalance(accounts, transactions)).toBe(5000000);
+  it('reports what can be spent without subtracting any debt', () => {
+    expect(figures(transactions).available).toBe(100000);
   });
 
-  it('never counts the same money in two of the three figures', () => {
-    const available = getAvailableBalance(accounts, transactions);
-    const setAside = getSetAsideBalance(accounts, transactions);
-    const owed = getTotalDebt(accounts, transactions);
+  it('keeps a mortgage out of what falls due this month', () => {
+    const { dueNow, longTerm } = figures(transactions);
 
-    expect(available + setAside - owed).toBe(
-      getTotalBalance(accounts, transactions),
-    );
+    expect(dueNow).toBe(290000000);
+    expect(longTerm).toBe(18000000000);
   });
 
-  it('leaves a credit on a card out of the three figures, not out of the app', () => {
-    const overpaid = [...transactions, opening('card', 295000000)];
+  it('classifies both sides, so this month can be read against itself', () => {
+    const { available, dueNow } = figures(transactions);
 
-    // cash 100.000 + savings 5.000.000 + a 5.000.000 credit left on the card
-    expect(getTotalBalance(accounts, overpaid)).toBe(10100000);
-    expect(getTotalDebt(accounts, overpaid)).toBe(0);
-    expect(getAvailableBalance(accounts, overpaid)).toBe(100000);
-    expect(getSetAsideBalance(accounts, overpaid)).toBe(5000000);
+    expect(available).toBeLessThan(dueNow);
+  });
+
+  it('adds back up to every posting, whatever the balances are', () => {
+    const cases = [
+      transactions,
+      [...transactions, opening('card', 295000000)],
+      [...transactions, opening('savings', -9000000)],
+    ];
+
+    for (const txs of cases) {
+      const { available, setAside, dueNow, longTerm } = figures(txs);
+
+      expect(available + setAside - dueNow - longTerm).toBe(
+        getTotalBalance(accounts, txs),
+      );
+    }
   });
 });
