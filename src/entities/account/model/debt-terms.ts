@@ -50,9 +50,14 @@ export const INTEREST_TYPE_OPTIONS = [
   { id: 'variable', label: 'Variable' },
 ] as const;
 
+/**
+ * A yearly rate is read as effective, which is the figure statements are
+ * required to show. A rate quoted per month is already effective, so a nominal
+ * yearly figure belongs in the monthly option divided by its periods.
+ */
 export const INTEREST_PERIOD_OPTIONS = [
-  { id: 'monthly', label: 'Monthly' },
-  { id: 'yearly', label: 'Yearly' },
+  { id: 'monthly', label: 'Per month' },
+  { id: 'yearly', label: 'Per year, effective' },
 ] as const;
 
 export const PAYMENT_TERMS_OPTIONS = [

@@ -128,6 +128,8 @@ export function DebtDetails({ control }: DebtDetailsProps) {
                 value={field.value}
                 onChange={field.onChange}
                 items={INTEREST_PERIOD_OPTIONS}
+                description="Statements show the effective yearly rate. If yours quotes a monthly one, pick per month."
+
                 errorMessage={fieldState.error?.message}
               >
                 {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
