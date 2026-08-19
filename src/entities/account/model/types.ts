@@ -101,9 +101,11 @@ export const LIABILITY_KINDS: AccountKind[] = [
 /**
  * A card is spent from every month, so it belongs to the budget. A mortgage or
  * a long-term loan is not this month's cash flow and would swallow whatever is
- * left to spend.
+ * left to spend. Savings sits on either side depending on what it is for, so
+ * it is the one kind worth asking about instead of guessing.
  */
 const OFF_BUDGET_KINDS: AccountKind[] = [
+  ACCOUNT_KINDS.SAVINGS,
   ACCOUNT_KINDS.MORTGAGE,
   ACCOUNT_KINDS.VEHICLE,
   ACCOUNT_KINDS.STUDENT,
@@ -111,6 +113,10 @@ const OFF_BUDGET_KINDS: AccountKind[] = [
 
 export function isOnBudgetByDefault(kind: AccountKind): boolean {
   return !OFF_BUDGET_KINDS.includes(kind);
+}
+
+export function budgetPlacementVaries(kind: AccountKind): boolean {
+  return kind === ACCOUNT_KINDS.SAVINGS;
 }
 
 export function getRootForKind(kind: AccountKind): AccountRoot {

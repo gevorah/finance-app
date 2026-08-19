@@ -78,6 +78,7 @@ describe('where a new account lands by default', () => {
     [ACCOUNT_KINDS.CREDIT_CARD, true],
     [ACCOUNT_KINDS.CASH, true],
     [ACCOUNT_KINDS.CHECKING, true],
+    [ACCOUNT_KINDS.SAVINGS, false],
     [ACCOUNT_KINDS.LOAN, true],
     [ACCOUNT_KINDS.MORTGAGE, false],
     [ACCOUNT_KINDS.VEHICLE, false],

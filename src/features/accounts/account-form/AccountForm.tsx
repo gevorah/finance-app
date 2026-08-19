@@ -10,6 +10,7 @@ import {
   accountSchema,
   AccountValues,
   ASSET_KINDS,
+  budgetPlacementVaries,
   getAccountBalance,
   getRealAccounts,
   getRootForKind,
@@ -46,6 +47,11 @@ const MONEY_FORMAT = {
   currency: 'COP',
   minimumFractionDigits: 2,
 } as const;
+
+const BUDGET_LABELS = {
+  asset: { in: 'In the budget', aside: 'Set aside' },
+  debt: { in: 'In the budget', aside: 'Long term' },
+};
 
 const BUDGET_HINTS = {
   asset: {
@@ -167,6 +173,8 @@ export default function AccountForm({ account }: AccountFormProps) {
   const kind = useWatch({ control, name: 'kind' });
   const onBudget = useWatch({ control, name: 'onBudget' });
   const isLiability = getRootForKind(kind) === ACCOUNT_ROOTS.LIABILITIES;
+  const side = isLiability ? 'debt' : 'asset';
+  const labels = BUDGET_LABELS[side];
 
   const availableKinds = account
     ? kindOptions(isEditingLiability ? LIABILITY_KINDS : ASSET_KINDS)
@@ -305,33 +313,31 @@ export default function AccountForm({ account }: AccountFormProps) {
           />
         )}
 
-        <Controller
-          name="onBudget"
-          control={control}
-          render={({ field }) => (
-            <div className="account-form__budget">
-              <p className="account-form__budget-label">Budget</p>
-              <ToggleButtonGroup
-                className="account-form__budget-toggle"
-                selectedKeys={new Set([field.value ? 'in' : 'aside'])}
-                onSelectionChange={(keys) => {
-                  const selected = [...keys][0];
-                  if (selected) field.onChange(selected === 'in');
-                }}
-              >
-                <Toggle id="in">In the budget</Toggle>
-                <Toggle id="aside">Set aside</Toggle>
-              </ToggleButtonGroup>
-              <p className="account-form__budget-hint">
-                {
-                  BUDGET_HINTS[isLiability ? 'debt' : 'asset'][
-                    onBudget ? 'in' : 'aside'
-                  ]
-                }
-              </p>
-            </div>
-          )}
-        />
+        {(account || budgetPlacementVaries(kind)) && (
+          <Controller
+            name="onBudget"
+            control={control}
+            render={({ field }) => (
+              <div className="account-form__budget">
+                <p className="account-form__budget-label">Budget</p>
+                <ToggleButtonGroup
+                  className="account-form__budget-toggle"
+                  selectedKeys={new Set([field.value ? 'in' : 'aside'])}
+                  onSelectionChange={(keys) => {
+                    const selected = [...keys][0];
+                    if (selected) field.onChange(selected === 'in');
+                  }}
+                >
+                  <Toggle id="in">{labels.in}</Toggle>
+                  <Toggle id="aside">{labels.aside}</Toggle>
+                </ToggleButtonGroup>
+                <p className="account-form__budget-hint">
+                  {BUDGET_HINTS[side][onBudget ? 'in' : 'aside']}
+                </p>
+              </div>
+            )}
+          />
+        )}
 
         {isLiability && (
           <Disclosure
