@@ -39,7 +39,11 @@ export function ComboBox<T extends object>({
   ...props
 }: ComboBoxProps<T>) {
   return (
-    <AriaComboBox className={clsx(styles.root, className)} {...props}>
+    <AriaComboBox
+      className={clsx(styles.root, className)}
+      {...props}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
+    >
       {label && <Label>{label}</Label>}
       <div className={styles.field}>
         <Input className={styles.input} placeholder={placeholder} />

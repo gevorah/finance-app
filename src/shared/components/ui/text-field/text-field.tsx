@@ -25,7 +25,11 @@ export function TextField({
   ...props
 }: TextFieldProps) {
   return (
-    <AriaTextField {...props} className={styles.root}>
+    <AriaTextField
+      {...props}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
+      className={styles.root}
+    >
       <Label>{label}</Label>
       <Input className={styles.input} placeholder={placeholder} />
       {description && <Description>{description}</Description>}

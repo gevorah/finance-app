@@ -40,7 +40,11 @@ export function Select<
   ...props
 }: SelectProps<T, M>) {
   return (
-    <AriaSelect className={clsx(styles.root, className)} {...props}>
+    <AriaSelect
+      className={clsx(styles.root, className)}
+      {...props}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
+    >
       {label && <Label>{label}</Label>}
       <Button className={styles.trigger}>
         <SelectValue className={styles.value} />

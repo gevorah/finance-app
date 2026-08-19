@@ -36,6 +36,7 @@ export function NumberField({
       {...props}
       value={value ?? NaN}
       onChange={(next) => onChange?.(Number.isNaN(next) ? undefined : next)}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
       className={styles.root}
     >
       <Label>{label}</Label>

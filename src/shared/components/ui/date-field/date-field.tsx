@@ -37,7 +37,11 @@ export function DateField<T extends DateValue>({
   ...props
 }: DateFieldProps<T>) {
   return (
-    <AriaDateField {...props} className={styles.root}>
+    <AriaDateField
+      {...props}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
+      className={styles.root}
+    >
       <Label>{label}</Label>
       <DateInput>{(segment) => <DateSegment segment={segment} />}</DateInput>
       {description && <Description>{description}</Description>}

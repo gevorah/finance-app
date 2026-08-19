@@ -31,7 +31,11 @@ export function DatePicker<T extends DateValue>({
   ...props
 }: DatePickerProps<T>) {
   return (
-    <AriaDatePicker {...props} className={styles.root}>
+    <AriaDatePicker
+      {...props}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
+      className={styles.root}
+    >
       <Label>{label}</Label>
       <Group className={styles.group}>
         <DateInput className={styles.input}>
