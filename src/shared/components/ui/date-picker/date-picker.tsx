@@ -1,5 +1,6 @@
 'use client';
 
+import { Ref, useImperativeHandle, useRef } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import {
   DatePicker as AriaDatePicker,
@@ -22,14 +23,29 @@ export interface DatePickerProps<
   label?: string;
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
+  inputRef?: Ref<{ focus: () => void }>;
 }
 
 export function DatePicker<T extends DateValue>({
   label,
   description,
   errorMessage,
+  inputRef,
   ...props
 }: DatePickerProps<T>) {
+  const segments = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(
+    inputRef,
+    () => ({
+      focus: () =>
+        segments.current
+          ?.querySelector<HTMLElement>('[role="spinbutton"]')
+          ?.focus(),
+    }),
+    [],
+  );
+
   return (
     <AriaDatePicker
       {...props}
@@ -38,7 +54,7 @@ export function DatePicker<T extends DateValue>({
     >
       <Label>{label}</Label>
       <Group className={styles.group}>
-        <DateInput className={styles.input}>
+        <DateInput ref={segments} className={styles.input}>
           {(segment) => <DateSegment segment={segment} />}
         </DateInput>
         <Button>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Ref } from 'react';
 import clsx from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import {
@@ -26,6 +27,7 @@ export interface ComboBoxProps<T extends object> extends Omit<
   placeholder?: string;
   items?: Iterable<T>;
   children: React.ReactNode | ((item: T) => React.ReactNode);
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 export function ComboBox<T extends object>({
@@ -36,6 +38,7 @@ export function ComboBox<T extends object>({
   children,
   items,
   className,
+  inputRef,
   ...props
 }: ComboBoxProps<T>) {
   return (
@@ -46,7 +49,11 @@ export function ComboBox<T extends object>({
     >
       {label && <Label>{label}</Label>}
       <div className={styles.field}>
-        <Input className={styles.input} placeholder={placeholder} />
+        <Input
+          ref={inputRef}
+          className={styles.input}
+          placeholder={placeholder}
+        />
         <Button className={styles.trigger}>
           <ChevronDown aria-hidden="true" />
         </Button>

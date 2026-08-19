@@ -1,5 +1,6 @@
 'use client';
 
+import { Ref } from 'react';
 import clsx from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import {
@@ -25,6 +26,7 @@ export interface SelectProps<
   errorMessage?: string | ((validation: ValidationResult) => string);
   items?: Iterable<T>;
   children: React.ReactNode | ((item: T) => React.ReactNode);
+  inputRef?: Ref<HTMLButtonElement>;
 }
 
 export function Select<
@@ -37,6 +39,7 @@ export function Select<
   children,
   items,
   className,
+  inputRef,
   ...props
 }: SelectProps<T, M>) {
   return (
@@ -46,7 +49,7 @@ export function Select<
       isInvalid={props.isInvalid ?? Boolean(errorMessage)}
     >
       {label && <Label>{label}</Label>}
-      <Button className={styles.trigger}>
+      <Button ref={inputRef} className={styles.trigger}>
         <SelectValue className={styles.value} />
         <ChevronDown aria-hidden="true" />
       </Button>

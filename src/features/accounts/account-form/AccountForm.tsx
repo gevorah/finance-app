@@ -36,6 +36,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Form } from 'react-aria-components';
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 
 import { CloseAccount } from '../close-account/CloseAccount';
@@ -249,7 +250,11 @@ export default function AccountForm({ account }: AccountFormProps) {
         {account ? 'Edit account' : 'New account'}
       </h1>
 
-      <form className="account-form" onSubmit={handleSubmit(onSubmit)}>
+      <Form
+        className="account-form"
+        validationBehavior="aria"
+        onSubmit={handleSubmit(onSubmit)}
+      >
         <Controller
           name="name"
           control={control}
@@ -257,6 +262,7 @@ export default function AccountForm({ account }: AccountFormProps) {
             <TextField
               label="Name"
               name={field.name}
+              inputRef={field.ref}
               value={field.value}
               onChange={field.onChange}
               errorMessage={fieldState.error?.message}
@@ -272,6 +278,7 @@ export default function AccountForm({ account }: AccountFormProps) {
               label="Type"
               placeholder="Select a type"
               name={field.name}
+              inputRef={field.ref}
               value={field.value}
               onChange={(value) => {
                 field.onChange(value);
@@ -317,6 +324,7 @@ export default function AccountForm({ account }: AccountFormProps) {
               <NumberField
                 label={isLiability ? 'Amount owed' : 'Balance'}
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 formatOptions={MONEY_FORMAT}
@@ -389,7 +397,7 @@ export default function AccountForm({ account }: AccountFormProps) {
             {account ? 'Save account' : 'Add account'}
           </Button>
         </div>
-      </form>
+      </Form>
 
       {account && (
         <section className="account-form__danger">

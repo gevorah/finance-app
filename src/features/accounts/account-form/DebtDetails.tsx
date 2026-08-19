@@ -39,6 +39,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
               <NumberField
                 label="Credit limit"
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 formatOptions={MONEY_FORMAT}
@@ -54,6 +55,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
               <NumberField
                 label="Cut-off day"
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 minValue={1}
@@ -73,6 +75,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
           <NumberField
             label="Payment due day"
             name={field.name}
+            inputRef={field.ref}
             value={field.value}
             onChange={field.onChange}
             minValue={1}
@@ -90,6 +93,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
             label="Interest"
             placeholder="Select interest type"
             name={field.name}
+            inputRef={field.ref}
             value={field.value}
             onChange={field.onChange}
             items={INTEREST_TYPE_OPTIONS}
@@ -109,6 +113,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
               <NumberField
                 label="Rate (%)"
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 minValue={0}
@@ -125,6 +130,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
                 label="Rate period"
                 placeholder="Select period"
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 items={INTEREST_PERIOD_OPTIONS}
@@ -147,6 +153,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
             label="Payment terms"
             placeholder="Select payment terms"
             name={field.name}
+            inputRef={field.ref}
             value={field.value}
             onChange={field.onChange}
             items={PAYMENT_TERMS_OPTIONS}
@@ -166,6 +173,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
               <NumberField
                 label="Installment"
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 formatOptions={MONEY_FORMAT}
@@ -181,6 +189,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
                 label="Frequency"
                 placeholder="Select frequency"
                 name={field.name}
+                inputRef={field.ref}
                 value={field.value}
                 onChange={field.onChange}
                 items={PAYMENT_FREQUENCY_OPTIONS}
@@ -201,6 +210,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
             <NumberField
               label="Minimum payment"
               name={field.name}
+              inputRef={field.ref}
               value={field.value}
               onChange={field.onChange}
               formatOptions={MONEY_FORMAT}
@@ -217,6 +227,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
           <DatePicker
             label="Next payment due"
             name={field.name}
+            inputRef={field.ref}
             value={field.value ?? null}
             onChange={field.onChange}
             errorMessage={fieldState.error?.message}
@@ -231,6 +242,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
           <TextField
             label="Note"
             name={field.name}
+            inputRef={field.ref}
             value={field.value}
             onChange={field.onChange}
             errorMessage={fieldState.error?.message}

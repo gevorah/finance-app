@@ -1,5 +1,6 @@
 'use client';
 
+import { Ref } from 'react';
 import {
   NumberField as AriaNumberField,
   NumberFieldProps as AriaNumberFieldProps,
@@ -21,6 +22,7 @@ export interface NumberFieldProps extends Omit<
   /** Undefined is an empty field; react-aria spells that NaN internally. */
   value?: number;
   onChange?: (value: number | undefined) => void;
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 export function NumberField({
@@ -29,6 +31,7 @@ export function NumberField({
   errorMessage,
   value,
   onChange,
+  inputRef,
   ...props
 }: NumberFieldProps) {
   return (
@@ -40,7 +43,7 @@ export function NumberField({
       className={styles.root}
     >
       <Label>{label}</Label>
-      <Input className={styles.input} />
+      <Input ref={inputRef} className={styles.input} />
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </AriaNumberField>
