@@ -67,20 +67,26 @@
 }
 
 .account-form__figure {
-  @include flex(normal, normal, column);
-  gap: var(--spacing-1);
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--spacing-1) var(--spacing-3);
 
   &-label {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
   }
 
   &-value {
     font-size: var(--text-lg);
     font-weight: var(--font-weight-semibold);
+    margin-right: auto;
   }
 
   &-hint {
+    flex-basis: 100%;
     font-size: var(--text-xs);
     color: var(--color-text-muted);
 
