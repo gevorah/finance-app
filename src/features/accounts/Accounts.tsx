@@ -2,9 +2,9 @@
 
 import {
   Account,
-  getOnBudgetBalance,
+  getAvailableBalance,
   getRealAccounts,
-  getTotalBalance,
+  getSetAsideBalance,
   getTotalDebt,
   isRealAccount,
   useAccountStore,
@@ -79,8 +79,8 @@ export default function Accounts() {
     (account) => isRealAccount(account) && account.archived,
   );
 
-  const available = getOnBudgetBalance(accounts, transactions);
-  const setAsideTotal = getTotalBalance(accounts, transactions) - available;
+  const available = getAvailableBalance(accounts, transactions);
+  const setAsideTotal = getSetAsideBalance(accounts, transactions);
   const owed = getTotalDebt(accounts, transactions);
 
   return (
