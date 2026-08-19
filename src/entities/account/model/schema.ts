@@ -6,10 +6,10 @@ import { ACCOUNT_KINDS, ACCOUNT_ROOTS, getRootForKind } from './types';
 const dayOfMonth = z
   .number()
   .int()
-  .min(1, { error: 'Day should be between 1 and 31' })
-  .max(31, { error: 'Day should be between 1 and 31' });
+  .min(1, { error: 'Enter a day between 1 and 31' })
+  .max(31, { error: 'Enter a day between 1 and 31' });
 
-const rate = z.number().min(0, { error: 'Rate should be 0 or above' });
+const rate = z.number().min(0, { error: 'Enter a rate of 0 or more' });
 
 const interestSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('none') }),
@@ -33,7 +33,7 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
     type: z.literal('installments'),
     installmentAmount: z
       .number()
-      .positive({ error: 'Installment amount should be above 0' })
+      .positive({ error: 'Enter an installment amount above 0' })
       .optional(),
     totalInstallments: z.number().int().positive().optional(),
     frequency: z.enum(['weekly', 'monthly', 'yearly', 'custom']).optional(),
@@ -43,7 +43,7 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
     type: z.literal('revolving'),
     minimumPayment: z
       .number()
-      .positive({ error: 'Minimum payment should be above 0' })
+      .positive({ error: 'Enter a minimum payment above 0' })
       .optional(),
     nextPaymentDueDate: dueDate,
   }),
@@ -51,7 +51,7 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
     type: z.literal('flexible'),
     suggestedPaymentAmount: z
       .number()
-      .positive({ error: 'Suggested payment should be above 0' })
+      .positive({ error: 'Enter a suggested payment above 0' })
       .optional(),
     nextPaymentDueDate: dueDate,
   }),
@@ -64,14 +64,14 @@ const paymentTermsSchema = z.discriminatedUnion('type', [
  */
 export const accountSchema = z
   .object({
-    name: z.string().min(1, { error: 'Name is required' }),
+    name: z.string().min(1, { error: 'Enter a name' }),
     kind: z.enum(ACCOUNT_KINDS),
     onBudget: z.boolean(),
     openingBalance: z.number().optional(),
     description: z.string().optional(),
     creditLimit: z
       .number()
-      .positive({ error: 'Credit limit should be above 0' })
+      .positive({ error: 'Enter a credit limit above 0' })
       .optional(),
     cutOffDay: dayOfMonth.optional(),
     paymentDueDay: dayOfMonth.optional(),
