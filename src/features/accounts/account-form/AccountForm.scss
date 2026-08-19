@@ -27,17 +27,22 @@
 }
 
 .account-form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--spacing-4) var(--spacing-5);
-  align-items: start;
+
+  > * {
+    flex: 1 1 0;
+    min-width: min(16rem, 100%);
+  }
 
   &__full {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
   }
 
   &__budget {
-    grid-column: 1 / -1;
+    flex-basis: 100%;
     @include flex(normal, normal, column);
     gap: var(--spacing-2);
   }
@@ -63,7 +68,7 @@
 }
 
 .account-form__figure {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -94,10 +99,15 @@
 }
 
 .account-form__details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--spacing-4) var(--spacing-5);
-  align-items: start;
+
+  > * {
+    flex: 1 1 0;
+    min-width: min(16rem, 100%);
+  }
 }
 
 .account-form__danger {
