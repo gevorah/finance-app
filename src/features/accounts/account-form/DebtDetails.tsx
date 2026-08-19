@@ -215,7 +215,7 @@ export function DebtDetails({ control }: DebtDetailsProps) {
           <DatePicker
             label="Next payment due"
             name={field.name}
-            value={field.value}
+            value={field.value ?? null}
             onChange={field.onChange}
             errorMessage={fieldState.error?.message}
           />

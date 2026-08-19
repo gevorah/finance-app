@@ -25,7 +25,7 @@ function describeAccount(account: Account): string {
     account.kind && ACCOUNT_KIND_LABELS[account.kind],
     account.cutOffDay && `closes on the ${ordinal(account.cutOffDay)}`,
     account.creditLimit &&
-      `${formatCurrency(account.creditLimit, { compact: true })} limit`,
+      `${formatCurrency(account.creditLimit, { maximumFractionDigits: 0, minimumFractionDigits: 0 })} limit`,
   ]
     .filter(Boolean)
     .join(' · ');
