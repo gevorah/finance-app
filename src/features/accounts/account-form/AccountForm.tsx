@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Account,
   ACCOUNT_KIND_LABELS,
@@ -30,6 +30,7 @@ import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
 import { formatCurrency } from '@/shared/lib/currency';
+import { collectErrorMessages } from '@/shared/lib/form';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
@@ -169,6 +170,23 @@ export default function AccountForm({ account }: AccountFormProps) {
           } as AccountValues),
     },
   );
+
+  const [detailsOpen, setDetailsOpen] = useState(Boolean(account?.debtTerms));
+  const [handledSubmit, setHandledSubmit] = useState(formState.submitCount);
+
+  const detailsHaveErrors =
+    collectErrorMessages({
+      creditLimit: formState.errors.creditLimit,
+      cutOffDay: formState.errors.cutOffDay,
+      paymentDueDay: formState.errors.paymentDueDay,
+      interest: formState.errors.interest,
+      paymentTerms: formState.errors.paymentTerms,
+    }).length > 0;
+
+  if (formState.submitCount !== handledSubmit) {
+    setHandledSubmit(formState.submitCount);
+    if (detailsHaveErrors) setDetailsOpen(true);
+  }
 
   const kind = useWatch({ control, name: 'kind' });
   const onBudget = useWatch({ control, name: 'onBudget' });
@@ -345,7 +363,8 @@ export default function AccountForm({ account }: AccountFormProps) {
             headingLevel={2}
             title="Card and loan details"
             description="Optional. Needed for available credit, due dates and the avalanche order."
-            defaultExpanded={Boolean(account?.debtTerms)}
+            isExpanded={detailsOpen}
+            onExpandedChange={setDetailsOpen}
           >
             <DebtDetails control={control} />
           </Disclosure>
