@@ -32,7 +32,9 @@ export default function RootLayout({
       lang="en"
       className={`${poppins.variable} ${testTiemposFine.variable}`}
     >
-      <body>
+      {/* Extensions such as ColorZilla add attributes here before React
+          hydrates; without this their noise buries real mismatches. */}
+      <body suppressHydrationWarning>
         <AppShell>{children}</AppShell>
       </body>
     </html>
