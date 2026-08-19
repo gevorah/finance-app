@@ -1,4 +1,9 @@
-const DEFAULT_LOCALE = 'es-CO';
+/**
+ * Dates carry month names, so they follow the interface language. Amounts are
+ * numerals and keep the currency's own conventions, which is why currency.ts
+ * formats with a different locale.
+ */
+const DEFAULT_LOCALE = 'en-GB';
 
 const SHORT_OPTIONS: Intl.DateTimeFormatOptions = {
   day: 'numeric',
