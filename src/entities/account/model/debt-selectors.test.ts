@@ -113,8 +113,20 @@ describe('getDebtStatus', () => {
 });
 
 describe('getMonthlyInterestRate', () => {
-  it('brings a yearly rate down to a monthly one so debts compare', () => {
-    expect(getMonthlyInterestRate(yearly)).toBe(2);
+  it('compounds a yearly rate down instead of dividing it', () => {
+    expect(getMonthlyInterestRate(yearly)).toBeCloseTo(1.8088, 4);
+  });
+
+  it('takes a monthly rate as it is, since it is already effective', () => {
+    expect(getMonthlyInterestRate(big)).toBe(2.5);
+  });
+
+  it('does not tie a 24% yearly debt with a 2% monthly one', () => {
+    const monthlyTwo = liability('debt-two', 2);
+
+    expect(getMonthlyInterestRate(monthlyTwo)).toBeGreaterThan(
+      getMonthlyInterestRate(yearly),
+    );
   });
 });
 

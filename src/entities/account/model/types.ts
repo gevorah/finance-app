@@ -99,10 +99,12 @@ export const LIABILITY_KINDS: AccountKind[] = [
 ];
 
 /**
- * A card is spent from every month, so it belongs to the budget. A mortgage or
- * a long-term loan is not this month's cash flow and would swallow whatever is
- * left to spend. Savings sits on either side depending on what it is for, so
- * it is the one kind worth asking about instead of guessing.
+ * One flag, two criteria. A liability is out of the budget when it is not
+ * settled within roughly a year — that is maturity, and it is why a mortgage
+ * never counts against this month. An asset is out because its owner decided
+ * not to spend it, which is intent, not maturity: savings is realisable at any
+ * time and still belongs outside. Savings is therefore the one kind worth
+ * asking about rather than guessing.
  */
 const OFF_BUDGET_KINDS: AccountKind[] = [
   ACCOUNT_KINDS.SAVINGS,

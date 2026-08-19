@@ -24,8 +24,8 @@ import { AccountCard } from './account-card/AccountCard';
 
 import './Accounts.scss';
 
-const LONG_TERM_NOTE =
-  'Money you are not spending this month, and debt you are not settling in it. Neither counts towards what is available.';
+const OUT_OF_BUDGET_NOTE =
+  'Savings you decided not to touch, and debt that is not settled this year. Neither counts towards what is available.';
 
 interface AccountGroupProps {
   title: string;
@@ -135,15 +135,15 @@ export default function Accounts() {
         <>
           {inBudget.length > 0 && (
             <AccountGroup
-              title="This month"
+              title="In the budget"
               accounts={inBudget}
               transactions={transactions}
             />
           )}
           {setAside.length > 0 && (
             <AccountGroup
-              title="Long term"
-              description={LONG_TERM_NOTE}
+              title="Out of the budget"
+              description={OUT_OF_BUDGET_NOTE}
               accounts={setAside}
               transactions={transactions}
             />
