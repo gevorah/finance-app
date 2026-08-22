@@ -38,16 +38,23 @@ export function getTotalDebt(
   transactions: Transaction[],
 ): Money {
   return getDebtAccounts(accounts).reduce(
-    (total, account) => total + Math.max(getAmountOwed(account, transactions), 0),
+    (total, account) =>
+      total + Math.max(getAmountOwed(account, transactions), 0),
     0,
   );
 }
 
-/** Yearly rates are divided by twelve so debts stay comparable. */
+/**
+ * A yearly rate is quoted as an effective annual rate, so its monthly
+ * equivalent compounds rather than divides. Dividing by twelve overstates it,
+ * and orders two debts the wrong way round when one of them is quoted monthly.
+ */
 export function getMonthlyInterestRate(account: Account): number {
   const interest = account.debtTerms?.interest;
   if (!interest || interest.type === 'none') return 0;
-  return interest.period === 'yearly' ? interest.rate / 12 : interest.rate;
+  if (interest.period === 'monthly') return interest.rate;
+
+  return ((1 + interest.rate / 100) ** (1 / 12) - 1) * 100;
 }
 
 export const DEBT_STRATEGIES = {
@@ -78,7 +85,6 @@ export function orderDebtsByStrategy(
   }
 
   return [...outstanding].sort(
-    (a, b) =>
-      getAmountOwed(a, transactions) - getAmountOwed(b, transactions),
+    (a, b) => getAmountOwed(a, transactions) - getAmountOwed(b, transactions),
   );
 }

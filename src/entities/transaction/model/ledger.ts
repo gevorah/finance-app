@@ -72,7 +72,7 @@ export function buildPostings(
 
 export interface OpeningBalanceDraft {
   accountId: string;
-  /** What the account holds, or what is owed on it, always as a positive figure. */
+  /** What the account holds, or what is owed on it as a positive figure. */
   amount: Money;
   root: AccountRoot;
 }
@@ -88,12 +88,28 @@ export function buildOpeningPostings({
   amount,
   root,
 }: OpeningBalanceDraft): Posting[] {
-  const magnitude = Math.abs(amount);
-  const signed = root === ACCOUNT_ROOTS.LIABILITIES ? -magnitude : magnitude;
+  const signed =
+    root === ACCOUNT_ROOTS.LIABILITIES ? -Math.abs(amount) : amount;
 
   return [
     { accountId, amount: signed },
     { accountId: OPENING_BALANCE_ACCOUNT_ID, amount: -signed },
+  ];
+}
+
+/**
+ * Emptying an account is its balance moved somewhere else, so the amount keeps
+ * the sign the balance already had instead of being a magnitude plus a
+ * direction. The account is left at zero whichever side it was on.
+ */
+export function buildBalanceTransferPostings(
+  accountId: string,
+  destinationAccountId: string,
+  balance: Money,
+): Posting[] {
+  return [
+    { accountId, amount: -balance },
+    { accountId: destinationAccountId, amount: balance },
   ];
 }
 
@@ -115,10 +131,9 @@ const REAL_ROOTS: AccountRoot[] = [
 ];
 
 /**
- * Firefly III derives the transaction type from the roots its postings touch
- * instead of storing it, and only lets the counter side be split — an expense
- * leaves one account and may land in several. Both rules are applied here, so
- * the amount is always the funding side rather than any single posting.
+ * The type is derived from the roots the postings touch rather than stored, and
+ * only the counter side may be split — an expense leaves one account and may
+ * land in several. So the amount is the funding side, never a single posting.
  */
 export function describeTransaction(
   transaction: Transaction,

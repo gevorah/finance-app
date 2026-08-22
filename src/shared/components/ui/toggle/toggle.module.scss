@@ -19,13 +19,19 @@
     opacity: 0.5;
   }
 
-  &[data-hovered] {
+  &[data-hovered]:not([data-selected]) {
     background-color: var(--dark-vulcan-700);
     color: var(--color-text-primary);
   }
 
-  :focus-visible {
-    outline: none;
+  &[data-selected] {
+    background-color: var(--color-primary);
+    color: var(--color-primary-contrast);
+  }
+
+  &[data-focus-visible] {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
   }
 }
 

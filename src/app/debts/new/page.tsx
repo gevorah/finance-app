@@ -1,9 +1,5 @@
-import AddDebt from '@/features/debts/add-debt/AddDebt';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return (
-    <main>
-      <AddDebt />
-    </main>
-  );
+  redirect('/accounts/new');
 }

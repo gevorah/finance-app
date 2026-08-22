@@ -1,5 +1,6 @@
 'use client';
 
+import { Ref } from 'react';
 import {
   TextField as AriaTextField,
   TextFieldProps as AriaTextFieldProps,
@@ -15,6 +16,7 @@ export interface TextFieldProps extends AriaTextFieldProps {
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
   placeholder?: string;
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 export function TextField({
@@ -22,12 +24,21 @@ export function TextField({
   description,
   errorMessage,
   placeholder,
+  inputRef,
   ...props
 }: TextFieldProps) {
   return (
-    <AriaTextField {...props} className={styles.root}>
+    <AriaTextField
+      {...props}
+      isInvalid={props.isInvalid ?? Boolean(errorMessage)}
+      className={styles.root}
+    >
       <Label>{label}</Label>
-      <Input className={styles.input} placeholder={placeholder} />
+      <Input
+        ref={inputRef}
+        className={styles.input}
+        placeholder={placeholder}
+      />
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </AriaTextField>

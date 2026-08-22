@@ -1,21 +1,75 @@
 import { Account, ACCOUNT_ROOTS } from '@/entities/account';
 import { Money } from '@/shared/lib/money';
 
-import { describeTransaction } from './ledger';
+import { describeTransaction, touchesAccount } from './ledger';
 import { Transaction } from './types';
+
+function postingsTotalFor(transaction: Transaction, accountId: string): Money {
+  return transaction.postings
+    .filter((posting) => posting.accountId === accountId)
+    .reduce((total, posting) => total + posting.amount, 0);
+}
 
 export function getAccountPostingsTotal(
   transactions: Transaction[],
   accountId: string,
 ): Money {
   return transactions.reduce(
-    (total, transaction) =>
-      total +
-      transaction.postings
-        .filter((posting) => posting.accountId === accountId)
-        .reduce((sum, posting) => sum + posting.amount, 0),
+    (total, transaction) => total + postingsTotalFor(transaction, accountId),
     0,
   );
+}
+
+export interface RegisterRow {
+  transaction: Transaction;
+  /** Summed over every posting on the account — a split can touch it twice. */
+  delta: Money;
+  runningBalance: Money;
+  /** Read from this account's side, not from the one that funded it. */
+  counterAccountIds: string[];
+  isSplit: boolean;
+}
+
+/**
+ * Rows come back newest first. Same-date transactions fall back to the order
+ * they were written down: without a tiebreak the running balance is not stable
+ * between reads.
+ */
+export function getAccountRegister(
+  transactions: Transaction[],
+  accountId: string,
+): RegisterRow[] {
+  const oldestFirst = transactions
+    .filter((transaction) => touchesAccount(transaction, accountId))
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt),
+    );
+
+  let runningBalance = 0;
+
+  return oldestFirst
+    .map((transaction) => {
+      const delta = postingsTotalFor(transaction, accountId);
+      runningBalance += delta;
+
+      const counterAccountIds = [
+        ...new Set(
+          transaction.postings
+            .filter((posting) => posting.accountId !== accountId)
+            .map((posting) => posting.accountId),
+        ),
+      ];
+
+      return {
+        transaction,
+        delta,
+        runningBalance,
+        counterAccountIds,
+        isSplit: counterAccountIds.length > 1,
+      };
+    })
+    .reverse();
 }
 
 /**
@@ -239,9 +293,8 @@ export interface PayeeSuggestion {
 }
 
 /**
- * Actual Budget learns a payee's category from what the user did last time
- * instead of asking for a rule. The ledger already holds that history, so the
- * suggestion is a query over it rather than something to store.
+ * The ledger already holds what was chosen for this payee last time, so the
+ * suggestion is a query over it rather than a rule to store.
  */
 export function getPayeeSuggestion(
   payee: string,
