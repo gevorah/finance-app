@@ -5,15 +5,15 @@ import {
   getAccountName,
   useAccountStore,
 } from '@/entities/account';
-import { formatCurrency } from '@/shared/lib/currency';
-import Bar from '@/shared/components/ui/bar/bar';
-import { Card } from '@/shared/components/ui/card';
 import {
   BudgetHighlightKind,
   getBudgetHighlights,
   useBudgetStore,
 } from '@/entities/budget';
 import { useTransactionStore } from '@/entities/transaction';
+import Bar from '@/shared/components/ui/bar/bar';
+import { Card } from '@/shared/components/ui/card';
+import { formatCurrency } from '@/shared/lib/currency';
 import Link from 'next/link';
 
 import './BudgetSummary.scss';
@@ -43,7 +43,9 @@ export function BudgetSummary() {
       <div className="budget-summary-section__grid">
         {highlights.map((highlight) => (
           <Card key={highlight.budget.id} className="budget-highlight">
-            <span className="budget-highlight__label">{HIGHLIGHT_LABELS[highlight.kind]}</span>
+            <span className="budget-highlight__label">
+              {HIGHLIGHT_LABELS[highlight.kind]}
+            </span>
             <div className="budget-highlight__category">
               <span className="budget-highlight__icon">
                 {getAccountIcon(

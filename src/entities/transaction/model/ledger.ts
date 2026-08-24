@@ -10,6 +10,7 @@ import {
   Posting,
   Transaction,
   TRANSACTION_KINDS,
+  TransactionInput,
   TransactionKind,
 } from './types';
 
@@ -19,6 +20,20 @@ export function getPostingsTotal(postings: Posting[]): Money {
 
 export function isBalanced(postings: Posting[]): boolean {
   return postings.length >= 2 && getPostingsTotal(postings) === 0;
+}
+
+/**
+ * Postings that do not sum to zero would silently corrupt every balance, so an
+ * unbalanced write is rejected at the door rather than stored.
+ */
+export function assertBalanced(
+  transaction: TransactionInput | Transaction,
+): void {
+  if (!isBalanced(transaction.postings)) {
+    throw new Error(
+      `Unbalanced transaction "${transaction.description}": postings must sum to zero.`,
+    );
+  }
 }
 
 export function getPostingFor(
@@ -168,9 +183,8 @@ export function describeTransaction(
   );
 
   const accountId =
-    [...(funding.length > 0 ? funding : realPostings)].sort(
-      byMagnitudeDesc,
-    )[0]?.accountId ?? '';
+    [...(funding.length > 0 ? funding : realPostings)].sort(byMagnitudeDesc)[0]
+      ?.accountId ?? '';
 
   const counterPostings = transaction.postings.filter(
     (posting) => posting.accountId !== accountId,
