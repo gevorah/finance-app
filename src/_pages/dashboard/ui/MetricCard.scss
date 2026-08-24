@@ -33,7 +33,7 @@
   &__trend {
     @include flex(center, center);
     gap: var(--spacing-1);
-    
+
     &--income {
       color: var(--color-info-border);
     }
