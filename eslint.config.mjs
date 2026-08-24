@@ -1,8 +1,8 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
-const LAYERS = ['app', 'widgets', 'features', 'entities', 'shared'];
+const LAYERS = ['_pages', 'features', 'entities', 'shared'];
 
 const layerZones = LAYERS.flatMap((layer, index) =>
   LAYERS.slice(0, index).map((upperLayer) => ({

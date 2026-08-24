@@ -12,7 +12,7 @@ number is an immutable identifier, not a ranking.
 
 | ADR                                            | Scope        | Decision                                                                 |
 | ---------------------------------------------- | ------------ | ------------------------------------------------------------------------ |
-| [001](ADR-001-fsd-with-next-app-router.md)     | Architecture | `src/app` is the routing layer                                           |
+| [001](ADR-001-fsd-with-next-app-router.md)     | Architecture | Four FSD layers; `src/app` is the routing layer                          |
 | [002](ADR-002-money-as-integer-minor-units.md) | Architecture | Money is stored as an integer number of cents, never as a decimal        |
 | [003](ADR-003-double-entry-ledger.md)          | Architecture | A movement is postings that sum to zero, with its type derived           |
 | [004](ADR-004-debts-as-liability-accounts.md)  | Module       | A debt is a liability account, not an entity of its own                  |
