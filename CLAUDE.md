@@ -18,16 +18,15 @@ Offline-first personal finance tracker for Colombian pesos (COP). No backend —
 
 ```
 src/
-  app/            → Next.js routes. Each page.tsx is a one-line re-export from _pages.
+  app/            → Next.js routes and root layout. Each page.tsx is a one-line re-export from _pages.
   _pages/         → Page compositions. Assembles features into full screens.
-  widgets/        → Autonomous UI blocks used at app level (AppShell, BudgetSummary).
   features/       → User-facing functionality (forms, cards, lists, interactions).
   entities/       → Domain models: types, Zustand stores, Zod schemas, selectors.
   shared/         → UI primitives, hooks, and utilities (no domain knowledge).
 ```
 
 **Import rule**: upper layers import from lower layers, never the reverse.
-Order (top → bottom): app > _pages > widgets > features > entities > shared.
+Order (top → bottom): app > _pages > features > entities > shared.
 
 ## Key Conventions
 
