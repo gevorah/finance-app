@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import clsx from 'clsx';
+import { Button } from '@/shared/components/ui/button';
 import {
   Dialog as AriaDialog,
   DialogTrigger as AriaDialogTrigger,
@@ -63,6 +65,8 @@ interface DialogProps {
   trigger: React.ReactNode;
   title: string;
   description: string;
+  confirmLabel?: string;
+  onConfirm?: () => void;
   children?: React.ReactNode;
 }
 
@@ -71,10 +75,19 @@ export function Dialog({
   trigger,
   title,
   description,
+  confirmLabel,
+  onConfirm,
   children,
 }: DialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleConfirm = () => {
+    onConfirm?.();
+    setIsOpen(false);
+  };
+
   return (
-    <DialogTrigger>
+    <DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
       {trigger}
       <DialogOverlay>
         <DialogContent>
@@ -84,7 +97,20 @@ export function Dialog({
           </div>
           <p className={styles.description}>{description}</p>
           <div className={styles.actions}>
-            {children}
+            {children ?? (
+              <>
+                <Button
+                  variant="secondary"
+                  size="medium"
+                  onPress={() => setIsOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="primary" size="medium" onPress={handleConfirm}>
+                  {confirmLabel ?? 'Confirm'}
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </DialogOverlay>

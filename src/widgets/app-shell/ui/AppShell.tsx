@@ -1,4 +1,4 @@
-import Navbar from '@/features/navbar/Navbar';
+import { MobileHeader } from '@/features/navigation/MobileHeader';
 
 import './AppShell.scss';
 
@@ -15,7 +15,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="app-shell-container">
       <div className="app-header">
-        <Navbar />
+        <MobileHeader />
       </div>
       <div className="app-shell">
         <Sidebar />
