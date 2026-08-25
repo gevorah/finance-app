@@ -1,6 +1,11 @@
 import '@/shared/styles/globals.scss';
+import './layout.scss';
 
-import { AppShell } from '@/widgets/app-shell';
+import Navbar from '@/features/navbar/Navbar';
+import { MobileNav } from '@/features/navigation/MobileNav';
+import { Sidebar } from '@/features/navigation/Sidebar';
+import { Fab } from '@/shared/components/ui/fab';
+import { Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import localFont from 'next/font/local';
@@ -32,10 +37,22 @@ export default function RootLayout({
       lang="en"
       className={`${poppins.variable} ${testTiemposFine.variable}`}
     >
-      {/* Extensions such as ColorZilla add attributes here before React
-          hydrates; without this their noise buries real mismatches. */}
       <body suppressHydrationWarning>
-        <AppShell>{children}</AppShell>
+        <div className="app-shell-container">
+          <div className="app-header">
+            <Navbar />
+          </div>
+          <div className="app-shell">
+            <Sidebar />
+            <main className="app-content">{children}</main>
+          </div>
+          <MobileNav />
+          <Fab
+            href="/create"
+            label="New transaction"
+            icon={<Plus size={24} />}
+          />
+        </div>
       </body>
     </html>
   );
