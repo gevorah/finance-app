@@ -10,6 +10,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/debts': 'Debts',
   '/settings': 'Settings',
   '/create': 'New transaction',
+  '/budgets': 'Budgets',
+  '/accounts': 'Accounts',
 };
 
 function getGreeting(): string {

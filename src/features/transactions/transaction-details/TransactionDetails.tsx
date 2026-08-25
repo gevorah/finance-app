@@ -91,6 +91,11 @@ export default function TransactionDetails() {
 
         <div className="transaction-information">
           <p className="transaction-information__title"> INFORMATION </p>
+          {transaction.payee && (
+            <p className="transaction-information__row">
+              Payee: {transaction.payee}
+            </p>
+          )}
           <p className="transaction-information__row">
             Type: {view.kind}
           </p>

@@ -1,7 +1,7 @@
 import '@/shared/styles/globals.scss';
 import './layout.scss';
 
-import Navbar from '@/features/navbar/Navbar';
+import { MobileHeader } from '@/features/navigation/MobileHeader';
 import { MobileNav } from '@/features/navigation/MobileNav';
 import { Sidebar } from '@/features/navigation/Sidebar';
 import { Fab } from '@/shared/components/ui/fab';
@@ -40,7 +40,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <div className="app-shell-container">
           <div className="app-header">
-            <Navbar />
+            <MobileHeader />
           </div>
           <div className="app-shell">
             <Sidebar />

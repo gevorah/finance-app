@@ -38,6 +38,9 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
           <p className="transaction-details__title">
             {transaction.description}
           </p>
+          {transaction.payee && (
+            <p className="transaction-details__payee">{transaction.payee}</p>
+          )}
           <p className="transaction-details__description">
             {view.isSplit
               ? `Split · ${view.counterPostings.length} categories`

@@ -104,6 +104,14 @@ export default function TransactionComponent() {
         >
           Expense
         </Button>
+        <Button
+          variant={'secondary'}
+          border={true}
+          size={'medium'}
+          onClick={() => setFilter('transfer')}
+        >
+          Transfer
+        </Button>
         <Button variant={'secondary'} border={true} size={'medium'}>
           <span>
             <Funnel size={14} />
