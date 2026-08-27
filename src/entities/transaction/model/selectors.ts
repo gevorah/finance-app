@@ -316,3 +316,12 @@ export function getPayeeSuggestion(
     counterAccountId: view.counterAccountId,
   };
 }
+
+export function getAccountSuggestions(
+  transactions: Transaction[],
+  accountsById: Map<string, Account>){
+    const lastAccount= [...transactions].sort((a,b) => b.date.localeCompare(a.date))[0];
+
+    return !lastAccount ? undefined :describeTransaction(lastAccount, accountsById).accountId;
+}
+
