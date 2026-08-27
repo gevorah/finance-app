@@ -10,6 +10,7 @@ import {
 import {
   buildPostings,
   describeTransaction,
+  getAccountSuggestions,
   getPayees,
   getPayeeSuggestion,
   isEditableKind,
@@ -82,7 +83,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
           }
         : {
             kind: TRANSACTION_KINDS.EXPENSE,
-            accountId: realAccounts[0]?.id,
+            accountId: getAccountSuggestions(transactions, accountsById) ?? realAccounts[0]?.id,
             counterAccountId: expenseAccounts[0]?.id,
             payee: '',
             description: '',

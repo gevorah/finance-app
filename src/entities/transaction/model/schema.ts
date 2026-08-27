@@ -18,7 +18,7 @@ export const transactionSchema = z
     accountId: z.string().min(1, { error: 'Account is required' }),
     counterAccountId: z.string().min(1, { error: 'Category is required' }),
     payee: z.string().optional(),
-    description: z.string().min(1, { error: 'Description is required' }),
+    description: z.string().optional(),
     date: z.custom<DateValue>((val) => val !== undefined && val !== null, {
       error: 'Date is required',
     }),
@@ -31,6 +31,9 @@ export const transactionSchema = z
       error: 'Pick a different destination account',
       path: ['counterAccountId'],
     },
-  );
+  ).refine((data) => data.payee || data.description, {
+    error: 'Either payee or description is required',
+    path: ['description']
+  });
 
 export type TransactionValues = z.input<typeof transactionSchema>;
