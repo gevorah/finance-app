@@ -1,6 +1,7 @@
 import {
   Account,
   ACCOUNT_ROOTS,
+  AccountRoot,
   DEFAULT_CASH_ACCOUNT_ID,
   DEFAULT_INCOME_ACCOUNT_ID,
   indexAccounts,
@@ -23,7 +24,7 @@ const LOAN_ID = 'liabilities-loan';
 const FOOD_ID = 'expenses-food';
 const INTEREST_ID = 'expenses-interest';
 
-const account = (id: string, root: Account['root']): Account => ({
+const account = (id: string, root: AccountRoot): Account => ({
   id,
   name: id,
   root,

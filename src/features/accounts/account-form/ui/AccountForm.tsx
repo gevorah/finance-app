@@ -22,7 +22,11 @@ import {
   useTransactionStore,
 } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
-import { Disclosure } from '@/shared/components/ui/disclosure';
+import {
+  Disclosure,
+  DisclosureHeader,
+  DisclosurePanel,
+} from '@/shared/components/ui/disclosure';
 import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
@@ -349,13 +353,18 @@ export function AccountForm({ account }: AccountFormProps) {
       {isLiability && (
         <Disclosure
           className="account-form__full"
-          headingLevel={2}
-          title="Card and loan details"
-          description="Optional. Needed for available credit, due dates and the avalanche order."
           isExpanded={detailsOpen}
           onExpandedChange={setDetailsOpen}
         >
-          <DebtDetails control={control} />
+          <DisclosureHeader level={2}>
+            Card and loan details (optional)
+          </DisclosureHeader>
+          <DisclosurePanel>
+            <p className="account-form__details-hint">
+              Needed for available credit, due dates and the avalanche order.
+            </p>
+            <DebtDetails control={control} />
+          </DisclosurePanel>
         </Disclosure>
       )}
 

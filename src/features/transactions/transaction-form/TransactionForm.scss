@@ -10,6 +10,17 @@
     font-weight: var(--font-weight-medium);
     display: block;
   }
+
+  &__suggestion {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  &__details {
+    @include flex(normal, normal, column);
+    gap: var(--spacing-4);
+  }
 }
 
 .form-container {

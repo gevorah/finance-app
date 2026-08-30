@@ -1,14 +1,19 @@
 import type { Transaction } from '@/entities/transaction';
 import { Money } from '@/shared/lib/money';
 
-import { Account, ACCOUNT_ROOTS, isRealAccount } from './types';
+import {
+  ACCOUNT_ROOTS,
+  AccountCore,
+  AccountRoot,
+  isRealAccount,
+} from './types';
 
 /**
  * An account's balance is nothing but the sum of its postings. There is no
  * stored balance to drift out of sync with the movements.
  */
 export function getAccountBalance(
-  account: Account,
+  account: AccountCore,
   transactions: Transaction[],
 ): Money {
   return transactions.reduce(
@@ -21,14 +26,14 @@ export function getAccountBalance(
   );
 }
 
-export function getRealAccounts(accounts: Account[]): Account[] {
+export function getRealAccounts<T extends AccountCore>(accounts: T[]): T[] {
   return accounts.filter(
     (account) => isRealAccount(account) && !account.archived,
   );
 }
 
 export function getTotalBalance(
-  accounts: Account[],
+  accounts: AccountCore[],
   transactions: Transaction[],
 ): Money {
   return getRealAccounts(accounts).reduce(
@@ -38,15 +43,13 @@ export function getTotalBalance(
 }
 
 function sumGroup(
-  accounts: Account[],
+  accounts: AccountCore[],
   transactions: Transaction[],
-  root: Account['root'],
+  root: AccountRoot,
   onBudget: boolean,
 ): Money {
   return getRealAccounts(accounts)
-    .filter(
-      (account) => account.root === root && account.onBudget === onBudget,
-    )
+    .filter((account) => account.root === root && account.onBudget === onBudget)
     .reduce(
       (total, account) => total + getAccountBalance(account, transactions),
       0,
@@ -60,47 +63,49 @@ function sumGroup(
  * clamps: together they always add back up to the sum of every posting.
  */
 export function getAvailableBalance(
-  accounts: Account[],
+  accounts: AccountCore[],
   transactions: Transaction[],
 ): Money {
   return sumGroup(accounts, transactions, ACCOUNT_ROOTS.ASSETS, true);
 }
 
 export function getSetAsideBalance(
-  accounts: Account[],
+  accounts: AccountCore[],
   transactions: Transaction[],
 ): Money {
   return sumGroup(accounts, transactions, ACCOUNT_ROOTS.ASSETS, false);
 }
 
 export function getDueNowBalance(
-  accounts: Account[],
+  accounts: AccountCore[],
   transactions: Transaction[],
 ): Money {
   return -sumGroup(accounts, transactions, ACCOUNT_ROOTS.LIABILITIES, true);
 }
 
 export function getLongTermBalance(
-  accounts: Account[],
+  accounts: AccountCore[],
   transactions: Transaction[],
 ): Money {
   return -sumGroup(accounts, transactions, ACCOUNT_ROOTS.LIABILITIES, false);
 }
 
-export function getAccountsByRoot(
-  accounts: Account[],
-  root: Account['root'],
-): Account[] {
+export function getAccountsByRoot<T extends AccountCore>(
+  accounts: T[],
+  root: AccountRoot,
+): T[] {
   return accounts.filter(
     (account) => account.root === root && !account.archived,
   );
 }
 
-export function getAccountName(accounts: Account[], id: string): string {
+export function getAccountName(accounts: AccountCore[], id: string): string {
   return accounts.find((account) => account.id === id)?.name ?? 'Unknown';
 }
 
-export function indexAccounts(accounts: Account[]): Map<string, Account> {
+export function indexAccounts<T extends AccountCore>(
+  accounts: T[],
+): Map<string, T> {
   return new Map(accounts.map((account) => [account.id, account]));
 }
 

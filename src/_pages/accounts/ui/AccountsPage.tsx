@@ -12,7 +12,11 @@ import {
 } from '@/entities/account';
 import { Transaction, useTransactionStore } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
-import { Disclosure } from '@/shared/components/ui/disclosure';
+import {
+  Disclosure,
+  DisclosureHeader,
+  DisclosurePanel,
+} from '@/shared/components/ui/disclosure';
 import { EmptyState } from '@/shared/components/ui/empty-state';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useHydrated } from '@/shared/hooks/useHydrated';
@@ -152,19 +156,22 @@ export function AccountsPage() {
       )}
 
       {closed.length > 0 && (
-        <Disclosure
-          title="Closed accounts"
-          description="Their movements still count towards past balances."
-        >
-          <div className="accounts-group__items">
-            {closed.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                transactions={transactions}
-              />
-            ))}
-          </div>
+        <Disclosure>
+          <DisclosureHeader>Closed accounts</DisclosureHeader>
+          <DisclosurePanel className="accounts-closed">
+            <p className="accounts-closed__note">
+              Their movements still count towards past balances.
+            </p>
+            <div className="accounts-group__items">
+              {closed.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  transactions={transactions}
+                />
+              ))}
+            </div>
+          </DisclosurePanel>
         </Disclosure>
       )}
     </div>

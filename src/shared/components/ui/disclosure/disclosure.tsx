@@ -9,41 +9,27 @@ import {
   DisclosurePanelProps,
   DisclosureProps,
   Heading,
+  HeadingProps,
 } from 'react-aria-components';
 
 import styles from './disclosure.module.scss';
 
-interface DisclosureSectionProps extends Omit<DisclosureProps, 'children'> {
-  title: string;
-  description?: string;
-  /** Match the surrounding outline so headings stay in order. */
-  headingLevel?: number;
-  children: React.ReactNode;
+export function Disclosure({ className, ...props }: DisclosureProps) {
+  return <AriaDisclosure className={clsx(styles.root, className)} {...props} />;
 }
 
-export function Disclosure({
-  title,
-  description,
-  headingLevel = 3,
-  children,
+export function DisclosureHeader({
   className,
+  children,
   ...props
-}: DisclosureSectionProps) {
+}: HeadingProps) {
   return (
-    <AriaDisclosure className={clsx(styles.root, className)} {...props}>
-      <Heading level={headingLevel} className={styles.heading}>
-        <Button slot="trigger" className={styles.trigger}>
-          <span className={styles.label}>
-            {title}
-            {description && (
-              <span className={styles.description}>{description}</span>
-            )}
-          </span>
-          <ChevronDown aria-hidden="true" className={styles.chevron} />
-        </Button>
-      </Heading>
-      <DisclosurePanel>{children}</DisclosurePanel>
-    </AriaDisclosure>
+    <Heading className={styles.heading} {...props}>
+      <Button slot="trigger" className={clsx(styles.trigger, className)}>
+        <span className={styles.label}>{children}</span>
+        <ChevronDown aria-hidden="true" className={styles.chevron} />
+      </Button>
+    </Heading>
   );
 }
 
