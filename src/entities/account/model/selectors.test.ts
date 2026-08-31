@@ -10,7 +10,7 @@ import {
   getSetAsideBalance,
   getTotalBalance,
 } from './selectors';
-import { Account, ACCOUNT_ROOTS } from './types';
+import { Account, ACCOUNT_ROOTS, AccountRoot } from './types';
 
 const transfer: Transaction = {
   id: 't1',
@@ -42,7 +42,7 @@ describe('canDeleteAccount', () => {
 describe('what the accounts header reports', () => {
   const account = (
     id: string,
-    root: Account['root'],
+    root: AccountRoot,
     onBudget: boolean,
   ): Account => ({
     id,

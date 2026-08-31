@@ -1,6 +1,6 @@
 import {
-  Account,
   ACCOUNT_ROOTS,
+  AccountCore,
   AccountRoot,
   OPENING_BALANCE_ACCOUNT_ID,
 } from '@/entities/account';
@@ -68,7 +68,7 @@ export interface TransactionDraft {
  */
 export function buildPostings(
   { amount, accountId, counterAccountId }: TransactionDraft,
-  accountsById: Map<string, Account>,
+  accountsById: Map<string, AccountCore>,
 ): Posting[] {
   const magnitude = Math.abs(amount);
   const moneyArrives =
@@ -152,7 +152,7 @@ const REAL_ROOTS: AccountRoot[] = [
  */
 export function describeTransaction(
   transaction: Transaction,
-  accountsById: Map<string, Account>,
+  accountsById: Map<string, AccountCore>,
 ): TransactionView {
   const rootOf = (posting: Posting) =>
     accountsById.get(posting.accountId)?.root;

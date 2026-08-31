@@ -91,3 +91,13 @@
     gap: var(--spacing-3);
   }
 }
+
+.accounts-closed {
+  @include flex(normal, normal, column);
+  gap: var(--spacing-3);
+
+  &__note {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+}

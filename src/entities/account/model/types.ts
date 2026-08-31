@@ -26,21 +26,23 @@ export const ACCOUNT_KINDS = {
 
 export type AccountKind = (typeof ACCOUNT_KINDS)[keyof typeof ACCOUNT_KINDS];
 
-export interface Account {
+export interface AccountCore {
   id: string;
   name: string;
   root: AccountRoot;
-  kind?: AccountKind;
   onBudget: boolean;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Account extends AccountCore {
+  kind?: AccountKind;
   creditLimit?: Money;
   cutOffDay?: number;
   paymentDueDay?: number;
   description?: string;
-  /** Only on liability accounts. */
   debtTerms?: DebtTerms;
-  archived: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export type AccountInput = Omit<
@@ -53,14 +55,14 @@ export const DEFAULT_CASH_ACCOUNT_ID = 'assets-cash';
 export const UNCATEGORIZED_EXPENSE_ACCOUNT_ID = 'expenses-others';
 export const DEFAULT_INCOME_ACCOUNT_ID = 'income-salary';
 
-export function isRealAccount(account: Account): boolean {
+export function isRealAccount(account: AccountCore): boolean {
   return (
     account.root === ACCOUNT_ROOTS.ASSETS ||
     account.root === ACCOUNT_ROOTS.LIABILITIES
   );
 }
 
-export function isCategoryAccount(account: Account): boolean {
+export function isCategoryAccount(account: AccountCore): boolean {
   return (
     account.root === ACCOUNT_ROOTS.INCOME ||
     account.root === ACCOUNT_ROOTS.EXPENSES
@@ -98,14 +100,6 @@ export const LIABILITY_KINDS: AccountKind[] = [
   ACCOUNT_KINDS.PERSONAL,
 ];
 
-/**
- * One flag, two criteria. A liability is out of the budget when it is not
- * settled within roughly a year — that is maturity, and it is why a mortgage
- * never counts against this month. An asset is out because its owner decided
- * not to spend it, which is intent, not maturity: savings is realisable at any
- * time and still belongs outside. Savings is therefore the one kind worth
- * asking about rather than guessing.
- */
 const OFF_BUDGET_KINDS: AccountKind[] = [
   ACCOUNT_KINDS.SAVINGS,
   ACCOUNT_KINDS.MORTGAGE,
@@ -127,15 +121,6 @@ export function getRootForKind(kind: AccountKind): AccountRoot {
     : ACCOUNT_ROOTS.ASSETS;
 }
 
-const toKindOption = (id: AccountKind) => ({
-  id,
-  label: ACCOUNT_KIND_LABELS[id],
-});
-
-export const ACCOUNT_KIND_OPTIONS = ASSET_KINDS.map(toKindOption);
-export const LIABILITY_KIND_OPTIONS = LIABILITY_KINDS.map(toKindOption);
-
-/** A credit card revolves; everything else that is owed is paid in installments. */
 export const LIABILITY_KIND_TO_PAYMENT_TYPE: Partial<
   Record<AccountKind, DebtPaymentTerms['type']>
 > = {
