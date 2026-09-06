@@ -1,12 +1,30 @@
+import { Money, toMinorUnits } from '@/shared/lib/money';
 import { DateValue } from 'react-aria-components';
 import z from 'zod';
 
 import { TRANSACTION_KINDS } from './types';
 
-/**
- * The form speaks the user's language — expense, income, transfer, one amount
- * in pesos — and the ledger turns it into balanced postings on submit.
- */
+const amountSchema = z
+  .number({ error: 'Amount is required' })
+  .positive({ error: 'Amount should be above 0' });
+
+const splitSchema = z.object({
+  counterAccountId: z.string().min(1, { error: 'Category is required' }),
+  amount: amountSchema,
+});
+
+export type SplitValues = z.input<typeof splitSchema>;
+
+export function getSplitsTotal(splits: SplitValues[]): Money {
+  return splits.reduce(
+    (total, split) =>
+      Number.isFinite(split.amount)
+        ? total + toMinorUnits(split.amount)
+        : total,
+    0,
+  );
+}
+
 export const transactionSchema = z
   .object({
     kind: z.enum([
@@ -14,14 +32,39 @@ export const transactionSchema = z
       TRANSACTION_KINDS.INCOME,
       TRANSACTION_KINDS.TRANSFER,
     ]),
-    amount: z.number().positive({ error: 'Amount should be above 0' }),
+    amount: amountSchema,
     accountId: z.string().min(1, { error: 'Account is required' }),
-    counterAccountId: z.string().min(1, { error: 'Category is required' }),
+    counterAccountId: z.string(),
+    splits: z.array(splitSchema).optional(),
     payee: z.string().optional(),
     description: z.string().optional(),
     date: z.custom<DateValue>((val) => val !== undefined && val !== null, {
       error: 'Date is required',
     }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.splits && data.splits.length > 0) {
+      const partsAreValid = data.splits.every((split) => split.amount > 0);
+      if (
+        partsAreValid &&
+        getSplitsTotal(data.splits) !== toMinorUnits(data.amount)
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['splits'],
+          message: 'The parts should add up to the amount',
+        });
+      }
+      return;
+    }
+
+    if (!data.counterAccountId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['counterAccountId'],
+        message: 'Category is required',
+      });
+    }
   })
   .refine(
     (data) =>
@@ -31,9 +74,10 @@ export const transactionSchema = z
       error: 'Pick a different destination account',
       path: ['counterAccountId'],
     },
-  ).refine((data) => data.payee || data.description, {
+  )
+  .refine((data) => data.payee || data.description, {
     error: 'Either payee or description is required',
-    path: ['description']
+    path: ['description'],
   });
 
 export type TransactionValues = z.input<typeof transactionSchema>;

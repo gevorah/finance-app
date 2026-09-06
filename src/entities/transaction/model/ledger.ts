@@ -60,29 +60,66 @@ export interface TransactionDraft {
   counterAccountId: string;
 }
 
+export interface SplitPart {
+  counterAccountId: string;
+  amount: Money;
+}
+
+export interface SplitTransactionDraft {
+  /** Real account the money leaves from or arrives in. */
+  accountId: string;
+  /** Counter-side parts whose magnitudes make up the whole transaction. */
+  splits: SplitPart[];
+}
+
+/**
+ * Splits only the counter side; the real account remains one posting for the
+ * whole amount. All counter parts must share one direction, so income parts
+ * cannot be mixed with non-income parts. The funding posting is the inverse of
+ * their total, making the result balanced by construction.
+ */
+export function buildSplitPostings(
+  { accountId, splits }: SplitTransactionDraft,
+  accountsById: Map<string, AccountCore>,
+): Posting[] {
+  const arrivals = splits.filter(
+    ({ counterAccountId }) =>
+      accountsById.get(counterAccountId)?.root === ACCOUNT_ROOTS.INCOME,
+  ).length;
+
+  if (arrivals !== 0 && arrivals !== splits.length) {
+    throw new Error('A split cannot mix income parts with other parts.');
+  }
+
+  const moneyArrives = arrivals > 0;
+  const sign = moneyArrives ? -1 : 1;
+
+  const counterPostings = splits.map((split) => ({
+    accountId: split.counterAccountId,
+    amount: sign * Math.abs(split.amount),
+  }));
+  const funding = {
+    accountId,
+    amount: -getPostingsTotal(counterPostings),
+  };
+
+  return moneyArrives
+    ? [...counterPostings, funding]
+    : [funding, ...counterPostings];
+}
+
 /**
  * Money always leaves one account and arrives in another, so the two amounts
- * are mirror images and the transaction sums to zero. The direction is read
- * from the counter account's root, the same rule describeTransaction uses, so
- * writing and reading a transaction can never disagree about its type.
+ * are mirror images and the transaction sums to zero.
  */
 export function buildPostings(
   { amount, accountId, counterAccountId }: TransactionDraft,
   accountsById: Map<string, AccountCore>,
 ): Posting[] {
-  const magnitude = Math.abs(amount);
-  const moneyArrives =
-    accountsById.get(counterAccountId)?.root === ACCOUNT_ROOTS.INCOME;
-
-  return moneyArrives
-    ? [
-        { accountId: counterAccountId, amount: -magnitude },
-        { accountId, amount: magnitude },
-      ]
-    : [
-        { accountId, amount: -magnitude },
-        { accountId: counterAccountId, amount: magnitude },
-      ];
+  return buildSplitPostings(
+    { accountId, splits: [{ counterAccountId, amount }] },
+    accountsById,
+  );
 }
 
 export interface OpeningBalanceDraft {
