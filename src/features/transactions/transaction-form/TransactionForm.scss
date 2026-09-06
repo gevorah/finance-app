@@ -49,7 +49,8 @@
   padding: var(--spacing-1);
 
   .toggle-expense,
-  .toggle-income {
+  .toggle-income,
+  .toggle-transfer {
     flex: 1;
   }
 
@@ -61,5 +62,54 @@
   .toggle-income[data-selected] {
     background-color: var(--river-blue-900);
     color: var(--river-blue-400);
+  }
+
+  .toggle-transfer[data-selected] {
+    background-color: var(--marguerite-900);
+    color: var(--marguerite-400);
+  }
+}
+
+.transaction-form {
+  &__legend {
+    padding: 0;
+    margin-bottom: var(--spacing-2);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__splits {
+    @include flex(normal, normal, column);
+    gap: var(--spacing-3);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--spacing-2) var(--spacing-3);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__split-remove {
+    align-self: end;
+    padding: 0 var(--spacing-2);
+  }
+
+  &__split-action {
+    align-self: flex-start;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-danger);
   }
 }
