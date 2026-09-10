@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildOpeningPostings,
   buildPostings,
+  buildSplitPostings,
   describeTransaction,
   getPostingsTotal,
   isBalanced,
@@ -149,6 +150,143 @@ describe('buildPostings', () => {
     );
 
     expect(getPostingsTotal(postings)).toBe(0);
+  });
+});
+
+describe('buildSplitPostings', () => {
+  const groceries = { counterAccountId: FOOD_ID, amount: toMinorUnits(80000) };
+  const fees = { counterAccountId: INTEREST_ID, amount: toMinorUnits(20000.5) };
+
+  it('funds every part from one posting on the paying account', () => {
+    const postings = buildSplitPostings(
+      { accountId: CARD_ID, splits: [groceries, fees] },
+      accountsById,
+    );
+
+    expect(postings.filter((p) => p.accountId === CARD_ID)).toEqual([
+      { accountId: CARD_ID, amount: -10000050 },
+    ]);
+    expect(isBalanced(postings)).toBe(true);
+  });
+
+  it('writes one posting per part, each with its own amount', () => {
+    const postings = buildSplitPostings(
+      { accountId: CARD_ID, splits: [groceries, fees] },
+      accountsById,
+    );
+
+    expect(postings).toHaveLength(3);
+    expect(postings).toContainEqual({ accountId: FOOD_ID, amount: 8000000 });
+    expect(postings).toContainEqual({
+      accountId: INTEREST_ID,
+      amount: 2000050,
+    });
+  });
+
+  it('reads back as a split expense for the whole amount', () => {
+    const view = describeTransaction(
+      transaction(
+        buildSplitPostings(
+          { accountId: CARD_ID, splits: [groceries, fees] },
+          accountsById,
+        ),
+      ),
+      accountsById,
+    );
+
+    expect(view).toMatchObject({
+      kind: TRANSACTION_KINDS.EXPENSE,
+      amount: 10000050,
+      accountId: CARD_ID,
+      counterAccountId: FOOD_ID,
+      isSplit: true,
+    });
+    expect(view.counterPostings.map((p) => p.accountId)).toEqual([
+      FOOD_ID,
+      INTEREST_ID,
+    ]);
+  });
+
+  it('puts money into the receiving account when the parts are income', () => {
+    const postings = buildSplitPostings(
+      {
+        accountId: DEFAULT_CASH_ACCOUNT_ID,
+        splits: [
+          { counterAccountId: DEFAULT_INCOME_ACCOUNT_ID, amount: 300000 },
+          { counterAccountId: DEFAULT_INCOME_ACCOUNT_ID, amount: 200000 },
+        ],
+      },
+      accountsById,
+    );
+
+    expect(postings).toContainEqual({
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      amount: 500000,
+    });
+    expect(describeTransaction(transaction(postings), accountsById).kind).toBe(
+      TRANSACTION_KINDS.INCOME,
+    );
+  });
+
+  it('pays a debt as principal to the loan and interest to the category', () => {
+    const postings = buildSplitPostings(
+      {
+        accountId: DEFAULT_CASH_ACCOUNT_ID,
+        splits: [
+          { counterAccountId: LOAN_ID, amount: 8000 },
+          { counterAccountId: INTEREST_ID, amount: 2000 },
+        ],
+      },
+      accountsById,
+    );
+
+    expect(postings).toEqual([
+      { accountId: DEFAULT_CASH_ACCOUNT_ID, amount: -10000 },
+      { accountId: LOAN_ID, amount: 8000 },
+      { accountId: INTEREST_ID, amount: 2000 },
+    ]);
+    expect(isBalanced(postings)).toBe(true);
+    expect(
+      describeTransaction(transaction(postings), accountsById),
+    ).toMatchObject({
+      kind: TRANSACTION_KINDS.EXPENSE,
+      amount: 10000,
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      isSplit: true,
+    });
+  });
+
+  it('refuses to mix income parts with other parts', () => {
+    expect(() =>
+      buildSplitPostings(
+        {
+          accountId: DEFAULT_CASH_ACCOUNT_ID,
+          splits: [
+            { counterAccountId: DEFAULT_INCOME_ACCOUNT_ID, amount: 8000 },
+            { counterAccountId: FOOD_ID, amount: 2000 },
+          ],
+        },
+        accountsById,
+      ),
+    ).toThrow();
+  });
+
+  it('is what a single-category transaction is built from', () => {
+    const draft = {
+      amount: toMinorUnits(45000.5),
+      accountId: DEFAULT_CASH_ACCOUNT_ID,
+      counterAccountId: FOOD_ID,
+    };
+
+    expect(buildPostings(draft, accountsById)).toEqual(
+      buildSplitPostings(
+        {
+          accountId: draft.accountId,
+          splits: [{ counterAccountId: FOOD_ID, amount: draft.amount }],
+        },
+        accountsById,
+      ),
+    );
   });
 });
 

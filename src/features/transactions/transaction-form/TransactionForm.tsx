@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ACCOUNT_KINDS,
   ACCOUNT_ROOTS,
@@ -11,11 +11,14 @@ import {
 } from '@/entities/account';
 import {
   buildPostings,
+  buildSplitPostings,
   describeTransaction,
   getAccountSuggestions,
   getPayees,
   getPayeeSuggestion,
+  getSplitsTotal,
   isEditableKind,
+  SplitValues,
   Transaction,
   TRANSACTION_KINDS,
   transactionSchema,
@@ -35,15 +38,17 @@ import { NumberField } from '@/shared/components/ui/number-field';
 import { Select, SelectItem } from '@/shared/components/ui/select';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
+import { formatCurrency } from '@/shared/lib/currency';
 import { toMajorUnits, toMinorUnits } from '@/shared/lib/money';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date';
-import { Wallet } from 'lucide-react';
+import { Plus, Wallet, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   Controller,
   SubmitErrorHandler,
   SubmitHandler,
+  useFieldArray,
   useForm,
   useWatch,
 } from 'react-hook-form';
@@ -57,6 +62,17 @@ const MONEY_FORMAT = {
   currency: 'COP',
   minimumFractionDigits: 2,
 } as const;
+
+const emptySplit = (counterAccountId = ''): SplitValues =>
+  ({ counterAccountId }) as SplitValues;
+
+function describeRemainder(total: number | undefined, assigned: number) {
+  if (total === undefined || !Number.isFinite(total)) return '';
+  const remainder = toMinorUnits(total) - assigned;
+  if (remainder > 0) return `${formatCurrency(remainder)} left to assign`;
+  if (remainder < 0) return `${formatCurrency(-remainder)} over the amount`;
+  return '';
+}
 
 interface TransactionFormProps {
   initialData?: Transaction;
@@ -82,7 +98,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
     ? initialView!.kind
     : TRANSACTION_KINDS.EXPENSE;
 
-  const { handleSubmit, control, setValue, formState } =
+  const { handleSubmit, control, setValue, getValues, setFocus, formState } =
     useForm<TransactionValues>({
       resolver: zodResolver(transactionSchema),
       defaultValues:
@@ -92,6 +108,12 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               amount: toMajorUnits(initialView.amount),
               accountId: initialView.accountId,
               counterAccountId: initialView.counterAccountId,
+              splits: initialView.isSplit
+                ? initialView.counterPostings.map((posting) => ({
+                    counterAccountId: posting.accountId,
+                    amount: toMajorUnits(Math.abs(posting.amount)),
+                  }))
+                : [],
               payee: initialData.payee ?? '',
               description: initialData.description,
               date: parseDate(initialData.date),
@@ -102,6 +124,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
                 getAccountSuggestions(transactions, accountsById) ??
                 realAccounts[0]?.id,
               counterAccountId: expenseAccounts[0]?.id,
+              splits: [],
               payee: '',
               description: '',
               date: today(getLocalTimeZone()),
@@ -123,6 +146,45 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
 
   const payees = getPayees(transactions);
 
+  const {
+    fields: splitFields,
+    append: appendSplit,
+    remove: removeSplit,
+    replace: replaceSplits,
+  } = useFieldArray({ control, name: 'splits' });
+  const isSplit = splitFields.length > 0;
+
+  const amount = useWatch({ control, name: 'amount' });
+  const splits = useWatch({ control, name: 'splits' });
+  const remainder = isSplit
+    ? describeRemainder(amount, getSplitsTotal(splits ?? []))
+    : '';
+
+  const startSplit = () => {
+    replaceSplits([emptySplit(getValues('counterAccountId')), emptySplit()]);
+  };
+
+  const focusSingleCategory = useRef(false);
+
+  useEffect(() => {
+    if (isSplit || !focusSingleCategory.current) return;
+    focusSingleCategory.current = false;
+    setFocus('counterAccountId');
+  }, [isSplit, setFocus]);
+
+  const removeSplitAt = (index: number) => {
+    if (splitFields.length > 2) {
+      const survivor = index < splitFields.length - 1 ? index + 1 : index - 1;
+      setFocus(`splits.${survivor}.counterAccountId`);
+      removeSplit(index);
+      return;
+    }
+    const remaining = getValues('splits')?.find((_, i) => i !== index);
+    setValue('counterAccountId', remaining?.counterAccountId ?? '');
+    focusSingleCategory.current = true;
+    replaceSplits([]);
+  };
+
   const [detailsOpen, setDetailsOpen] = useState(Boolean(initialData));
   const [suggestedFrom, setSuggestedFrom] = useState('');
 
@@ -135,7 +197,7 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
       setValue('accountId', suggestion.accountId);
       applied = true;
     }
-    if (!formState.dirtyFields.counterAccountId) {
+    if (!isSplit && !formState.dirtyFields.counterAccountId) {
       setValue('counterAccountId', suggestion.counterAccountId);
       applied = true;
     }
@@ -152,14 +214,25 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
       payee: data.payee?.trim() || undefined,
       description: data.description || data.payee || '',
       date: data.date.toString(),
-      postings: buildPostings(
-        {
-          amount: toMinorUnits(Number(data.amount)),
-          accountId: data.accountId,
-          counterAccountId: data.counterAccountId,
-        },
-        accountsById,
-      ),
+      postings: data.splits?.length
+        ? buildSplitPostings(
+            {
+              accountId: data.accountId,
+              splits: data.splits.map((split) => ({
+                counterAccountId: split.counterAccountId,
+                amount: toMinorUnits(Number(split.amount)),
+              })),
+            },
+            accountsById,
+          )
+        : buildPostings(
+            {
+              amount: toMinorUnits(Number(data.amount)),
+              accountId: data.accountId,
+              counterAccountId: data.counterAccountId,
+            },
+            accountsById,
+          ),
     };
 
     if (initialData) {
@@ -225,7 +298,9 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               className="type-toggle"
               selectedKeys={new Set([field.value])}
               onSelectionChange={(keys) => {
-                field.onChange([...keys][0] as TransactionValues['kind']);
+                const next = [...keys][0] as TransactionValues['kind'];
+                if (next === TRANSACTION_KINDS.TRANSFER) replaceSplits([]);
+                field.onChange(next);
               }}
             >
               <Toggle id={TRANSACTION_KINDS.EXPENSE} className="toggle-expense">
@@ -339,26 +414,127 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               />
             </>
           )}
-          <Controller
-            name="counterAccountId"
-            control={control}
-            render={({ field, fieldState }) => (
-              <Select
-                label={isTransfer ? 'To account' : 'Category'}
-                placeholder={isTransfer ? 'Select account' : 'Select category'}
-                name={field.name}
-                value={field.value}
-                onChange={(value) => {
-                  setSuggestedFrom('');
-                  field.onChange(value);
-                }}
-                items={counterAccounts}
-                errorMessage={fieldState.error?.message}
+          {isSplit ? (
+            <fieldset className="transaction-form__splits">
+              <legend className="transaction-form__legend">Categories</legend>
+              {splitFields.map((splitField, index) => (
+                <fieldset
+                  key={splitField.id}
+                  className="transaction-form__split"
+                >
+                  <legend className="transaction-form__legend">
+                    Part {index + 1}
+                  </legend>
+                  <Controller
+                    name={`splits.${index}.counterAccountId`}
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <Select
+                        label="Category"
+                        placeholder="Select category"
+                        name={field.name}
+                        inputRef={field.ref}
+                        value={field.value}
+                        onChange={field.onChange}
+                        items={counterAccounts}
+                        errorMessage={fieldState.error?.message}
+                      >
+                        {(item) => (
+                          <SelectItem id={item.id}>{item.name}</SelectItem>
+                        )}
+                      </Select>
+                    )}
+                  />
+                  <Controller
+                    name={`splits.${index}.amount`}
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <NumberField
+                        label="Amount"
+                        name={field.name}
+                        inputRef={field.ref}
+                        value={field.value}
+                        onChange={field.onChange}
+                        formatOptions={MONEY_FORMAT}
+                        errorMessage={fieldState.error?.message}
+                      />
+                    )}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    border
+                    className="transaction-form__split-remove"
+                    aria-label={`Remove part ${index + 1}`}
+                    onPress={() => removeSplitAt(index)}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </Button>
+                </fieldset>
+              ))}
+              <p
+                className="transaction-form__suggestion"
+                role="status"
+                aria-live="polite"
               >
-                {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
-              </Select>
-            )}
-          />
+                {remainder}
+              </p>
+              {formState.errors.splits?.root?.message && (
+                <p className="transaction-form__error" role="alert">
+                  {formState.errors.splits.root.message}
+                </p>
+              )}
+              <Button
+                variant="secondary"
+                size="small"
+                border
+                className="transaction-form__split-action"
+                onPress={() => appendSplit(emptySplit())}
+              >
+                <Plus size={16} aria-hidden="true" />{' '}
+                <span>Add another category</span>
+              </Button>
+            </fieldset>
+          ) : (
+            <>
+              <Controller
+                name="counterAccountId"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Select
+                    label={isTransfer ? 'To account' : 'Category'}
+                    placeholder={
+                      isTransfer ? 'Select account' : 'Select category'
+                    }
+                    name={field.name}
+                    inputRef={field.ref}
+                    value={field.value}
+                    onChange={(value) => {
+                      setSuggestedFrom('');
+                      field.onChange(value);
+                    }}
+                    items={counterAccounts}
+                    errorMessage={fieldState.error?.message}
+                  >
+                    {(item) => (
+                      <SelectItem id={item.id}>{item.name}</SelectItem>
+                    )}
+                  </Select>
+                )}
+              />
+              {!isTransfer && (
+                <Button
+                  variant="secondary"
+                  size="small"
+                  border
+                  className="transaction-form__split-action"
+                  onPress={startSplit}
+                >
+                  Split across categories
+                </Button>
+              )}
+            </>
+          )}
           <p
             className="transaction-form__suggestion"
             role="status"
