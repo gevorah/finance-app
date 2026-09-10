@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import {
+  ACCOUNT_KINDS,
   ACCOUNT_ROOTS,
   getAccountsByRoot,
   getRealAccounts,
@@ -48,6 +49,8 @@ import {
 } from 'react-hook-form';
 
 import './TransactionForm.scss';
+
+import { calculateInstallment } from '@/features/installements/calculateInstallment';
 
 const MONEY_FORMAT = {
   style: 'currency',
@@ -108,6 +111,10 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
   const kind = useWatch({ control, name: 'kind' });
   const isTransfer = kind === TRANSACTION_KINDS.TRANSFER;
 
+  const accountId = useWatch({ control, name: 'accountId' });
+  const selectedAccount = accountsById.get(accountId);
+  const isCreditCard = selectedAccount?.kind === ACCOUNT_KINDS.CREDIT_CARD;
+
   const counterAccounts = isTransfer
     ? realAccounts
     : kind === TRANSACTION_KINDS.INCOME
@@ -159,6 +166,27 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
       updateTransaction(initialData.id, transaction);
     } else {
       addTransaction(transaction);
+    }
+
+    if (isCreditCard && data.installments && data.installments > 1 && data.paymentAccountId) {
+      const installmentAmount = calculateInstallment(
+        data.amount,
+        data.installments,
+      );
+      for (let i = 1; i <= data.installments; i++) {
+        addTransaction({
+          description: `Installment ${i}/${data.installments} — ${data.description || data.payee || ''}`,
+          date: data.date.add({ months: i }).toString(),
+          postings: buildPostings(
+            {
+              amount: toMinorUnits(installmentAmount),
+              accountId: data.paymentAccountId,
+              counterAccountId: data.accountId,
+            },
+            accountsById,
+          ),
+        });
+      }
     }
 
     router.push('/transactions');
@@ -277,6 +305,40 @@ export default function TransactionForm({ initialData }: TransactionFormProps) {
               </Select>
             )}
           />
+          {isCreditCard && (
+            <>
+              <Controller
+                name="installments"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <NumberField
+                    label="Installments"
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    errorMessage={fieldState.error?.message}
+                  />
+                )}
+              />
+              <Controller
+                name="paymentAccountId"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Select
+                    label="Pay from"
+                    placeholder="Select account"
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    items={realAccounts}
+                    errorMessage={fieldState.error?.message}
+                  >
+                    {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+                  </Select>
+                )}
+              />
+            </>
+          )}
           <Controller
             name="counterAccountId"
             control={control}

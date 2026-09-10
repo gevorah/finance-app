@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Account,
   ACCOUNT_ROOTS,
@@ -8,6 +9,7 @@ import {
   useAccountsById,
   useAccountStore,
 } from '@/entities/account';
+import { getLocalTimeZone, today } from '@internationalized/date';
 import {
   getAccountRegister,
   RegisterRow,
@@ -20,7 +22,7 @@ import { useHydrated } from '@/shared/hooks/useHydrated';
 import { formatCurrency } from '@/shared/lib/currency';
 import { formatDate } from '@/shared/lib/date';
 import { ordinal } from '@/shared/lib/ordinal';
-import { ArrowLeft, Receipt, SearchX } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronLeft, ChevronRight, Receipt, SearchX } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import './AccountRegister.scss';
@@ -107,6 +109,7 @@ export function AccountRegisterPage() {
   const router = useRouter();
 
   const account = accounts.find((item) => item.id === id);
+  const [selectedDate, setSelectedDate] = useState(today(getLocalTimeZone()));
 
   if (!hydrated) return null;
 
@@ -129,7 +132,27 @@ export function AccountRegisterPage() {
     );
   }
 
-  const rows = getAccountRegister(transactions, account.id);
+  const allRows = getAccountRegister(transactions, account.id);
+
+  const cutOff = account.cutOffDay;
+
+  const rows = allRows.filter((row) => {
+    const date = row.transaction.date;
+
+    if (cutOff) {
+      const year = selectedDate.year;
+      const month = selectedDate.month;
+      const prevMonth = month === 1 ? 12 : month - 1;
+      const prevYear = month === 1 ? year - 1 : year;
+      const startDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(cutOff + 1).padStart(2, '0')}`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(cutOff).padStart(2, '0')}`;
+      return date >= startDate && date <= endDate;
+    }
+
+    const monthStr = `${selectedDate.year}-${String(selectedDate.month).padStart(2, '0')}`;
+    return date.startsWith(monthStr);
+  });
+
   const header = getHeader(account, getAccountBalance(account, transactions));
 
   const nameFor = (row: RegisterRow) =>
@@ -162,6 +185,29 @@ export function AccountRegisterPage() {
           </div>
         )}
       </section>
+
+      <div className="month-selector">
+        <Button
+          variant="secondary"
+          className="month-button"
+          onPress={() => setSelectedDate(selectedDate.subtract({ months: 1 }))}
+        >
+          <ChevronLeft />
+        </Button>
+        <span className="month-label">
+          <Calendar size={16} />
+          {new Date(selectedDate.year, selectedDate.month - 1).toLocaleDateString('en', { month: 'long' })}{' '}
+          {selectedDate.year}
+          {cutOff && ` (cut-off: ${ordinal(cutOff)})`}
+        </span>
+        <Button
+          variant="secondary"
+          className="month-button"
+          onPress={() => setSelectedDate(selectedDate.add({ months: 1 }))}
+        >
+          <ChevronRight />
+        </Button>
+      </div>
 
       <section className="account-register__section">
         <h3 className="account-register__title">Movements</h3>

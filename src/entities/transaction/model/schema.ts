@@ -16,6 +16,8 @@ export const transactionSchema = z
     ]),
     amount: z.number().positive({ error: 'Amount should be above 0' }),
     accountId: z.string().min(1, { error: 'Account is required' }),
+    installments: z.number().min(1).optional(),
+    paymentAccountId: z.string().optional(),
     counterAccountId: z.string().min(1, { error: 'Category is required' }),
     payee: z.string().optional(),
     description: z.string().optional(),
