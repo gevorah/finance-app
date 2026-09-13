@@ -65,6 +65,21 @@
   }
 }
 
+.month-selector {
+  @include flex(space-between, center);
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.month-label {
+  @include flex();
+  gap: var(--spacing-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+
 .register-row {
   @include flex(space-between, center);
   gap: var(--spacing-4);

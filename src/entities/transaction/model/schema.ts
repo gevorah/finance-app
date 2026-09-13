@@ -34,6 +34,8 @@ export const transactionSchema = z
     ]),
     amount: amountSchema,
     accountId: z.string().min(1, { error: 'Account is required' }),
+    installments: z.number().min(1).optional(),
+    paymentAccountId: z.string().optional(),
     counterAccountId: z.string(),
     splits: z.array(splitSchema).optional(),
     payee: z.string().optional(),
