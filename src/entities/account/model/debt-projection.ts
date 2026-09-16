@@ -2,6 +2,7 @@ import { Money } from '@/shared/lib/money';
 
 export const PROJECTION_HORIZON_MONTHS = 600;
 
+// makes the object and its properties readonly
 export const DEBT_STRATEGIES = {
   SNOWBALL: 'snowball',
   AVALANCHE: 'avalanche',
