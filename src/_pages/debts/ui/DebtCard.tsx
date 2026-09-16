@@ -5,6 +5,7 @@ import {
   getAmountOwed,
   getDebtStatus,
   getMonthlyInterestRate,
+  getMonthlyPayment,
 } from '@/entities/account';
 import { useTransactionStore } from '@/entities/transaction';
 import { Button } from '@/shared/components/ui/button';
@@ -26,18 +27,30 @@ export function DebtCard({ debt }: DebtCardProps) {
 
   const status = getDebtStatus(debt, transactions);
   const amountOwed = getAmountOwed(debt, transactions);
-  const rate = getMonthlyInterestRate(debt);
   const nextPaymentDueDate = debt.debtTerms?.paymentTerms.nextPaymentDueDate;
+  const monthlyPayment = getMonthlyPayment(debt);
+
+  /** Undeclared interest is unknown, not zero, so it says nothing at all. */
+  const interest = debt.debtTerms?.interest;
+  const rateLabel = !interest
+    ? undefined
+    : interest.type === 'none'
+      ? 'No interest'
+      : `${getMonthlyInterestRate(debt).toFixed(2)}% monthly`;
 
   return (
     <Card className="debt-card">
       <div className="debt-card__info">
-        <h4 className="debt-card__name">{debt.name}</h4>
+        <h5 className="debt-card__name">{debt.name}</h5>
         {debt.description && (
           <p className="debt-card__description">{debt.description}</p>
         )}
-        {rate > 0 && (
-          <p className="debt-card__description">{rate.toFixed(2)}% monthly</p>
+        {(rateLabel || monthlyPayment) && (
+          <p className="debt-card__terms">
+            {rateLabel}
+            {rateLabel && monthlyPayment && <span aria-hidden="true"> · </span>}
+            {monthlyPayment && `${formatCurrency(monthlyPayment)} a month`}
+          </p>
         )}
         {nextPaymentDueDate && status !== 'paid_off' && (
           <p className="debt-card__due">Due {formatDate(nextPaymentDueDate)}</p>

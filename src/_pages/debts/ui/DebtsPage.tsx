@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  DEBT_STRATEGIES,
-  DebtStrategy,
+  buildProjectionReadiness,
+  getAmountOwed,
   getDebtAccounts,
-  orderDebtsByStrategy,
+  getTotalDebt,
   useAccountStore,
 } from '@/entities/account';
 import { useTransactionStore } from '@/entities/transaction';
+import { StrategyComparison } from '@/features/debts/strategy-comparison';
 import { Button } from '@/shared/components/ui/button';
 import { EmptyState } from '@/shared/components/ui/empty-state';
-import { Toggle, ToggleButtonGroup } from '@/shared/components/ui/toggle';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+import { useHydrated } from '@/shared/hooks/useHydrated';
+import { formatCurrency } from '@/shared/lib/currency';
 import { HandCoins, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -19,23 +21,31 @@ import { DebtCard } from './DebtCard';
 
 import './Debts.scss';
 
-const STRATEGY_HINTS: Record<DebtStrategy, string> = {
-  snowball: 'Smallest balance first — quicker wins.',
-  avalanche: 'Highest interest first — cheaper overall.',
-};
+const NEW_DEBT_ROUTE = '/accounts/new?kind=credit_card';
 
 export function DebtsPage() {
+  const hydrated = useHydrated();
   const { accounts } = useAccountStore();
   const { transactions } = useTransactionStore();
   const router = useRouter();
-  const [strategy, setStrategy] = useState<DebtStrategy>(
-    DEBT_STRATEGIES.SNOWBALL,
-  );
+
+  if (!hydrated) {
+    return (
+      <div className="debts">
+        <Skeleton className="debts-overview debts-overview--loading" />
+        <Skeleton className="debts-row--loading" />
+        <Skeleton className="debts-row--loading" />
+      </div>
+    );
+  }
 
   const debts = getDebtAccounts(accounts);
-  const ordered = orderDebtsByStrategy(accounts, transactions, strategy);
+  const readiness = buildProjectionReadiness(accounts, transactions);
+  const outstanding = debts.filter(
+    (account) => getAmountOwed(account, transactions) > 0,
+  );
   const paidOff = debts.filter(
-    (account) => !ordered.some((item) => item.id === account.id),
+    (account) => getAmountOwed(account, transactions) <= 0,
   );
 
   return (
@@ -45,7 +55,7 @@ export function DebtsPage() {
         <Button
           size="small"
           className="debts-header__button"
-          onPress={() => router.push('/accounts/new?kind=credit_card')}
+          onPress={() => router.push(NEW_DEBT_ROUTE)}
         >
           <Plus size={14} /> Add
         </Button>
@@ -60,7 +70,7 @@ export function DebtsPage() {
             <Button
               variant="primary"
               size="small"
-              onPress={() => router.push('/accounts/new?kind=credit_card')}
+              onPress={() => router.push(NEW_DEBT_ROUTE)}
             >
               Add debt
             </Button>
@@ -68,29 +78,29 @@ export function DebtsPage() {
         />
       ) : (
         <>
-          <section className="debts-strategy">
-            <ToggleButtonGroup
-              className="debts-strategy__toggle"
-              selectedKeys={new Set([strategy])}
-              onSelectionChange={(keys) => {
-                const selected = [...keys][0] as DebtStrategy;
-                if (selected) setStrategy(selected);
-              }}
-            >
-              <Toggle id={DEBT_STRATEGIES.SNOWBALL}>Snowball</Toggle>
-              <Toggle id={DEBT_STRATEGIES.AVALANCHE}>Avalanche</Toggle>
-            </ToggleButtonGroup>
-            <p className="debts-strategy__hint">{STRATEGY_HINTS[strategy]}</p>
+          <section className="debts-overview">
+            <p className="debts-overview__label">Total owed</p>
+            <p className="debts-overview__amount">
+              {formatCurrency(getTotalDebt(accounts, transactions))}
+            </p>
+            <p className="debts-overview__meta">
+              {`${outstanding.length} debt${outstanding.length !== 1 ? 's' : ''} still open`}
+            </p>
           </section>
 
-          <div className="debts-group__items">
-            {ordered.map((debt) => (
-              <DebtCard debt={debt} key={debt.id} />
-            ))}
-            {paidOff.map((debt) => (
-              <DebtCard debt={debt} key={debt.id} />
-            ))}
-          </div>
+          <StrategyComparison readiness={readiness} />
+
+          <section className="debts-group">
+            <h4 className="debts-group__title">Your debts</h4>
+            <div className="debts-group__items">
+              {outstanding.map((debt) => (
+                <DebtCard debt={debt} key={debt.id} />
+              ))}
+              {paidOff.map((debt) => (
+                <DebtCard debt={debt} key={debt.id} />
+              ))}
+            </div>
+          </section>
         </>
       )}
     </div>
