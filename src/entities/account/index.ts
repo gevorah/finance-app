@@ -1,6 +1,7 @@
 export * from './model/types';
 export * from './model/chart';
 export * from './model/debt-terms';
+export * from './model/debt-payment';
 export * from './model/debt-projection';
 export * from './model/debt-selectors';
 export * from './model/schema';

@@ -65,6 +65,17 @@ export function DebtCard({ debt }: DebtCardProps) {
             <span className="debt-card__badge">Paid</span>
           )}
           {status === 'late' && <span className="debt-card__badge">Late</span>}
+          {status !== 'paid_off' && (
+            <Button
+              size="small"
+              variant="secondary"
+              border
+              className="debt-card__action"
+              onPress={() => router.push(`/debts/${debt.id}/pay`)}
+            >
+              Pay
+            </Button>
+          )}
           <Button
             size="small"
             variant="ghost"
