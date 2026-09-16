@@ -21,6 +21,11 @@
     color: var(--color-text-secondary);
   }
 
+  &__terms {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
   &__due {
     font-size: var(--text-xs);
     color: var(--color-text-muted);

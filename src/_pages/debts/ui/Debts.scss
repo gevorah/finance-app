@@ -2,7 +2,7 @@
 
 .debts {
   @include flex(normal, normal, column);
-  gap: var(--spacing-5);
+  gap: var(--spacing-6);
 }
 
 .debts-header {
@@ -20,7 +20,57 @@
   }
 }
 
-.debts-group__items {
+.debts-overview {
+  @include flex(normal, normal, column);
+  gap: var(--spacing-1);
+  padding: var(--spacing-5);
+  background: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+
+  &--loading {
+    height: 116px;
+  }
+
+  &__label {
+    font-size: var(--text-xs);
+    color: var(--color-primary-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__amount {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-bold);
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    font-size: var(--text-xs);
+    color: var(--color-primary-muted);
+  }
+}
+
+.debts-row--loading {
+  height: 84px;
+  border-radius: var(--radius-lg);
+}
+
+.debts-group {
   @include flex(normal, normal, column);
   gap: var(--spacing-3);
+  margin-top: var(--spacing-2);
+
+  &__title {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__items {
+    @include flex(normal, normal, column);
+    gap: var(--spacing-3);
+  }
 }

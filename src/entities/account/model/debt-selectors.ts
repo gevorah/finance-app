@@ -1,7 +1,18 @@
 import type { Transaction } from '@/entities/transaction';
 import { Money } from '@/shared/lib/money';
 
-import { DebtStatus } from './debt-terms';
+import {
+  compareByAvalanche,
+  compareBySnowball,
+  DEBT_STRATEGIES,
+  DebtPriority,
+  DebtProjectionIssue,
+  DebtProjectionIssueCode,
+  DebtSnapshot,
+  DebtStrategy,
+  ProjectionReadiness,
+} from './debt-projection';
+import { DebtInterest, DebtPaymentTerms, DebtStatus } from './debt-terms';
 import { getAccountBalance } from './selectors';
 import { Account, ACCOUNT_ROOTS } from './types';
 
@@ -57,13 +68,109 @@ export function getMonthlyInterestRate(account: Account): number {
   return ((1 + interest.rate / 100) ** (1 / 12) - 1) * 100;
 }
 
-export const DEBT_STRATEGIES = {
-  SNOWBALL: 'snowball',
-  AVALANCHE: 'avalanche',
-} as const;
+export function toDebtPriority(
+  account: Account,
+  transactions: Transaction[],
+): DebtPriority {
+  return {
+    id: account.id,
+    balance: getAmountOwed(account, transactions),
+    monthlyRate: getMonthlyInterestRate(account) / 100,
+  };
+}
 
-export type DebtStrategy =
-  (typeof DEBT_STRATEGIES)[keyof typeof DEBT_STRATEGIES];
+function getOutstandingDebts(
+  accounts: Account[],
+  transactions: Transaction[],
+): Account[] {
+  return getDebtAccounts(accounts).filter(
+    (account) => getAmountOwed(account, transactions) > 0,
+  );
+}
+
+function getMonthlyMinimumPayment(terms: DebtPaymentTerms): Money | undefined {
+  if (terms.type === 'installments') return terms.installmentAmount;
+  if (terms.type === 'revolving') return terms.minimumPayment;
+
+  return terms.suggestedPaymentAmount;
+}
+
+function getFrequencyIssue(
+  terms: DebtPaymentTerms,
+): DebtProjectionIssueCode | undefined {
+  if (terms.type !== 'installments') return undefined;
+  if (!terms.frequency) return 'unknown_frequency';
+  if (terms.frequency !== 'monthly') return 'unsupported_frequency';
+
+  return undefined;
+}
+
+export function getMonthlyPayment(account: Account): Money | undefined {
+  const terms = account.debtTerms?.paymentTerms;
+  if (!terms || getFrequencyIssue(terms)) return undefined;
+
+  const amount = getMonthlyMinimumPayment(terms);
+
+  return amount && amount > 0 ? amount : undefined;
+}
+
+type DebtEvaluation =
+  | { simulatable: true; minimumPayment: Money }
+  | { simulatable: false; codes: DebtProjectionIssueCode[] };
+
+function evaluateDebt(account: Account): DebtEvaluation {
+  const terms = account.debtTerms;
+  if (!terms?.paymentTerms) {
+    return { simulatable: false, codes: ['missing_payment_terms'] };
+  }
+
+  const codes: DebtProjectionIssueCode[] = [];
+
+  const interest: DebtInterest | undefined = terms.interest;
+  if (!interest) codes.push('missing_interest_terms');
+
+  const frequencyIssue = getFrequencyIssue(terms.paymentTerms);
+  if (frequencyIssue) codes.push(frequencyIssue);
+
+  const minimumPayment = getMonthlyMinimumPayment(terms.paymentTerms);
+  if (!minimumPayment || minimumPayment <= 0) {
+    codes.push('missing_payment_amount');
+  }
+
+  if (codes.length > 0 || !minimumPayment) {
+    return { simulatable: false, codes };
+  }
+
+  return { simulatable: true, minimumPayment };
+}
+
+export function buildProjectionReadiness(
+  accounts: Account[],
+  transactions: Transaction[],
+): ProjectionReadiness {
+  const issues: DebtProjectionIssue[] = [];
+  const debts: DebtSnapshot[] = [];
+
+  for (const account of getOutstandingDebts(accounts, transactions)) {
+    const evaluation = evaluateDebt(account);
+
+    if (!evaluation.simulatable) {
+      issues.push(
+        ...evaluation.codes.map((code) => ({ accountId: account.id, code })),
+      );
+      continue;
+    }
+
+    debts.push({
+      ...toDebtPriority(account, transactions),
+      minimumPayment: evaluation.minimumPayment,
+    });
+  }
+
+  return issues.length > 0
+    ? { status: 'incomplete', issues }
+    : { status: 'ready', debts };
+}
 
 /**
  * Snowball pays the smallest balance first, avalanche the highest rate. Both
@@ -74,17 +181,16 @@ export function orderDebtsByStrategy(
   transactions: Transaction[],
   strategy: DebtStrategy,
 ): Account[] {
-  const outstanding = getDebtAccounts(accounts).filter(
-    (account) => getAmountOwed(account, transactions) > 0,
-  );
+  const compare =
+    strategy === DEBT_STRATEGIES.AVALANCHE
+      ? compareByAvalanche
+      : compareBySnowball;
 
-  if (strategy === DEBT_STRATEGIES.AVALANCHE) {
-    return [...outstanding].sort(
-      (a, b) => getMonthlyInterestRate(b) - getMonthlyInterestRate(a),
-    );
-  }
-
-  return [...outstanding].sort(
-    (a, b) => getAmountOwed(a, transactions) - getAmountOwed(b, transactions),
-  );
+  return getOutstandingDebts(accounts, transactions)
+    .map((account) => ({
+      account,
+      priority: toDebtPriority(account, transactions),
+    }))
+    .sort((a, b) => compare(a.priority, b.priority))
+    .map(({ account }) => account);
 }
