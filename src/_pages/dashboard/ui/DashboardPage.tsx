@@ -2,18 +2,17 @@
 
 import './Dashboard.scss';
 
-import { getTotalBalance, useAccountStore } from '@/entities/account';
+import {
+  getAvailableBalance,
+  getSetAsideBalance,
+  getTotalBalance,
+  useAccountStore,
+} from '@/entities/account';
 import {
   getMonthIncomeExpense,
-  getMonthlyExpenses,
-  getMonthlyIncome,
   getRecentTransactions,
   getSpendingByAccount,
-  getTotalExpenses,
-  getTotalIncome,
   getWeeklySpending,
-  monthOverMonthExpenses,
-  monthOverMonthIncome,
   useTransactionStore,
 } from '@/entities/transaction';
 import { ComparisonChart } from '@/features/charts/comparison-chart/ComparisonChart';
@@ -25,7 +24,8 @@ import Link from 'next/link';
 
 import { BalanceCard } from './BalanceCard';
 import { DashboardSkeleton } from './DashboardSkeleton';
-import { MetricCard } from './MetricCard';
+import { NeedsAttention } from './NeedsAttention';
+import { SummaryCards } from './SummaryCards';
 
 export function DashboardPage() {
   const hydrated = useHydrated();
@@ -35,8 +35,6 @@ export function DashboardPage() {
   if (!hydrated) return <DashboardSkeleton />;
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
 
   const recentTransactions = getRecentTransactions(transactions, 5);
   const weeklySpendingData = getWeeklySpending(transactions, accounts, now);
@@ -49,66 +47,47 @@ export function DashboardPage() {
   return (
     <div className="page">
       <section className="page-container">
-        <div className="balance-cards">
-          <BalanceCard
-            balance={getTotalBalance(accounts, transactions)}
-            stats={[
-              {
-                icon: 'income',
-                label: 'Income',
-                value: getTotalIncome(transactions, accounts),
-              },
-              {
-                icon: 'expense',
-                label: 'Expenses',
-                value: getTotalExpenses(transactions, accounts),
-              },
-            ]}
-          ></BalanceCard>
-          <div className="metrics">
-            <MetricCard
-              title={'Monthly Expenses'}
-              value={getMonthlyExpenses(transactions, accounts, year, month)}
-              icon={'expense'}
-              trend={
-                monthOverMonthExpenses(
-                  transactions,
-                  accounts,
-                  year,
-                  month,
-                ).toFixed(1) + '% vs last month'
-              }
-            ></MetricCard>
-            <MetricCard
-              title={'Monthly Income'}
-              value={getMonthlyIncome(transactions, accounts, year, month)}
-              icon={'income'}
-              trend={
-                monthOverMonthIncome(
-                  transactions,
-                  accounts,
-                  year,
-                  month,
-                ).toFixed(1) + '% vs last month'
-              }
-            ></MetricCard>
+        <BalanceCard
+          balance={getAvailableBalance(accounts, transactions)}
+          stats={[
+            {
+              label: 'Total balance',
+              value: getTotalBalance(accounts, transactions),
+            },
+            {
+              label: 'Set aside',
+              value: getSetAsideBalance(accounts, transactions),
+            },
+          ]}
+        ></BalanceCard>
+        <SummaryCards />
+        <NeedsAttention />
+        <section aria-labelledby="dashboard-spending">
+          <div className="section-header">
+            <h2 id="dashboard-spending" className="section-header__title">
+              Spending &amp; cash flow
+            </h2>
           </div>
-        </div>
-        <div className="chart-container">
-          <WeeklySpendingChart data={weeklySpendingData} />
-          <SpendingChart
-            data={spendingByAccountData}
-            accountNames={accountNames}
-          />
-          <ComparisonChart data={comparisonData} />
-        </div>
-        <div className="transaction-header">
-          <h3 className="transaction-header__title">Recent Transactions</h3>
-          <Link href="/transactions" className="transaction-header__link">
-            See all
-          </Link>
-        </div>
-        <TransactionList transactions={recentTransactions} />
+          <div className="charts">
+            <WeeklySpendingChart data={weeklySpendingData} />
+            <SpendingChart
+              data={spendingByAccountData}
+              accountNames={accountNames}
+            />
+            <ComparisonChart data={comparisonData} />
+          </div>
+        </section>
+        <section aria-labelledby="dashboard-recent">
+          <div className="section-header">
+            <h2 id="dashboard-recent" className="section-header__title">
+              Recent transactions
+            </h2>
+            <Link href="/transactions" className="section-header__link">
+              See all
+            </Link>
+          </div>
+          <TransactionList transactions={recentTransactions} />
+        </section>
       </section>
     </div>
   );

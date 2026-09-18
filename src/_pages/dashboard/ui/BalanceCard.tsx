@@ -4,9 +4,6 @@ import { Money } from '@/shared/lib/money';
 import './BalanceCard.scss';
 
 import { Card } from '@/shared/components/ui/card';
-import { ArrowDown, ArrowUp } from 'lucide-react';
-
-type MetricTone = 'income' | 'expense';
 
 interface CardBalanceProps {
   balance: Money;
@@ -14,7 +11,6 @@ interface CardBalanceProps {
 }
 
 interface Stats {
-  icon: MetricTone;
   label: string;
   value: Money;
 }
@@ -22,26 +18,18 @@ interface Stats {
 export function BalanceCard({ balance, stats = [] }: CardBalanceProps) {
   return (
     <Card type="primary" className="balance-card">
-      <div className="balance-header">
-        <p className="balance-header__title">total balance</p>
-        <p className="balance-header__description">{formatCurrency(balance)}</p>
-      </div>
+      <header className="balance-card__header">
+        <p className="balance-card__title">Available this month</p>
+        <p className="balance-card__amount">{formatCurrency(balance)}</p>
+        <p className="balance-card__description">
+          Money in accounts you are using this month.
+        </p>
+      </header>
       <section className="stats">
         {stats.map((stat, index) => (
-          <div key={index} className={`stat-item`}>
-            <div className={`stat-item__icon stat-item__icon--${stat.icon}`}>
-              {stat.icon === 'income' ? (
-                <ArrowUp size={16} />
-              ) : (
-                <ArrowDown size={16} />
-              )}
-            </div>
-            <div>
-              <p className={`stat-item__label`}>{stat.label}</p>
-              <p className={`stat-item__value stat-item__value--${stat.icon}`}>
-                {formatCurrency(stat.value)}
-              </p>
-            </div>
+          <div key={index} className="stat-item">
+            <p className="stat-item__label">{stat.label}</p>
+            <p className="stat-item__value">{formatCurrency(stat.value)}</p>
           </div>
         ))}
       </section>

@@ -1,5 +1,6 @@
 import { Account, ACCOUNT_ROOTS } from '@/entities/account';
 import { Money } from '@/shared/lib/money';
+import { CalendarDate, getLocalTimeZone } from '@internationalized/date';
 
 import { describeTransaction, touchesAccount } from './ledger';
 import { Transaction } from './types';
@@ -97,10 +98,9 @@ export function getTotalForRoot(
   accounts: Account[],
   root: Account['root'],
 ): Money {
-  return Object.values(getActivityByAccount(transactions, accounts, root)).reduce(
-    (total, amount) => total + amount,
-    0,
-  );
+  return Object.values(
+    getActivityByAccount(transactions, accounts, root),
+  ).reduce((total, amount) => total + amount, 0);
 }
 
 export function getTotalIncome(
@@ -214,12 +214,13 @@ export function getMonthIncomeExpense(
   transactions: Transaction[],
   accounts: Account[],
   currentDate: Date,
-  amountMonth: number,
+  monthCount: number,
 ) {
-  return Array.from({ length: amountMonth }).map((_, index) => {
+  return Array.from({ length: monthCount }, (_, index) => {
+    const monthsAgo = monthCount - 1 - index;
     const date = new Date(
       currentDate.getFullYear(),
-      currentDate.getMonth() - index,
+      currentDate.getMonth() - monthsAgo,
     );
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
@@ -231,23 +232,29 @@ export function getMonthIncomeExpense(
   });
 }
 
+const WEEK_LENGTH = 7;
+
 export function getWeeklySpending(
   transactions: Transaction[],
   accounts: Account[],
   currentDate: Date,
 ) {
-  return Array.from({ length: 7 }).map((_, index) => {
-    const date = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate() - index,
-    );
-    const isoDate = date.toISOString().split('T')[0];
+  const lastDay = new CalendarDate(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    currentDate.getDate(),
+  );
+
+  return Array.from({ length: WEEK_LENGTH }, (_, index) => {
+    const daysAgo = WEEK_LENGTH - 1 - index;
+    const calendarDay = lastDay.subtract({ days: daysAgo });
+    const date = calendarDay.toDate(getLocalTimeZone());
+
     return {
       day: date.getDay(),
       shortDayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
       dayTransactions: getTotalExpenses(
-        transactions.filter((t) => t.date === isoDate),
+        transactions.filter((t) => t.date === calendarDay.toString()),
         accounts,
       ),
     };
@@ -319,9 +326,13 @@ export function getPayeeSuggestion(
 
 export function getAccountSuggestions(
   transactions: Transaction[],
-  accountsById: Map<string, Account>){
-    const lastAccount= [...transactions].sort((a,b) => b.date.localeCompare(a.date))[0];
+  accountsById: Map<string, Account>,
+) {
+  const lastAccount = [...transactions].sort((a, b) =>
+    b.date.localeCompare(a.date),
+  )[0];
 
-    return !lastAccount ? undefined :describeTransaction(lastAccount, accountsById).accountId;
+  return !lastAccount
+    ? undefined
+    : describeTransaction(lastAccount, accountsById).accountId;
 }
-

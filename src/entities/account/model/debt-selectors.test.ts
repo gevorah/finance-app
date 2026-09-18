@@ -1,11 +1,12 @@
 import { buildOpeningPostings, type Transaction } from '@/entities/transaction';
 import { toMinorUnits } from '@/shared/lib/money';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { DEBT_STRATEGIES, DebtStrategy } from './debt-projection';
 import {
   buildProjectionReadiness,
   getAmountOwed,
+  getDebtPayoffProgress,
   getDebtStatus,
   getMonthlyInterestRate,
   getMonthlyPayment,
@@ -114,6 +115,27 @@ describe('getDebtStatus', () => {
   });
 });
 
+describe('getDebtStatus without a given day, at night in Bogota', () => {
+  beforeAll(() => {
+    vi.stubEnv('TZ', 'America/Bogota');
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-15T03:00:00.000Z'));
+  });
+
+  afterAll(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  });
+
+  it('is current, not late, when the due date is the local today', () => {
+    const dueToday = liability('debt-due-today', 1, 'monthly', '2026-08-14');
+
+    expect(getDebtStatus(dueToday, [owe('o', dueToday.id, 100000)])).toBe(
+      'current',
+    );
+  });
+});
+
 describe('getMonthlyInterestRate', () => {
   it('compounds a yearly rate down instead of dividing it', () => {
     expect(getMonthlyInterestRate(yearly)).toBeCloseTo(1.8088, 4);
@@ -168,6 +190,120 @@ describe('orderDebtsByStrategy', () => {
 describe('getTotalDebt', () => {
   it('adds up what is still owed across every liability', () => {
     expect(getTotalDebt(accounts, transactions)).toBe(toMinorUnits(4500000));
+  });
+});
+
+describe('getDebtPayoffProgress', () => {
+  const cash: Account = {
+    id: CASH,
+    name: 'cash',
+    root: ACCOUNT_ROOTS.ASSETS,
+    kind: ACCOUNT_KINDS.CASH,
+    onBudget: true,
+    archived: false,
+    createdAt: '',
+    updatedAt: '',
+  };
+
+  it('reads a repayment as progress and what it settles as the baseline', () => {
+    expect(
+      getDebtPayoffProgress(
+        [small],
+        [owe('o1', small.id, 500000), pay('p1', small.id, 200000)],
+      ),
+    ).toEqual({
+      borrowed: toMinorUnits(500000),
+      repaid: toMinorUnits(200000),
+      percentage: 40,
+    });
+  });
+
+  it('grows the baseline with every later charge, not just the opening one', () => {
+    expect(
+      getDebtPayoffProgress(
+        [small],
+        [
+          owe('o1', small.id, 400000),
+          owe('o2', small.id, 100000),
+          pay('p1', small.id, 250000),
+        ],
+      ),
+    ).toEqual({
+      borrowed: toMinorUnits(500000),
+      repaid: toMinorUnits(250000),
+      percentage: 50,
+    });
+  });
+
+  it('pools every debt account into one figure', () => {
+    expect(
+      getDebtPayoffProgress(accounts, [
+        ...transactions,
+        pay('p1', small.id, 500000),
+        pay('p2', big.id, 400000),
+      ]),
+    ).toEqual({
+      borrowed: toMinorUnits(4500000),
+      repaid: toMinorUnits(900000),
+      percentage: 20,
+    });
+  });
+
+  it.each([
+    [100000, 33],
+    [200000, 67],
+  ])('rounds a %d repayment of 300000 to a whole percent', (paid, percent) => {
+    expect(
+      getDebtPayoffProgress(
+        [small],
+        [owe('o1', small.id, 300000), pay('p1', small.id, paid)],
+      ).percentage,
+    ).toBe(percent);
+  });
+
+  it('caps the share at 100 when more came back than went out', () => {
+    expect(
+      getDebtPayoffProgress(
+        [small],
+        [owe('o1', small.id, 500000), pay('p1', small.id, 800000)],
+      ),
+    ).toEqual({
+      borrowed: toMinorUnits(500000),
+      repaid: toMinorUnits(800000),
+      percentage: 100,
+    });
+  });
+
+  it('reports a flat zero rather than dividing by nothing', () => {
+    const nothing = { borrowed: 0, repaid: 0, percentage: 0 };
+
+    expect(getDebtPayoffProgress([], transactions)).toEqual(nothing);
+    expect(getDebtPayoffProgress(accounts, [])).toEqual(nothing);
+    expect(getDebtPayoffProgress([cash], transactions)).toEqual(nothing);
+  });
+
+  it('ignores the cash side of a payment, which is not borrowing', () => {
+    expect(
+      getDebtPayoffProgress(
+        [cash, small],
+        [owe('o1', small.id, 500000), pay('p1', small.id, 200000)],
+      ),
+    ).toEqual({
+      borrowed: toMinorUnits(500000),
+      repaid: toMinorUnits(200000),
+      percentage: 40,
+    });
+  });
+
+  it('leaves an archived debt out of the progress it reports', () => {
+    const closed = { ...liability('debt-closed', 1), archived: true };
+
+    expect(
+      getDebtPayoffProgress(
+        [closed],
+        [owe('o1', closed.id, 500000), pay('p1', closed.id, 200000)],
+      ),
+    ).toEqual({ borrowed: 0, repaid: 0, percentage: 0 });
   });
 });
 

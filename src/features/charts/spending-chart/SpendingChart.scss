@@ -1,5 +1,37 @@
 @use 'shared/styles/mixins' as *;
 
-.chart-container{
-    margin-top: var(--spacing-3);
+.spending-legend {
+  @include flex(center, stretch, column);
+  gap: var(--spacing-3);
+  padding-right: var(--spacing-4);
+  max-height: 100%;
+  overflow-y: auto;
+
+  &__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  &__label {
+    min-width: 0;
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__value {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
 }
