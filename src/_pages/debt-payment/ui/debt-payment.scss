@@ -1,0 +1,17 @@
+.debt-payment-page {
+  max-width: 720px;
+  margin-inline: auto;
+
+  &__back {
+    gap: var(--spacing-2);
+    margin-left: calc(var(--spacing-4) * -1);
+    margin-bottom: var(--spacing-4);
+  }
+
+  &__title {
+    text-align: center;
+    margin-bottom: var(--spacing-6);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+  }
+}

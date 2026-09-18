@@ -53,6 +53,7 @@ export type AccountInput = Omit<
 export const OPENING_BALANCE_ACCOUNT_ID = 'equity-opening-balances';
 export const DEFAULT_CASH_ACCOUNT_ID = 'assets-cash';
 export const UNCATEGORIZED_EXPENSE_ACCOUNT_ID = 'expenses-others';
+export const INTEREST_EXPENSE_ACCOUNT_ID = 'expenses-interest';
 export const DEFAULT_INCOME_ACCOUNT_ID = 'income-salary';
 
 export function isRealAccount(account: AccountCore): boolean {
