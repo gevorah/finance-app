@@ -1,35 +1,43 @@
 @use 'shared/styles/mixins' as *;
 
-.balance-cards {
+.charts {
+  display: grid;
+  gap: var(--spacing-4);
+
   @include desktop {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-4);
+    grid-template-columns: repeat(2, 1fr);
+
+    > :last-child {
+      grid-column: span 2;
+    }
   }
 }
-.transaction-header {
+
+.section-header {
   @include flex(space-between);
-  margin-top: var(--spacing-6);
+  margin-top: var(--spacing-8);
   margin-bottom: var(--spacing-3);
+
   &__title {
     font-size: var(--text-md);
     font-weight: var(--font-weight-semibold);
   }
+
   &__link {
     font-size: var(--text-xs);
     font-weight: var(--font-weight-medium);
     color: var(--color-primary-muted);
-  }
-}
+    padding: var(--spacing-1) var(--spacing-2);
+    margin-right: calc(var(--spacing-2) * -1);
+    border-radius: var(--radius-sm);
 
-.metrics {
-  @include flex(space-between);
-  margin-top: var(--spacing-4);
-  gap: var(--spacing-3);
-  @include desktop {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    margin-top: 0;
+    &:hover {
+      color: var(--color-primary-contrast);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-focus-ring);
+      outline-offset: 2px;
+    }
   }
 }

@@ -1,5 +1,6 @@
 import type { Transaction } from '@/entities/transaction';
 import { Money } from '@/shared/lib/money';
+import { getLocalTimeZone, today } from '@internationalized/date';
 
 import {
   compareByAvalanche,
@@ -34,12 +35,12 @@ export function getDebtAccounts(accounts: Account[]): Account[] {
 export function getDebtStatus(
   account: Account,
   transactions: Transaction[],
-  today: string = new Date().toISOString().slice(0, 10),
+  asOf: string = today(getLocalTimeZone()).toString(),
 ): DebtStatus {
   if (getAmountOwed(account, transactions) <= 0) return 'paid_off';
 
   const dueDate = account.debtTerms?.paymentTerms.nextPaymentDueDate;
-  if (dueDate && dueDate < today) return 'late';
+  if (dueDate && dueDate < asOf) return 'late';
 
   return 'current';
 }
@@ -53,6 +54,40 @@ export function getTotalDebt(
       total + Math.max(getAmountOwed(account, transactions), 0),
     0,
   );
+}
+
+export interface DebtPayoffProgress {
+  borrowed: Money;
+  repaid: Money;
+  percentage: number;
+}
+
+/**
+ * How much of everything ever charged to a debt has been paid back.
+ */
+export function getDebtPayoffProgress(
+  accounts: Account[],
+  transactions: Transaction[],
+): DebtPayoffProgress {
+  const debtIds = new Set(
+    getDebtAccounts(accounts).map((account) => account.id),
+  );
+
+  let borrowed = 0;
+  let repaid = 0;
+
+  for (const transaction of transactions) {
+    for (const posting of transaction.postings) {
+      if (!debtIds.has(posting.accountId)) continue;
+      if (posting.amount < 0) borrowed -= posting.amount;
+      else repaid += posting.amount;
+    }
+  }
+
+  const percentage =
+    borrowed > 0 ? Math.min(Math.round((repaid / borrowed) * 100), 100) : 0;
+
+  return { borrowed, repaid, percentage };
 }
 
 /**

@@ -29,3 +29,26 @@ export function formatDateLong(date: string): string {
     new Date(date),
   );
 }
+
+const MONTH_YEAR_OPTIONS: Intl.DateTimeFormatOptions = {
+  month: 'short',
+  year: 'numeric',
+};
+
+export function formatMonthsAhead(from: Date, months: number): string {
+  const day = 1;
+  const month = new Date(from.getFullYear(), from.getMonth() + months, day);
+
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, MONTH_YEAR_OPTIONS).format(
+    month,
+  );
+}
+
+export function daysLeftInMonth(date: Date): number {
+  const lastDay = new Date(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    0,
+  ).getDate();
+  return lastDay - date.getDate();
+}

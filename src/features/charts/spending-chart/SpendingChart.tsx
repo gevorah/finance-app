@@ -1,11 +1,10 @@
-
 import { Card } from '@/shared/components/ui/card';
 import { formatCurrency } from '@/shared/lib/currency';
 import { Money } from '@/shared/lib/money';
 
-import "./SpendingChart.scss";
+import './SpendingChart.scss';
 
-import { Legend, Pie, PieChart } from 'recharts';
+import { Legend, Pie, PieChart, Sector, Tooltip } from 'recharts';
 
 import CardChart from '../card-chart/CardChart';
 
@@ -29,26 +28,21 @@ export function SpendingChart({
   accountNames,
 }: SpendingChartProps) {
   const today = new Date().toLocaleDateString('en-US', { month: 'long' });
-  const data = Object.entries(spendingByAccount).map(
-    ([accountId, amount], index) => ({
+  const data = Object.entries(spendingByAccount)
+    .sort(([, a], [, b]) => b - a)
+    .map(([accountId, amount], index) => ({
       category: accountNames[accountId] ?? accountId,
       amount,
       fill: COLORS[index % COLORS.length],
-    }),
-  );
+    }));
 
   return (
     <Card className="chart-container">
-      <CardChart title="Budget Breakdown" date={today}>
+      <CardChart title="Spending breakdown" date={today}>
         <PieChart
           accessibilityLayer
           responsive
-          style={{
-            width: '100%',
-            maxWidth: '300px',
-            maxHeight: '80vh',
-            aspectRatio: 1,
-          }}
+          style={{ width: '100%', height: '100%' }}
         >
           <Pie
             data={data}
@@ -59,19 +53,46 @@ export function SpendingChart({
             dataKey="amount"
             nameKey="category"
             stroke="none"
+            shape={(props) => (
+              <Sector
+                {...props}
+                outerRadius={
+                  props.isActive ? props.outerRadius + 4 : props.outerRadius
+                }
+              />
+            )}
           ></Pie>
+          <Tooltip
+            contentStyle={{
+              background: '#252731',
+              border: '1px solid #32343f',
+              borderRadius: 8,
+            }}
+            labelStyle={{ color: '#9295a0' }}
+            formatter={(value) => formatCurrency(Number(value))}
+          />
           <Legend
-            align="right"
-            layout="vertical"
-            verticalAlign="middle"
+            position="right"
+            itemSorter={null}
             content={({ payload }) => (
-              <ul>
-                {payload?.map((entry, index) => (
-                  <li key={index} style={{ color: entry.color }}>
-                    <span>{entry.value}</span>
-                    <span>{formatCurrency(data[index].amount)}</span>
-                  </li>
-                ))}
+              <ul className="spending-legend">
+                {payload?.map((entry) => {
+                  const slice = entry.payload as (typeof data)[number];
+                  return (
+                    <li key={entry.value} className="spending-legend__item">
+                      <span
+                        className="spending-legend__dot"
+                        style={{ background: entry.color }}
+                      />
+                      <span className="spending-legend__label">
+                        {entry.value}
+                      </span>
+                      <span className="spending-legend__value">
+                        {formatCurrency(slice.amount)}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           />

@@ -2,61 +2,51 @@
 
 .balance-card {
   @include flex(center, flex-start, column);
-}
+  gap: var(--spacing-4);
 
-.balance-header {
+  &__header {
+    @include flex(center, flex-start, column);
+    gap: var(--spacing-1);
+  }
+
   &__title {
     text-transform: uppercase;
     font-weight: var(--font-weight-medium);
     color: var(--color-primary-muted);
     letter-spacing: 0.05em;
-    margin-bottom: var(--spacing-2);
   }
-  &__description {
+
+  &__amount {
     font-size: var(--text-5xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-primary-contrast);
-    margin-bottom: var(--spacing-4);
+  }
+
+  &__description {
+    font-size: var(--text-xs);
   }
 }
 
 .stats {
-  @include flex();
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(144px, 260px));
   gap: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-primary-border);
 }
 
 .stat-item {
-  @include flex();
-  gap: var(--spacing-2);
-  &__icon {
-    border-radius: var(--radius-md);
-    width: 32px;
-    height: 32px;
-    @include flex(center, center);
+  @include flex(normal, normal, column);
+  gap: var(--spacing-1);
 
-    &--income {
-      background-color: var(--color-info-muted);
-      color: var(--color-info-border);
-    }
-
-    &--expense {
-      background-color: var(--color-danger-muted);
-      color: var(--color-danger-border);
-    }
-  }
   &__label {
     color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
+
   &__value {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-semibold);
-
-    &--income {
-      color: var(--color-info-border);
-    }
-    &--expense {
-      color: var(--color-danger-border);
-    }
   }
 }

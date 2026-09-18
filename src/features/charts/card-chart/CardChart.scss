@@ -1,11 +1,30 @@
 @use 'shared/styles/mixins' as *;
 
+.chart-container {
+  display: flex;
+  height: 100%;
+}
+
+.card-chart {
+  @include flex(flex-start, stretch, column);
+  gap: var(--spacing-4);
+  flex: 1;
+  min-width: 0;
+
+  &__body {
+    height: 200px;
+    min-width: 0;
+  }
+}
+
 .chart-header {
   @include flex(space-between, center);
+
   &__title {
     font-size: var(--text-sm);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-semibold);
   }
+
   &__date {
     font-size: var(--text-xs);
     color: var(--color-text-muted);
